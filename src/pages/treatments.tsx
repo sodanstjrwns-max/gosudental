@@ -17,7 +17,7 @@ export function treatmentsListPage() {
     <nav class="breadcrumb"><a href="/">홈</a> / <span>진료안내</span></nav>
     <p class="eyebrow" style="color:var(--brand-accent)">Treatments</p>
     <h1 class="h-display">한 사람의 고민을 해결하는<br><em style="color:var(--brand-soft)">올인원 진료</em></h1>
-    <p class="lead">많은 치료를 권한다는 의미가 아닙니다. 필요한 여러 선택지를 한곳에서 충분히 비교하고, 그중 꼭 필요한 치료를 선택할 수 있게 해드린다는 의미입니다.</p>
+    <p class="lead">살릴 수 있는 치아는 오래 살리고, 잃어버린 치아는 제대로 회복해서, 다시 잘 먹을 수 있게 해드리는 것. 많은 치료를 권한다는 의미가 아니라, 필요한 선택지를 한곳에서 충분히 비교하고 그중 꼭 필요한 치료만 선택하실 수 있게 해드린다는 의미입니다.</p>
   </div>
 </section>
 
