@@ -7,6 +7,7 @@ export function missionPage() {
 <section class="hero" id="mission-hero" style="min-height:88svh">
   <div class="hero-bg" style="background-image:url('/static/img/interior-bookcafe.jpg')"></div>
   <div class="hero-veil"></div>
+  <div class="hero-hanja" aria-hidden="true">信賴<b>固守</b></div>
   <div class="hero-inner">
     <p class="hero-eyebrow">Mission &amp; Story</p>
     <h1 class="hero-title">
@@ -17,6 +18,11 @@ export function missionPage() {
     <p class="hero-sub">신뢰를 바탕으로 옳은 진료를 고수하며, 한 사람의 삶을 더 나은 방향으로 바꾼다 — 고수치과의 미션입니다.</p>
   </div>
   <div class="hero-scroll">Scroll</div>
+</section>
+
+<section class="quote-band" id="mission-quote-section">
+  <blockquote class="reveal">지켜야 할 것을 오래도록 지키며,<br>어제보다 더 나은 <em>'고수'</em>가 되어가는 치과.</blockquote>
+  <cite class="reveal reveal-d1">고수치과라는 이름의 약속</cite>
 </section>
 
 <section class="section" id="name-origin-section">
@@ -34,8 +40,8 @@ export function missionPage() {
 
 <section class="section philosophy" id="mission-core-section">
   <div class="section-inner" style="text-align:center">
-    <p class="eyebrow reveal" style="color:var(--brand-accent);justify-content:center">Slogan</p>
-    <h2 class="h-display reveal reveal-d1" style="color:#fff">치과 치료의 두려움을<br><em style="color:var(--brand-accent)">신뢰</em>로 바꾸는 치과</h2>
+    <p class="eyebrow reveal" style="color:var(--sky);justify-content:center">Slogan</p>
+    <h2 class="h-display reveal reveal-d1" style="color:#fff">치과 치료의 두려움을<br><em style="color:var(--sky)">신뢰</em>로 바꾸는 치과</h2>
     <p class="lead reveal reveal-d2" style="color:rgba(255,255,255,0.72);margin:0 auto">
       '이 치료가 정말 나에게 필요한 걸까.' '이 치과의사를 믿어도 될까.' '치료하다가 아프면 내 이야기를 들어줄까.'<br><br>
       그런 마음들이 쌓여 치과에 대한 두려움이 됩니다. 반대로 환자의 이야기를 충분히 듣고, 필요한 치료를 정직하게 설명하고, 작은 치료 하나하나에서 믿음을 쌓아간다면 — 그 두려움을 신뢰로 바꿀 수 있다고 믿습니다.
@@ -71,6 +77,7 @@ export function missionPage() {
       <p>지금까지 가장 기억에 남는 변화는 치아가 아닙니다. <strong>어금니가 회복되고 식사가 편해진 뒤, 내원하실 때마다 얼굴에 살이 붙고 표정이 밝아지고 웃는 모습이 부쩍 많아지던 것</strong>입니다.</p>
       <p>아파서 제대로 먹지 못했던 사람이 다시 잘 먹고, 치아 때문에 웃지 못했던 사람이 더 자주 웃고, 무서워서 미뤄왔던 사람이 이제는 치과를 믿고 치료를 이어가는 것. 치과의사라는 직업에서 가장 큰 보람을 느끼는 순간입니다.</p>
       <p>치과의사 한 사람이 세상을 바꿀 수는 없습니다. 하지만 저는 굳게 믿습니다.<br><strong>치과의사는 한 사람의 세상을 바꿀 수 있습니다.</strong> 고수치과는 그런 진료를 고수하고 싶습니다.</p>
+      <p style="margin-top:28px"><a href="https://blog.naver.com/vkdlxld0101/224325996270" target="_blank" rel="noopener" class="treat-more" style="font-size:16px">원장이 직접 쓴 신념글 전문 읽기 <i class="fas fa-arrow-up-right-from-square"></i></a></p>
     </div>
   </div>
 </section>
@@ -83,7 +90,7 @@ export function missionPage() {
       <p>내포·홍성·예산에 계신 환자분들도 좋은 치료를 받기 위해 멀리까지 찾아가지 않아도 되도록, 지역 안에서 충분히 신뢰하고 선택할 수 있는 치과를 만들고 싶습니다.</p>
       <p>쾌적하고 깨끗한 진료환경을 기본으로, 물방울레이저와 안면스캐너를 비롯한 디지털·레이저 장비, 원내 3D 프린팅 시스템까지 — 단순히 고가의 장비를 갖추기 위해서가 아니라 <strong>새로운 기술이 실제로 환자분의 불편을 줄이고 더 좋은 결과를 만드는 데 도움이 되는지</strong>를 고민해서 도입했습니다.</p>
       <p>그리고 이 모든 것의 중심에는 결국 사람이 있습니다. 원장과 직원 모두가 같은 기준으로 움직일 수 있는 체계적인 내부 교육 시스템과 진료 프로토콜을 만들어, 누가 진료를 돕더라도 일관되고 수준 높은 의료서비스를 경험하실 수 있도록 하겠습니다.</p>
-      <p style="font-size:19px;font-weight:700;color:var(--brand-dark)">"우리 지역에도 충분히 믿고 치료받을 수 있는 치과가 있다."<br>환자분들이 그렇게 생각할 수 있는 선택지가 되겠습니다.</p>
+      <p style="font-size:19px;font-weight:700;color:var(--sky-deep);font-family:var(--serif)">"우리 지역에도 충분히 믿고 치료받을 수 있는 치과가 있다."<br>환자분들이 그렇게 생각할 수 있는 선택지가 되겠습니다.</p>
     </div>
   </div>
 </section>

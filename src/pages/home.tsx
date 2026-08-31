@@ -16,13 +16,14 @@ export function homePage() {
 <section class="hero" id="hero-section">
   <div class="hero-bg" style="background-image:url('/static/img/interior-lobby.jpg')"></div>
   <div class="hero-veil"></div>
+  <div class="hero-hanja" aria-hidden="true">固守<b>高手</b></div>
   <div class="hero-inner">
     <p class="hero-eyebrow">GOSU DENTAL · 내포신도시 ${SITE.openDate}</p>
     <h1 class="hero-title">
-      <span class="line"><span>치과 치료의 두려움을</span></span>
-      <span class="line"><span><em>신뢰</em>로 바꾸는 치과</span></span>
+      <span class="line"><span>지켜야 할 것을</span></span>
+      <span class="line"><span>오래도록 <em>고수</em>하는 치과</span></span>
     </h1>
-    <p class="hero-sub">좋은 결과를 고수합니다. 환자 중심의 진료를 고수합니다. 배움과 성장을 고수합니다. — 굳이 멀리 가지 않아도, 내포에서 충분히 믿고 치료받을 수 있도록.</p>
+    <p class="hero-sub">좋은 결과를 고수합니다. 환자 중심의 진료를 고수합니다. 배움과 성장을 고수합니다.<br>— 우리 지역에도 충분히 믿고 치료받을 수 있는 치과가 있도록.</p>
     <div class="hero-actions">
       <a href="/reservation" class="hero-btn primary">상담 예약하기</a>
       <a href="/mission" class="hero-btn outline">고수치과 이야기</a>
@@ -31,27 +32,33 @@ export function homePage() {
   <div class="hero-scroll">Scroll</div>
 </section>
 
+<!-- 원장님의 말 -->
+<section class="quote-band" id="belief-quote-section">
+  <blockquote class="reveal">치과의사는<br><em>한 사람의 세상</em>을 바꿀 수 있습니다.</blockquote>
+  <cite class="reveal reveal-d1">고수치과의원 대표원장 조원익</cite>
+</section>
+
 <!-- 철학 -->
 <section class="section philosophy" id="philosophy-section">
   <div class="section-inner">
-    <p class="eyebrow reveal" style="color:var(--brand-accent)">Our Promise</p>
-    <h2 class="h-display reveal reveal-d1" style="color:#fff">고수치과는<br>세 가지 약속을 <em style="color:var(--brand-accent)">고수</em>합니다</h2>
-    <p class="lead reveal reveal-d2" style="color:rgba(255,255,255,0.7)">固守 — 지켜야 할 것을 오래도록 지키며, 어제보다 더 나은 高手가 되어가는 치과.</p>
+    <p class="eyebrow reveal" style="color:var(--sky)">Our Promise</p>
+    <h2 class="h-display reveal reveal-d1" style="color:#fff">고수치과는<br>세 가지를 <em style="color:var(--sky)">고수</em>합니다</h2>
+    <p class="lead reveal reveal-d2" style="color:rgba(255,255,255,0.7)">固守 — 지켜야 할 것을 오래도록 지키며, 어제보다 더 나은 '고수(高手)'가 되어가는 치과.</p>
     <div class="phil-grid">
       <article class="phil-card reveal reveal-d1">
-        <span class="phil-num">PROMISE 01</span>
+        <span class="phil-num">固守 一</span>
         <h3>좋은 결과를 고수합니다</h3>
         <p>비용보다 결과를 먼저 생각하며, 검증된 재료와 장비를 사용합니다. 치료의 질과 타협하지 않습니다.</p>
       </article>
       <article class="phil-card reveal reveal-d2">
-        <span class="phil-num">PROMISE 02</span>
-        <h3>환자 중심 진료를 고수합니다</h3>
-        <p>불필요한 치료를 권하지 않고, 필요한 치료는 충분히 설명합니다. 환자의 이야기를 먼저 듣습니다.</p>
+        <span class="phil-num">固守 二</span>
+        <h3>환자 중심의 진료를 고수합니다</h3>
+        <p>환자분의 말만 듣는 것이 아니라, 그 말 뒤에 있는 걱정과 두려움까지 먼저 알아차리는 진료를 하겠습니다.</p>
       </article>
       <article class="phil-card reveal reveal-d3">
-        <span class="phil-num">PROMISE 03</span>
+        <span class="phil-num">固守 三</span>
         <h3>배움과 성장을 고수합니다</h3>
-        <p>오늘보다 더 나은 진료를 위해 배움과 연구를 멈추지 않습니다. 전국의 고수들을 직접 찾아가 배웁니다.</p>
+        <p>어제보다 더 나은 진료를 위해 배움과 연구를 멈추지 않습니다. 전국의 고수들을 직접 찾아가 배웁니다.</p>
       </article>
     </div>
   </div>
@@ -61,8 +68,8 @@ export function homePage() {
 <section class="section" id="core-treatments-section">
   <div class="section-inner">
     <p class="eyebrow reveal">Core Treatments</p>
-    <h2 class="h-display reveal reveal-d1">내포 유일의 <em>올인원 진료</em></h2>
-    <p class="lead reveal reveal-d2">한 사람의 고민을 해결하기 위해 필요한 여러 선택지를 한곳에서 비교하고, 그중 꼭 필요한 치료만 선택할 수 있도록 안내합니다.</p>
+    <h2 class="h-display reveal reveal-d1">다시 <em>잘 먹을 수 있게</em>,<br>편하게 웃을 수 있게</h2>
+    <p class="lead reveal reveal-d2">살릴 수 있는 치아는 오래 살리고, 잃어버린 치아는 제대로 회복해서, 다시 잘 먹을 수 있게 해드리는 것 — 고수치과 진료의 시작이자 끝입니다.</p>
     <div class="treat-grid">
       ${core.map((t, i) => html`
       <a href="/treatments/${t.slug}" class="treat-card reveal reveal-d${i + 1}">
@@ -85,13 +92,19 @@ export function homePage() {
   </div>
 </section>
 
+<!-- 원장님의 약속 -->
+<section class="quote-band" id="pain-quote-section" style="background:#fff">
+  <blockquote class="reveal">치료 중 아프면 절대 억지로 이어가지 않겠습니다.<br><em>통증만큼은 제가 끝까지 신경 쓰겠습니다.</em></blockquote>
+  <cite class="reveal reveal-d1">진료실에서 드리는 약속</cite>
+</section>
+
 <!-- 숫자 -->
 <section class="section stats-band" id="stats-section">
   <div class="section-inner">
     <div class="stats-grid">
       <div class="reveal"><div class="stat-num"><span data-count="3">0</span><span class="unit">인</span></div><p class="stat-label">의료진 협진 체계</p></div>
-      <div class="reveal reveal-d1"><div class="stat-num"><span data-count="6">0</span><span class="unit">과목</span></div><p class="stat-label">올인원 진료 영역</p></div>
-      <div class="reveal reveal-d2"><div class="stat-num"><span data-count="20">0</span><span class="unit">년+</span></div><p class="stat-label">교정 전문의 임상 경험</p></div>
+      <div class="reveal reveal-d1"><div class="stat-num"><span data-count="1">0</span><span class="unit">곳</span></div><p class="stat-label">내포 유일 교정과 전문의 상주 치과</p></div>
+      <div class="reveal reveal-d2"><div class="stat-num"><span data-count="6">0</span><span class="unit">과목</span></div><p class="stat-label">한곳에서 해결하는 올인원 진료</p></div>
       <div class="reveal reveal-d3"><div class="stat-num"><span data-count="30">0</span><span class="unit">회+</span></div><p class="stat-label">의료진 연수 · 교육 이수</p></div>
     </div>
   </div>
@@ -101,7 +114,8 @@ export function homePage() {
 <section class="section" id="doctors-section" style="background:#fff">
   <div class="section-inner">
     <p class="eyebrow reveal">Medical Team</p>
-    <h2 class="h-display reveal reveal-d1">배움을 멈추지 않는<br><em>고수치과 의료진</em></h2>
+    <h2 class="h-display reveal reveal-d1">전국의 고수들을 찾아가<br>배움을 멈추지 않는 <em>의료진</em></h2>
+    <p class="lead reveal reveal-d2">스스로를 '고수'라고 이야기하는 치과보다, 환자분들께서 "여기는 정말 믿고 맡길 수 있는 치과다"라고 이야기해 주시는 치과가 되고자 합니다.</p>
     <div class="doctor-grid">
       ${DOCTORS.map((d, i) => html`
       <a href="/doctors/${d.slug}" class="doctor-card reveal reveal-d${i + 1}">
@@ -120,10 +134,10 @@ export function homePage() {
 </section>
 
 <!-- 공간 -->
-<section class="section" id="space-section" style="background:var(--brand-mist)">
+<section class="section" id="space-section" style="background:var(--sky-mist)">
   <div class="section-inner">
     <p class="eyebrow reveal">Space</p>
-    <h2 class="h-display reveal reveal-d1">치과 같지 않은,<br>편안한 <em>공간</em></h2>
+    <h2 class="h-display reveal reveal-d1">두려움이 아닌<br><em>편안함</em>이 먼저인 공간</h2>
     <p class="lead reveal reveal-d2">치과 문을 여는 순간부터 두려움이 아닌 편안함을 느끼실 수 있도록, 공간 하나하나를 설계했습니다.</p>
     <div class="space-gallery">
       <figure class="space-item sp-a reveal"><img src="/static/img/interior-lobby.jpg" alt="고수치과 로비 전경" loading="lazy"><figcaption class="cap">Lounge</figcaption></figure>
@@ -141,7 +155,7 @@ export function homePage() {
   <div class="section-inner">
     <p class="eyebrow reveal">Technology</p>
     <h2 class="h-display reveal reveal-d1">환자의 불편을 줄이는<br><em>디지털 장비</em></h2>
-    <p class="lead reveal reveal-d2">비싼 장비를 위한 장비가 아니라, 새로운 기술이 실제로 환자분의 불편을 줄이고 더 좋은 결과를 만드는지 고민해서 선택했습니다.</p>
+    <p class="lead reveal reveal-d2">장비를 위한 장비가 아니라, 새로운 기술이 실제로 환자분의 불편을 줄이고 더 좋은 결과를 만드는지 먼저 고민해서 선택했습니다.</p>
     <div class="treat-sub-grid" style="grid-template-columns:repeat(3,1fr);margin-top:50px">
       ${EQUIPMENT.map((e, i) => html`
       <div class="treat-sub reveal reveal-d${(i % 3) + 1}">
@@ -156,7 +170,7 @@ export function homePage() {
 <section class="section" id="cta-section" style="padding-top:0">
   <div class="section-inner">
     <div class="cta-band reveal">
-      <h2>치과가 두려우셨나요?<br>그 마음부터 듣겠습니다.</h2>
+      <h2>잘 먹는 것에서 시작해, 편하게 웃을 수 있도록.<br>그리고 조금 더 자신 있게 나이 들어갈 수 있도록.</h2>
       <p>${SITE.addressShort} · ${SITE.openDate}</p>
       <a href="/reservation" class="hero-btn primary">상담 예약하기</a>
     </div>
@@ -167,7 +181,7 @@ export function homePage() {
     {
       title: '고수치과의원 | 내포신도시 임플란트·치아교정·심미보철 치과',
       description:
-        '내포신도시 주키즈소아청소년과 건물 5층, 고수치과의원. 치과 치료의 두려움을 신뢰로 바꾸는 치과 — 임플란트·교정과 전문의 치아교정·라미네이트 심미보철 올인원 진료. 2026년 11월 개원.',
+        '내포신도시 주키즈소아청소년과 건물 5층, 고수치과의원. 좋은 결과·환자 중심 진료·배움과 성장을 고수하는 치과 — 임플란트·교정과 전문의 치아교정·심미보철 올인원 진료. 2026년 11월 개원.',
       path: '/',
     },
     content
