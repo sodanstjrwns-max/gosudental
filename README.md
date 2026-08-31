@@ -7,9 +7,17 @@
 - **주소**: 충청남도 예산군 삽교읍 예학로 93, 5층 (내포신도시 주키즈소아청소년과 건물 5층)
 
 ## URLs
+- **프로덕션**: https://gosudental.pages.dev ✅ 배포 완료 (2026-08-31)
 - **개발 미리보기**: https://3000-ibwcewnougzmi7rx3gacu-d0b9e1e2.sandbox.novita.ai
-- **프로덕션**: 미배포 (배포 경로 결정 대기)
 - **네이버 블로그**: https://blog.naver.com/vkdlxld0101
+
+## 배포 정보 (BYOK — 사용자 Cloudflare 계정)
+- **Pages 프로젝트**: `gosudental` (production branch: main)
+- **D1**: `gosudental-production` (id: 924797e5-a06c-4236-b005-f236490e5e0e) — 마이그레이션 + 시드 적용 완료
+- **R2**: `gosudental-bucket` (케이스 사진 저장)
+- **Secrets**: `SESSION_SECRET`(랜덤 64hex), `ADMIN_PASSWORD` 설정 완료
+- **재배포**: `npm run build && npx wrangler pages deploy dist --project-name gosudental`
+- **원격 DB 콘솔**: `npx wrangler d1 execute gosudental-production --remote --command="..."`
 
 ## 완성된 기능
 ### 공개 페이지 (149 URL, sitemap 기준)
