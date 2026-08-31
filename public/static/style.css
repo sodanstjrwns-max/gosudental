@@ -23,7 +23,8 @@
   --paper: #fcfdfe;
   --line: #e5ecf0;
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
-  --font: 'Pretendard Variable', Pretendard, -apple-system, sans-serif;
+  --font: 'Gowun Batang', 'Noto Serif KR', 'Pretendard Variable', serif; /* 수묵 본문 — 붓 세리프 바탕체 */
+  --sans: 'Pretendard Variable', Pretendard, -apple-system, sans-serif;   /* UI·폼 전용 */
   --serif: 'Noto Serif KR', 'Nanum Myeongjo', serif;
   --brush: 'LXGW WenKai TC', 'Noto Serif KR', serif;          /* 해서(楋書) 붓글씨 — 한자 워터마크·낙관 */
   --hangul-brush: 'Nanum Brush Script', 'Noto Serif KR', serif; /* 한글 붓 손글씨 — 포인트 강조 */
@@ -959,4 +960,66 @@ main, .site-header, .site-footer { position: relative; z-index: 1; }
 }
 @media (prefers-reduced-motion: reduce) {
   .hero-seal { animation: none; opacity: 0.94; }
+}
+
+/* ═══════════════════════════════════════════
+   東洋 v2 — 수묵 본문체 · 운문 · 족자 · 먹 와이프
+   ═══════════════════════════════════════════ */
+
+/* UI·폼·관리자는 산세리프 유지 (가독성/입력 편의) */
+input, select, textarea, button, .admin-side, .admin-main, .admin-main table,
+.mobile-menu, .gnb, .header-cta, .breadcrumb, .pill, .badge, .treat-tag,
+.footer-info, .footer-legal, .footer-links { font-family: var(--sans); }
+.eyebrow, .mega-label, .stat-label, .hero-eyebrow { font-family: var(--sans); }
+
+/* ── 운문(雲紋) 구름 문양 — 밝은 섹션에 은은히 흐르는 당초 구름 ── */
+.section:not(.philosophy):not(.stats-band)::before {
+  content: ''; position: absolute; inset: 0; pointer-events: none; opacity: 0.35;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='420' height='300' viewBox='0 0 420 300'%3E%3Cg fill='none' stroke='%23acd7e5' stroke-width='1.4' stroke-linecap='round' opacity='0.33'%3E%3Cpath d='M40 80 q18 -26 44 -14 q10 -22 36 -16 q24 6 22 28 q22 2 20 22 q-2 18 -24 16 l-84 0 q-24 -2 -20 -20 q3 -13 6 -16'/%3E%3Cpath d='M250 190 q14 -20 36 -11 q8 -18 29 -13 q20 5 18 23 q18 2 16 18 q-2 15 -20 13 l-68 0 q-20 -2 -16 -16 q2 -11 5 -14'/%3E%3Cpath d='M300 60 q11 -15 27 -8 q6 -13 22 -10 q15 4 14 17 q13 1 12 13 q-1 11 -15 10 l-51 0 q-15 -1 -12 -12 q2 -8 3 -10'/%3E%3C/g%3E%3C/svg%3E");
+  background-size: 420px 300px;
+}
+.section { position: relative; }
+.section > .section-inner, .section > .section-narrow { position: relative; z-index: 1; }
+
+/* ── 족자(簇子) 펼침 — quote-band 스크롤 시 두루마리처럼 ── */
+.quote-band {
+  clip-path: inset(46% 0 46% 0);
+  transition: clip-path 1.3s cubic-bezier(0.65, 0, 0.2, 1);
+}
+.quote-band.unrolled { clip-path: inset(0 0 0 0); }
+/* 족자 봉(축) — 펼쳐질 때 위아래 나무 축 느낌의 진한 경계 */
+.quote-band::before { transition: opacity 0.9s ease 0.5s; opacity: 0; }
+.quote-band.unrolled::before { opacity: 1; }
+.quote-band blockquote, .quote-band cite { transition: opacity 0.8s ease 0.55s, transform 0.8s var(--ease) 0.55s; opacity: 0; transform: translateY(14px); }
+.quote-band.unrolled blockquote, .quote-band.unrolled cite { opacity: 1; transform: none; }
+.quote-band { border-top: 3px double rgba(16,20,23,0.28); border-bottom: 3px double rgba(16,20,23,0.28); }
+
+/* ── 먹 와이프 페이지 전환 ── */
+.ink-wipe {
+  position: fixed; inset: -12%; z-index: 9998; pointer-events: none;
+  background: radial-gradient(140% 90% at 50% 50%, #101417 62%, rgba(16,20,23,0.92) 78%, rgba(16,20,23,0) 100%);
+  filter: url(#ink-bleed);
+  transform: translateX(-118%) skewX(-7deg);
+}
+.ink-wipe.in { animation: inkWipeIn 0.5s cubic-bezier(0.7, 0, 0.3, 1) forwards; }
+@keyframes inkWipeIn {
+  from { transform: translateX(-118%) skewX(-7deg); }
+  to   { transform: translateX(0) skewX(0); }
+}
+/* 페이지 도착 시 먹이 걷히는 연출 */
+body.ink-arrive::after {
+  content: ''; position: fixed; inset: -12%; z-index: 9998; pointer-events: none;
+  background: radial-gradient(140% 90% at 50% 50%, #101417 62%, rgba(16,20,23,0.92) 78%, rgba(16,20,23,0) 100%);
+  filter: url(#ink-bleed);
+  animation: inkWipeOut 0.6s cubic-bezier(0.7, 0, 0.3, 1) 0.05s forwards;
+}
+@keyframes inkWipeOut {
+  from { transform: translateX(0) skewX(0); }
+  to   { transform: translateX(118%) skewX(7deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .quote-band { clip-path: none; }
+  .quote-band blockquote, .quote-band cite, .quote-band::before { opacity: 1; transform: none; transition: none; }
+  .ink-wipe, body.ink-arrive::after { display: none; }
 }

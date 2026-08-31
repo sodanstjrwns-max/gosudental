@@ -173,6 +173,72 @@
     document.querySelectorAll('.brush-divider').forEach(function (d) { io.observe(d); });
   }
 
+  /* ══════════ 4. 족자(簇子) 펼침 — quote-band scroll unroll ══════════ */
+  function initScrollUnroll() {
+    var bands = document.querySelectorAll('.quote-band');
+    if (!bands.length) return;
+    if (reduced || !('IntersectionObserver' in window)) {
+      bands.forEach(function (b) { b.classList.add('unrolled'); });
+      return;
+    }
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (en.isIntersecting) {
+          en.target.classList.add('unrolled');
+          io.unobserve(en.target);
+        }
+      });
+    }, { threshold: 0.45 });
+    bands.forEach(function (b) { io.observe(b); });
+  }
+
+  /* ══════════ 5. 먹 와이프 페이지 전환 ══════════ */
+  function initInkWipe() {
+    if (reduced) return;
+    // arrival: sweep the ink away
+    try {
+      if (sessionStorage.getItem('inkWipe') === '1') {
+        sessionStorage.removeItem('inkWipe');
+        document.body.classList.add('ink-arrive');
+        setTimeout(function () { document.body.classList.remove('ink-arrive'); }, 900);
+      }
+    } catch (e) { /* sessionStorage unavailable */ }
+
+    // departure: sweep the ink in, then navigate
+    var wiping = false;
+    document.addEventListener('click', function (e) {
+      if (wiping) return;
+      var a = e.target.closest('a');
+      if (!a) return;
+      var href = a.getAttribute('href');
+      if (!href || href.charAt(0) === '#') return;
+      if (a.target === '_blank' || a.hasAttribute('download')) return;
+      if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+      var url;
+      try { url = new URL(href, location.href); } catch (err) { return; }
+      if (url.origin !== location.origin) return;
+      if (url.pathname === location.pathname && url.hash) return;
+
+      e.preventDefault();
+      wiping = true;
+      try { sessionStorage.setItem('inkWipe', '1'); } catch (err) {}
+      var wipe = document.createElement('div');
+      wipe.className = 'ink-wipe';
+      document.body.appendChild(wipe);
+      // force reflow then animate
+      void wipe.offsetWidth;
+      wipe.classList.add('in');
+      setTimeout(function () { location.href = url.href; }, 480);
+    });
+    // restore if page came back from bfcache mid-wipe
+    window.addEventListener('pageshow', function (e) {
+      if (e.persisted) {
+        wiping = false;
+        document.querySelectorAll('.ink-wipe').forEach(function (w) { w.remove(); });
+      }
+    });
+  }
+
   /* ══════════ init ══════════ */
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', boot);
@@ -181,5 +247,7 @@
     initHeroInk();
     initInkDrop();
     initBrushDividers();
+    initScrollUnroll();
+    initInkWipe();
   }
 })();
