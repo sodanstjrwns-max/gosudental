@@ -8,6 +8,7 @@ export function missionPage() {
   <div class="hero-bg" style="background-image:url('/static/img/interior-bookcafe.jpg')"></div>
   <div class="hero-veil"></div>
   <div class="hero-hanja" aria-hidden="true">信賴<b>固守</b></div>
+  <span class="hero-seal" aria-hidden="true">信賴</span>
   <div class="hero-inner">
     <p class="hero-eyebrow">Mission &amp; Story</p>
     <h1 class="hero-title">

@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 260" preserveAspectRatio="none">
+  <defs>
+    <filter id="mtn-ink" x="-10%" y="-10%" width="120%" height="120%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.012 0.05" numOctaves="3" seed="11" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="14"/>
+    </filter>
+    <linearGradient id="fade1" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#101417" stop-opacity="0.16"/>
+      <stop offset="1" stop-color="#101417" stop-opacity="0.05"/>
+    </linearGradient>
+    <linearGradient id="fade2" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#101417" stop-opacity="0.34"/>
+      <stop offset="1" stop-color="#101417" stop-opacity="0.12"/>
+    </linearGradient>
+    <linearGradient id="fade3" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#101417" stop-opacity="0.62"/>
+      <stop offset="1" stop-color="#101417" stop-opacity="0.3"/>
+    </linearGradient>
+  </defs>
+  <!-- 원경 -->
+  <path filter="url(#mtn-ink)" fill="url(#fade1)" d="M0 150 C 90 120, 160 84, 250 96 C 330 106, 380 140, 470 132 C 570 122, 620 74, 720 82 C 810 89, 850 128, 940 124 C 1040 119, 1090 70, 1190 78 C 1280 85, 1330 120, 1440 112 L 1440 260 L 0 260 Z"/>
+  <!-- 중경 -->
+  <path filter="url(#mtn-ink)" fill="url(#fade2)" d="M0 190 C 110 168, 170 128, 265 140 C 355 151, 400 186, 495 180 C 600 173, 660 118, 760 128 C 850 137, 900 176, 1000 172 C 1100 168, 1160 122, 1260 132 C 1340 140, 1390 168, 1440 162 L 1440 260 L 0 260 Z"/>
+  <!-- 근경 -->
+  <path filter="url(#mtn-ink)" fill="url(#fade3)" d="M0 228 C 130 210, 200 178, 300 190 C 390 200, 450 226, 550 222 C 660 217, 720 178, 820 186 C 910 193, 970 224, 1070 220 C 1170 216, 1240 184, 1330 192 C 1390 197, 1420 214, 1440 212 L 1440 260 L 0 260 Z"/>
+</svg>

@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 300">
+  <defs>
+    <filter id="plum-ink" x="-15%" y="-15%" width="130%" height="130%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.04 0.06" numOctaves="2" seed="5" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="5"/>
+    </filter>
+  </defs>
+  <g filter="url(#plum-ink)">
+    <!-- 주 가지 -->
+    <path d="M 8 292 C 70 250, 110 210, 150 168 C 190 126, 225 96, 275 72 C 310 55, 345 44, 388 38"
+          fill="none" stroke="#101417" stroke-width="7" stroke-linecap="round" opacity="0.55"/>
+    <!-- 잔가지 -->
+    <path d="M 150 168 C 175 160, 200 158, 228 162" fill="none" stroke="#101417" stroke-width="3.6" stroke-linecap="round" opacity="0.45"/>
+    <path d="M 275 72 C 290 88, 298 104, 300 124" fill="none" stroke="#101417" stroke-width="3" stroke-linecap="round" opacity="0.42"/>
+    <path d="M 95 232 C 118 226, 138 228, 158 236" fill="none" stroke="#101417" stroke-width="3" stroke-linecap="round" opacity="0.4"/>
+    <!-- 매화 꽃 (5엽) -->
+    <g fill="#b8382b" opacity="0.62">
+      <g transform="translate(232,158)">
+        <circle cx="0" cy="-9" r="6.5"/><circle cx="8.6" cy="-2.8" r="6.5"/><circle cx="5.3" cy="7.3" r="6.5"/><circle cx="-5.3" cy="7.3" r="6.5"/><circle cx="-8.6" cy="-2.8" r="6.5"/>
+        <circle cx="0" cy="0" r="3" fill="#7d1f16"/>
+      </g>
+      <g transform="translate(302,128) scale(0.85)">
+        <circle cx="0" cy="-9" r="6.5"/><circle cx="8.6" cy="-2.8" r="6.5"/><circle cx="5.3" cy="7.3" r="6.5"/><circle cx="-5.3" cy="7.3" r="6.5"/><circle cx="-8.6" cy="-2.8" r="6.5"/>
+        <circle cx="0" cy="0" r="3" fill="#7d1f16"/>
+      </g>
+      <g transform="translate(388,38) scale(0.75)">
+        <circle cx="0" cy="-9" r="6.5"/><circle cx="8.6" cy="-2.8" r="6.5"/><circle cx="5.3" cy="7.3" r="6.5"/><circle cx="-5.3" cy="7.3" r="6.5"/><circle cx="-8.6" cy="-2.8" r="6.5"/>
+        <circle cx="0" cy="0" r="3" fill="#7d1f16"/>
+      </g>
+      <g transform="translate(162,236) scale(0.7)">
+        <circle cx="0" cy="-9" r="6.5"/><circle cx="8.6" cy="-2.8" r="6.5"/><circle cx="5.3" cy="7.3" r="6.5"/><circle cx="-5.3" cy="7.3" r="6.5"/><circle cx="-8.6" cy="-2.8" r="6.5"/>
+        <circle cx="0" cy="0" r="3" fill="#7d1f16"/>
+      </g>
+      <!-- 꽃봉오리 -->
+      <circle cx="205" cy="118" r="4.5" opacity="0.8"/>
+      <circle cx="340" cy="58" r="4" opacity="0.8"/>
+    </g>
+  </g>
+</svg>

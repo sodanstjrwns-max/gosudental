@@ -17,6 +17,7 @@ export function homePage() {
   <div class="hero-bg" style="background-image:url('/static/img/interior-lobby.jpg')"></div>
   <div class="hero-veil"></div>
   <div class="hero-hanja" aria-hidden="true">固守<b>高手</b></div>
+  <span class="hero-seal" aria-hidden="true">高手</span>
   <div class="hero-inner">
     <p class="hero-eyebrow">GOSU DENTAL · 내포신도시 ${SITE.openDate}</p>
     <h1 class="hero-title">
