@@ -25,6 +25,8 @@
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
   --font: 'Pretendard Variable', Pretendard, -apple-system, sans-serif;
   --serif: 'Noto Serif KR', 'Nanum Myeongjo', serif;
+  --brush: 'LXGW WenKai TC', 'Noto Serif KR', serif;          /* 해서(楋書) 붓글씨 — 한자 워터마크·낙관 */
+  --hangul-brush: 'Nanum Brush Script', 'Noto Serif KR', serif; /* 한글 붓 손글씨 — 포인트 강조 */
   /* 하위 호환 별칭 (기존 인라인 스타일 대응) */
   --brand: var(--sky-deep);
   --brand-soft: var(--sky);
@@ -70,7 +72,7 @@ ul { list-style: none; }
   display: inline-flex; align-items: center; justify-content: center;
   width: 54px; height: 54px; flex-shrink: 0;
   border: 2.5px solid var(--seal); color: var(--seal);
-  font-family: var(--serif); font-weight: 900; font-size: 19px; line-height: 1.05;
+  font-family: var(--brush); font-weight: 700; font-size: 20px; line-height: 1.05;
   letter-spacing: 0; text-align: center; padding: 4px;
   transform: rotate(-4deg);
   border-radius: 6px 10px 7px 9px / 9px 7px 10px 6px;
@@ -170,7 +172,7 @@ ul { list-style: none; }
 .hero-hanja {
   position: absolute; right: clamp(16px, 6vw, 110px); top: 50%;
   transform: translateY(-50%);
-  font-family: var(--serif); font-weight: 900;
+  font-family: var(--brush); font-weight: 700;
   font-size: clamp(110px, 17vw, 260px); line-height: 1.06;
   color: transparent;
   -webkit-text-stroke: 1px rgba(172, 215, 229, 0.2);
@@ -278,7 +280,7 @@ ul { list-style: none; }
 }
 .philosophy::before {
   content: '固守'; position: absolute; right: -1%; top: 50%; transform: translateY(-50%);
-  font-family: var(--serif); font-size: clamp(200px, 30vw, 430px); font-weight: 900;
+  font-family: var(--brush); font-size: clamp(200px, 30vw, 430px); font-weight: 700;
   color: transparent; -webkit-text-stroke: 1px rgba(172,215,229,0.09);
   line-height: 1; pointer-events: none; writing-mode: vertical-rl;
 }
@@ -298,7 +300,7 @@ ul { list-style: none; }
 .phil-card:hover { transform: translateY(-6px); border-color: rgba(172,215,229,0.45); background: rgba(172,215,229,0.05); }
 .phil-card:hover::before { transform: scaleX(1); }
 .phil-num {
-  font-family: var(--serif); font-size: 13px; font-weight: 700;
+  font-family: var(--brush); font-size: 17px; font-weight: 700;
   color: var(--sky); letter-spacing: 0.24em;
 }
 .phil-card h3 { font-family: var(--serif); font-size: 22.5px; font-weight: 900; margin: 16px 0 14px; letter-spacing: -0.01em; }
@@ -372,7 +374,7 @@ ul { list-style: none; }
 }
 .stats-band::before {
   content: '修鍊'; position: absolute; left: 3%; top: 50%; transform: translateY(-50%);
-  font-family: var(--serif); font-size: clamp(120px, 16vw, 230px); font-weight: 900;
+  font-family: var(--brush); font-size: clamp(120px, 16vw, 230px); font-weight: 700;
   color: transparent; -webkit-text-stroke: 1px rgba(172,215,229,0.08);
   line-height: 1; pointer-events: none;
 }
@@ -442,7 +444,7 @@ ul { list-style: none; }
 }
 .cta-band::before {
   content: '信賴'; position: absolute; right: 4%; bottom: -8%;
-  font-family: var(--serif); font-size: clamp(100px, 13vw, 190px); font-weight: 900;
+  font-family: var(--brush); font-size: clamp(100px, 13vw, 190px); font-weight: 700;
   color: transparent; -webkit-text-stroke: 1px rgba(172,215,229,0.1); line-height: 1;
 }
 .cta-band h2 {
@@ -462,7 +464,7 @@ ul { list-style: none; }
 }
 .page-hero::after {
   content: '高手'; position: absolute; right: 2%; top: 46%; transform: translateY(-50%);
-  font-family: var(--serif); font-size: clamp(90px, 13vw, 200px); font-weight: 900;
+  font-family: var(--brush); font-size: clamp(90px, 13vw, 200px); font-weight: 700;
   color: transparent; -webkit-text-stroke: 1px rgba(79,156,190,0.14);
   line-height: 1; pointer-events: none; writing-mode: vertical-rl;
 }
@@ -511,7 +513,7 @@ ul { list-style: none; }
 .faq-item summary::-webkit-details-marker { display: none; }
 .faq-item summary::before {
   content: '問'; flex-shrink: 0; width: 34px; height: 34px;
-  font-family: var(--serif); background: var(--ink); color: #fff; font-weight: 700; font-size: 15px;
+  font-family: var(--brush); background: var(--ink); color: #fff; font-weight: 700; font-size: 17px;
   display: flex; align-items: center; justify-content: center; border-radius: 2px;
   transform: rotate(-2deg);
 }
@@ -680,7 +682,7 @@ textarea.form-control { min-height: 110px; resize: vertical; }
 }
 .site-footer::before {
   content: '固守 · 高手'; position: absolute; right: 3%; bottom: 8%;
-  font-family: var(--serif); font-size: clamp(60px, 8vw, 120px); font-weight: 900;
+  font-family: var(--brush); font-size: clamp(60px, 8vw, 120px); font-weight: 700;
   color: transparent; -webkit-text-stroke: 1px rgba(172,215,229,0.07); line-height: 1;
   pointer-events: none;
 }
@@ -860,3 +862,30 @@ textarea.form-control { min-height: 110px; resize: vertical; }
 @media (max-width: 720px) {
   .brush-divider { height: 22px; }
 }
+
+/* ═══ 붓글씨 폰트 세트 (LXGW WenKai TC + Nanum Brush) ═══ */
+/* 히어로 '고수' — 한글 붓 손글씨, 살짝 크게·기울여 낙관 느낌 */
+.hero-title em {
+  font-family: var(--hangul-brush); font-weight: 400;
+  font-size: 1.24em; line-height: 1;
+  display: inline-block; transform: rotate(-2deg) translateY(0.03em);
+  letter-spacing: 0.01em;
+}
+/* 인용 배너 강조도 붓글씨 */
+.quote-band blockquote em {
+  font-family: var(--hangul-brush); font-weight: 400;
+  font-size: 1.3em; line-height: 1;
+  display: inline-block; transform: rotate(-1.2deg);
+}
+/* 인용부호를 붓 획으로 */
+.quote-band::before { font-family: var(--brush); }
+/* h-display 강조(em)에도 은은한 붓 기울임 */
+.h-display em {
+  font-family: var(--hangul-brush); font-weight: 400;
+  font-size: 1.18em; line-height: 1;
+  display: inline-block; transform: rotate(-1.5deg);
+}
+/* eyebrow 위 낙관풍 점 — 유지하되 붓체 통일 */
+.footer-slogan { font-family: var(--hangul-brush); font-size: 22px; font-weight: 400; }
+/* stat 숫자 단위 한자풍 */
+.stat-num .unit { font-family: var(--brush); }
