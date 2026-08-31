@@ -70,6 +70,12 @@ export function Layout(meta: PageMeta, content: any) {
 ${raw(schemas.map((s) => `<script type="application/ld+json">${JSON.stringify(s)}</script>`).join('\n'))}
 </head>
 <body class="${meta.bodyClass || ''}">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <filter id="ink-bleed" x="-20%" y="-20%" width="140%" height="140%">
+    <feTurbulence type="fractalNoise" baseFrequency="0.032 0.045" numOctaves="3" seed="7" result="noise"/>
+    <feDisplacementMap in="SourceGraphic" in2="noise" scale="6" xChannelSelector="R" yChannelSelector="G"/>
+  </filter>
+</svg>
 <a href="#main-content" class="skip-link">본문 바로가기</a>
 
 <header id="site-header" class="site-header">
@@ -176,6 +182,7 @@ ${raw(schemas.map((s) => `<script type="application/ld+json">${JSON.stringify(s)
 </footer>
 
 <script src="/static/app.js" defer></script>
+<script src="/static/ink.js" defer></script>
 </body>
 </html>`
 }

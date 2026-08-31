@@ -800,3 +800,63 @@ textarea.form-control { min-height: 110px; resize: vertical; }
   .hero-title .line span { transform: none; }
   .hero-eyebrow, .hero-sub, .hero-actions, .hero-scroll, .hero-hanja { opacity: 1; }
 }
+
+/* ═══════════════════════════════════════════
+   수묵(水墨) Interactive Layer — ink.js companion
+   ═══════════════════════════════════════════ */
+
+/* hero ink trail canvas */
+.ink-canvas {
+  position: absolute; inset: 0; z-index: 1;
+  pointer-events: none; mix-blend-mode: screen;
+  filter: url(#ink-bleed);
+}
+.hero .hero-inner, .hero .hero-scroll { position: relative; }
+
+/* click ink drop */
+.ink-drop {
+  position: fixed; z-index: 9999; pointer-events: none;
+  width: 46px; height: 46px; margin: -23px 0 0 -23px;
+  background: radial-gradient(circle at 42% 38%, rgba(16,20,23,0.5), rgba(16,20,23,0.28) 55%, rgba(16,20,23,0) 72%);
+  filter: url(#ink-bleed);
+  animation: inkDrop 1.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+.ink-drop-sat {
+  width: 10px; height: 10px; margin: -5px 0 0 -5px;
+  border-radius: 50% 42% 55% 46% / 48% 56% 44% 52%;
+  animation: inkDropSat 1.1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+@keyframes inkDrop {
+  0%   { transform: scale(0.15); opacity: 0.95; }
+  45%  { transform: scale(1); opacity: 0.55; }
+  100% { transform: scale(1.5); opacity: 0; }
+}
+@keyframes inkDropSat {
+  0%   { transform: scale(0.3); opacity: 0.8; }
+  100% { transform: scale(1.6); opacity: 0; }
+}
+
+/* brush divider strokes */
+.brush-divider {
+  max-width: 1320px; margin: 0 auto; padding: 0 24px;
+  height: 30px; display: flex; align-items: center;
+  color: var(--ink); opacity: 0.85;
+}
+.brush-divider svg { width: min(560px, 70%); height: 22px; margin: 0 auto; display: block; filter: url(#ink-bleed); }
+.brush-divider .brush-path { transition: stroke-dashoffset 1.4s cubic-bezier(0.6, 0, 0.2, 1); }
+.brush-divider .brush-path-2 { transition-duration: 1.9s; transition-delay: 0.15s; }
+.brush-divider.drawn .brush-path { stroke-dashoffset: 0 !important; }
+
+/* 먹 번짐 — apply rough ink edge to key 武林 elements */
+.hero-hanja, .h-display em::after, .seal-stamp, .site-footer::before {
+  filter: url(#ink-bleed);
+}
+.philosophy::before, .stats-band::before, .cta-band::before { filter: url(#ink-bleed); }
+
+@media (prefers-reduced-motion: reduce) {
+  .ink-canvas, .ink-drop { display: none; }
+  .brush-divider .brush-path { stroke-dashoffset: 0 !important; transition: none; }
+}
+@media (max-width: 720px) {
+  .brush-divider { height: 22px; }
+}
