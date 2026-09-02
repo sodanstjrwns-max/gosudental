@@ -9,7 +9,7 @@ export function columnListPage(posts: any[]) {
   <div class="section-inner">
     <nav class="breadcrumb"><a href="/">홈</a> / <span>원장 칼럼</span></nav>
     <p class="eyebrow">Column</p>
-    <h1 class="h-display">원장이 직접 쓰는<br><em>치과 이야기</em></h1>
+    <h1 class="h-display">원장이 직접 쓰는 <br><em>치과 이야기</em></h1>
     <p class="lead">광고가 아닌, 진짜 도움이 되는 치과 이야기를 기록합니다. 배우고 성장하는 과정도 함께 남깁니다.</p>
   </div>
 </section>

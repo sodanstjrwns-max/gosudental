@@ -26,7 +26,7 @@ export function directionsPage() {
     <nav class="breadcrumb"><a href="/">홈</a> / <span>오시는 길</span></nav>
     <p class="eyebrow">Directions</p>
     <h1 class="h-display">오시는 길 · <em>진료시간</em></h1>
-    <p class="lead">${SITE.address}<br>${SITE.addressShort}</p>
+    <p class="lead">${SITE.address} <br>${SITE.addressShort}</p>
   </div>
 </section>
 
@@ -92,7 +92,7 @@ export function tourPage() {
   <div class="section-inner">
     <nav class="breadcrumb"><a href="/">홈</a> / <span>공간 둘러보기</span></nav>
     <p class="eyebrow" style="color:var(--brand-accent)">Space Tour</p>
-    <h1 class="h-display">치과 같지 않은 치과,<br><em style="color:var(--brand-soft)">고수치과의 공간</em></h1>
+    <h1 class="h-display">치과 같지 않은 치과, <br><em style="color:var(--brand-soft)">고수치과의 공간</em></h1>
     <p class="lead">두려움은 공간에서부터 시작됩니다. 그래서 고수치과는 첫인상부터 다르게 설계했습니다. 내포에서 가장 큰 규모, 가장 쾌적한 환경으로 준비하고 있습니다.</p>
   </div>
 </section>
@@ -166,7 +166,7 @@ export function faqTotalPage() {
   <div class="section-inner">
     <nav class="breadcrumb"><a href="/">홈</a> / <span>자주 묻는 질문</span></nav>
     <p class="eyebrow">FAQ</p>
-    <h1 class="h-display">자주 묻는 질문<br><em>${allFaqs.length}가지</em></h1>
+    <h1 class="h-display">자주 묻는 질문 <br><em>${allFaqs.length}가지</em></h1>
     <p class="lead">진료별로 환자분들이 가장 많이 궁금해하시는 질문을 모았습니다. 원하는 진료를 선택해 확인해 보세요.</p>
   </div>
 </section>

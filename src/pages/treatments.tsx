@@ -16,7 +16,7 @@ export function treatmentsListPage() {
   <div class="section-inner">
     <nav class="breadcrumb"><a href="/">홈</a> / <span>진료안내</span></nav>
     <p class="eyebrow" style="color:var(--brand-accent)">Treatments</p>
-    <h1 class="h-display">한 사람의 고민을 해결하는<br><em style="color:var(--brand-soft)">올인원 진료</em></h1>
+    <h1 class="h-display">한 사람의 고민을 해결하는 <br><em style="color:var(--brand-soft)">올인원 진료</em></h1>
     <p class="lead">살릴 수 있는 치아는 오래 살리고, 잃어버린 치아는 제대로 회복해서, 다시 잘 먹을 수 있게 해드리는 것. 많은 치료를 권한다는 의미가 아니라, 필요한 선택지를 한곳에서 충분히 비교하고 그중 꼭 필요한 치료만 선택하실 수 있게 해드린다는 의미입니다.</p>
   </div>
 </section>
@@ -129,7 +129,7 @@ export function treatmentDetailPage(slug: string, relatedCases: any[]) {
     ${t.sections.map((s, i) => html`
     <div class="reveal" id="section-${i}">
       <h2>${s.h}</h2>
-      <p>${raw(autoLink(s.body).replace(/\n/g, '<br>'))}</p>
+      <p>${raw(autoLink(s.body).replace(/\n/g, ' <br>'))}</p>
     </div>`)}
   </div>
 </section>
@@ -179,7 +179,7 @@ ${relatedCases.length > 0 ? html`
 <section class="section" id="treatment-faq-section" ${relatedCases.length === 0 ? '' : raw('style="background:#fff"')}>
   <div class="section-narrow">
     <p class="eyebrow reveal">FAQ</p>
-    <h2 class="h-display reveal reveal-d1">${t.name},<br>이런 점이 <em>궁금하셨나요?</em></h2>
+    <h2 class="h-display reveal reveal-d1">${t.name}, <br>이런 점이 <em>궁금하셨나요?</em></h2>
     <div class="faq-list reveal reveal-d2">
       ${t.faqs.map((f) => html`
       <details class="faq-item">
@@ -204,7 +204,7 @@ ${relTerms.length ? html`
 <section class="section" style="padding-top:20px" id="treatment-cta">
   <div class="section-inner">
     <div class="cta-band reveal">
-      <h2>${t.name} 상담이<br>필요하신가요?</h2>
+      <h2>${t.name} 상담이 <br>필요하신가요?</h2>
       <p>불필요한 치료를 권하지 않습니다. 정확한 진단과 충분한 설명부터 시작합니다.</p>
       <a href="/reservation" class="hero-btn primary">상담 예약하기</a>
     </div>

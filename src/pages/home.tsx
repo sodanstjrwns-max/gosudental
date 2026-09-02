@@ -24,7 +24,7 @@ export function homePage() {
       <span class="line"><span>지켜야 할 것을</span></span>
       <span class="line"><span>오래도록 <em>고수</em>하는 치과</span></span>
     </h1>
-    <p class="hero-sub">좋은 결과를 고수합니다. 환자 중심의 진료를 고수합니다. 배움과 성장을 고수합니다.<br>— 우리 지역에도 충분히 믿고 치료받을 수 있는 치과가 있도록.</p>
+    <p class="hero-sub">좋은 결과를 고수합니다. 환자 중심의 진료를 고수합니다. 배움과 성장을 고수합니다. <br>— 우리 지역에도 충분히 믿고 치료받을 수 있는 치과가 있도록.</p>
     <div class="hero-actions">
       <a href="/reservation" class="hero-btn primary">상담 예약하기</a>
       <a href="/mission" class="hero-btn outline">고수치과 이야기</a>
@@ -35,7 +35,7 @@ export function homePage() {
 
 <!-- 원장님의 말 -->
 <section class="quote-band" id="belief-quote-section">
-  <blockquote class="reveal">치과의사는<br><em>한 사람의 세상</em>을 바꿀 수 있습니다.</blockquote>
+  <blockquote class="reveal">치과의사는 <br><em>한 사람의 세상</em>을 바꿀 수 있습니다.</blockquote>
   <cite class="reveal reveal-d1">고수치과의원 대표원장 조원익</cite>
 </section>
 
@@ -43,7 +43,7 @@ export function homePage() {
 <section class="section philosophy" id="philosophy-section">
   <div class="section-inner">
     <p class="eyebrow reveal" style="color:var(--sky)">Our Promise</p>
-    <h2 class="h-display reveal reveal-d1" style="color:#fff">고수치과는<br>세 가지를 <em style="color:var(--sky)">고수</em>합니다</h2>
+    <h2 class="h-display reveal reveal-d1" style="color:#fff">고수치과는 <br>세 가지를 <em style="color:var(--sky)">고수</em>합니다</h2>
     <p class="lead reveal reveal-d2" style="color:rgba(255,255,255,0.7)">固守 — 지켜야 할 것을 오래도록 지키며, 어제보다 더 나은 '고수(高手)'가 되어가는 치과.</p>
     <div class="phil-grid">
       <article class="phil-card reveal reveal-d1">
@@ -69,7 +69,7 @@ export function homePage() {
 <section class="section" id="core-treatments-section">
   <div class="section-inner">
     <p class="eyebrow reveal">Core Treatments</p>
-    <h2 class="h-display reveal reveal-d1">다시 <em>잘 먹을 수 있게</em>,<br>편하게 웃을 수 있게</h2>
+    <h2 class="h-display reveal reveal-d1">다시 <em>잘 먹을 수 있게</em>, <br>편하게 웃을 수 있게</h2>
     <p class="lead reveal reveal-d2">살릴 수 있는 치아는 오래 살리고, 잃어버린 치아는 제대로 회복해서, 다시 잘 먹을 수 있게 해드리는 것 — 고수치과 진료의 시작이자 끝입니다.</p>
     <div class="treat-grid">
       ${core.map((t, i) => html`
@@ -95,7 +95,7 @@ export function homePage() {
 
 <!-- 원장님의 약속 -->
 <section class="quote-band" id="pain-quote-section" style="background:#fff">
-  <blockquote class="reveal">치료 중 아프면 절대 억지로 이어가지 않겠습니다.<br><em>통증만큼은 제가 끝까지 신경 쓰겠습니다.</em></blockquote>
+  <blockquote class="reveal">치료 중 아프면 절대 억지로 이어가지 않겠습니다. <br><em>통증만큼은 제가 끝까지 신경 쓰겠습니다.</em></blockquote>
   <cite class="reveal reveal-d1">진료실에서 드리는 약속</cite>
 </section>
 
@@ -115,7 +115,7 @@ export function homePage() {
 <section class="section" id="doctors-section" style="background:#fff">
   <div class="section-inner">
     <p class="eyebrow reveal">Medical Team</p>
-    <h2 class="h-display reveal reveal-d1">전국의 고수들을 찾아가<br>배움을 멈추지 않는 <em>의료진</em></h2>
+    <h2 class="h-display reveal reveal-d1">전국의 고수들을 찾아가 <br>배움을 멈추지 않는 <em>의료진</em></h2>
     <p class="lead reveal reveal-d2">스스로를 '고수'라고 이야기하는 치과보다, 환자분들께서 "여기는 정말 믿고 맡길 수 있는 치과다"라고 이야기해 주시는 치과가 되고자 합니다.</p>
     <div class="doctor-grid">
       ${DOCTORS.map((d, i) => html`
@@ -138,7 +138,7 @@ export function homePage() {
 <section class="section" id="space-section" style="background:var(--sky-mist)">
   <div class="section-inner">
     <p class="eyebrow reveal">Space</p>
-    <h2 class="h-display reveal reveal-d1">두려움이 아닌<br><em>편안함</em>이 먼저인 공간</h2>
+    <h2 class="h-display reveal reveal-d1">두려움이 아닌 <br><em>편안함</em>이 먼저인 공간</h2>
     <p class="lead reveal reveal-d2">치과 문을 여는 순간부터 두려움이 아닌 편안함을 느끼실 수 있도록, 공간 하나하나를 설계했습니다.</p>
     <div class="space-gallery">
       <figure class="space-item sp-a reveal"><img src="/static/img/interior-lobby.jpg" alt="고수치과 로비 전경" loading="lazy"><figcaption class="cap">Lounge</figcaption></figure>
@@ -155,7 +155,7 @@ export function homePage() {
 <section class="section" id="equipment-section">
   <div class="section-inner">
     <p class="eyebrow reveal">Technology</p>
-    <h2 class="h-display reveal reveal-d1">환자의 불편을 줄이는<br><em>디지털 장비</em></h2>
+    <h2 class="h-display reveal reveal-d1">환자의 불편을 줄이는 <br><em>디지털 장비</em></h2>
     <p class="lead reveal reveal-d2">장비를 위한 장비가 아니라, 새로운 기술이 실제로 환자분의 불편을 줄이고 더 좋은 결과를 만드는지 먼저 고민해서 선택했습니다.</p>
     <div class="treat-sub-grid" style="grid-template-columns:repeat(3,1fr);margin-top:50px">
       ${EQUIPMENT.map((e, i) => html`
@@ -171,7 +171,7 @@ export function homePage() {
 <section class="section" id="cta-section" style="padding-top:0">
   <div class="section-inner">
     <div class="cta-band reveal">
-      <h2>잘 먹는 것에서 시작해, 편하게 웃을 수 있도록.<br>그리고 조금 더 자신 있게 나이 들어갈 수 있도록.</h2>
+      <h2>잘 먹는 것에서 시작해, 편하게 웃을 수 있도록. <br>그리고 조금 더 자신 있게 나이 들어갈 수 있도록.</h2>
       <p>${SITE.addressShort} · ${SITE.openDate}</p>
       <a href="/reservation" class="hero-btn primary">상담 예약하기</a>
     </div>

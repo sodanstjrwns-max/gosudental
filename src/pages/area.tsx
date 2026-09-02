@@ -27,7 +27,7 @@ export function areaPage(slug: string) {
   <div class="section-inner">
     <nav class="breadcrumb"><a href="/">홈</a> / <a href="/treatments/${t.slug}">${t.name}</a> / <span>${area.region} ${area.treatment}</span></nav>
     <p class="eyebrow" style="color:var(--brand-accent)">${area.region} · ${area.treatment}</p>
-    <h1 class="h-display">${area.region} ${area.treatment},<br><em style="color:var(--brand-soft)">고수치과</em>가 함께합니다</h1>
+    <h1 class="h-display">${area.region} ${area.treatment}, <br><em style="color:var(--brand-soft)">고수치과</em>가 함께합니다</h1>
     <p class="lead">${area.region}에서 ${area.treatment}를 고민하고 계신가요? 굳이 멀리 가지 않아도, 내포신도시 안에서 충분히 믿고 치료받을 수 있도록 — 고수치과가 준비했습니다.</p>
   </div>
 </section>
@@ -67,7 +67,7 @@ export function areaPage(slug: string) {
       </details>`)}
     </div>
     <div class="cta-band" style="margin-top:60px">
-      <h2>${area.region}에서 오시는<br>${area.treatment} 상담</h2>
+      <h2>${area.region}에서 오시는 <br>${area.treatment} 상담</h2>
       <p>정확한 진단과 충분한 설명부터 시작합니다.</p>
       <a href="/reservation" class="hero-btn primary">상담 예약하기</a>
     </div>

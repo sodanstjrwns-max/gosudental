@@ -8,7 +8,7 @@ export function doctorsListPage() {
   <div class="section-inner">
     <nav class="breadcrumb" aria-label="브레드크럼"><a href="/">홈</a> / <span>의료진</span></nav>
     <p class="eyebrow" style="color:var(--brand-accent)">Medical Team</p>
-    <h1 class="h-display">배움을 멈추지 않는<br><em style="color:var(--brand-soft)">고수치과 의료진</em></h1>
+    <h1 class="h-display">배움을 멈추지 않는 <br><em style="color:var(--brand-soft)">고수치과 의료진</em></h1>
     <p class="lead">앞으로도 고수치과에서 가장 많이 배우고, 가장 많이 고민하는 사람은 의료진이고 싶습니다. 배운 것은 다시 환자분의 더 좋은 결과로 돌려드리겠습니다.</p>
   </div>
 </section>
@@ -134,7 +134,7 @@ ${cases.length > 0 ? html`
 <section class="section" style="padding-top:0" id="doctor-cta">
   <div class="section-inner">
     <div class="cta-band reveal">
-      <h2>${d.name} 원장에게<br>상담받고 싶으시다면</h2>
+      <h2>${d.name} 원장에게 <br>상담받고 싶으시다면</h2>
       <p>상담 예약 시 희망 의료진을 남겨주세요.</p>
       <a href="/reservation" class="hero-btn primary">상담 예약하기</a>
     </div>

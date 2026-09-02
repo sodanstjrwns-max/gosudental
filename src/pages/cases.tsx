@@ -10,7 +10,7 @@ export function casesListPage(cases: any[], loggedIn: boolean) {
   <div class="section-inner">
     <nav class="breadcrumb"><a href="/">홈</a> / <span>비포 &amp; 애프터</span></nav>
     <p class="eyebrow">Before &amp; After</p>
-    <h1 class="h-display">나와 비슷한 고민의<br><em>치료 이야기</em></h1>
+    <h1 class="h-display">나와 비슷한 고민의 <br><em>치료 이야기</em></h1>
     <p class="lead">비슷한 고민을 가진 분들의 치료 과정을 고민별로 모았습니다. 치료 결과는 개인에 따라 차이가 있을 수 있으며, 치료 후 사진은 의료법에 따라 로그인 후 열람하실 수 있습니다.</p>
     ${!loggedIn ? html`<div class="alert info" style="max-width:560px;margin-top:24px"><i class="fas fa-lock" style="margin-right:8px"></i>치료 후(After) 사진은 <a href="/auth/login" style="font-weight:700;text-decoration:underline">로그인</a> 후 확인하실 수 있습니다.</div>` : ''}
   </div>
@@ -111,7 +111,7 @@ export function caseDetailPage(cs: any, loggedIn: boolean) {
             ${p.after
               ? loggedIn
                 ? html`<img src="/api/case-image/${cs.id}/${p.label === '파노라마' ? 'pano' : 'photo'}_after" alt="${cs.title} ${p.label} 치료 후">`
-                : html`<div class="lock-overlay"><i class="fas fa-lock"></i><span>치료 후 사진은 로그인 후<br>열람 가능합니다</span><a href="/auth/login" class="btn-brand" style="margin-top:8px;font-size:13px;padding:8px 18px">로그인</a></div>`
+                : html`<div class="lock-overlay"><i class="fas fa-lock"></i><span>치료 후 사진은 로그인 후 <br>열람 가능합니다</span><a href="/auth/login" class="btn-brand" style="margin-top:8px;font-size:13px;padding:8px 18px">로그인</a></div>`
               : ''}
             <span class="ba-tag after" style="top:12px">After</span>
           </div>

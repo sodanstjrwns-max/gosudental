@@ -8,7 +8,7 @@ export function loginPage(next?: string) {
     <div style="text-align:center;margin-bottom:32px">
       <img src="/static/img/logo-stack.png" alt="고수치과" width="120" style="margin:0 auto 16px">
       <h1 style="font-size:26px;font-weight:800;color:var(--brand-dark)">로그인</h1>
-      <p style="font-size:14.5px;color:var(--ink-mute);margin-top:8px">치료 후 사진 열람은 의료법에 따라<br>회원 로그인 후 가능합니다.</p>
+      <p style="font-size:14.5px;color:var(--ink-mute);margin-top:8px">치료 후 사진 열람은 의료법에 따라 <br>회원 로그인 후 가능합니다.</p>
     </div>
     <form class="form-card" data-ajax action="/api/auth/login${next ? '?next=' + encodeURIComponent(next) : ''}" method="POST">
       <div class="form-group">
@@ -107,7 +107,7 @@ export function privacyPage() {
     <h1 class="h-display" style="font-size:32px">개인정보 처리방침</h1>
     <p>고수치과의원(이하 "병원")은 개인정보보호법 등 관련 법령에 따라 이용자의 개인정보를 보호하며, 다음과 같이 처리방침을 수립·공개합니다.</p>
     <h2>1. 수집하는 개인정보 항목</h2>
-    <p>회원가입: 이름, 이메일, 전화번호, 비밀번호(암호화 저장)<br>상담 예약: 이름, 연락처, 이메일(선택), 상담 내용</p>
+    <p>회원가입: 이름, 이메일, 전화번호, 비밀번호(암호화 저장) <br>상담 예약: 이름, 연락처, 이메일(선택), 상담 내용</p>
     <h2>2. 수집 및 이용 목적</h2>
     <p>회원제 콘텐츠(치료 사례 열람) 제공, 상담 예약 응대, 마케팅 정보 수신 동의자에 한한 안내(선택)</p>
     <h2>3. 보유 및 이용 기간</h2>

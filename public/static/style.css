@@ -1149,3 +1149,37 @@ body.menu-open { overflow: hidden; }
   .mobile-cta-bar a { font-size: 14px; }
   .hero-hanja { display: none; }
 }
+
+/* ═══════════════════════════════════════════
+   줄바꿈 최적화 — 어절 단위 · 균형 잡힌 제목 · 모바일 br 해제
+   ═══════════════════════════════════════════ */
+
+/* 한국어 어절 단위 줄바꿈 전역 적용 (단어 중간에서 안 잘림) */
+body { word-break: keep-all; overflow-wrap: break-word; }
+
+/* 제목류: 양쪽 줄 길이 균형 (지원 브라우저) */
+h1, h2, h3, .h-display, .hero-title, .quote-band blockquote, .cta-band h2 {
+  text-wrap: balance;
+}
+/* 본문류: 마지막 줄 한 단어만 남는 '외톨이' 방지 */
+p, .lead, .hero-sub { text-wrap: pretty; }
+
+/* 긴 URL·영문이 레이아웃 깨지 않게 */
+.footer-info, .prose, .faq-item, .term-def { overflow-wrap: anywhere; }
+
+/* ── 모바일: 데스크톱 기준으로 넣은 <br> 강제 줄바꿈 해제 ──
+   좁은 화면에선 br 위치가 어색하게 잘리므로 자연 줄바꿈에 맡긴다 */
+@media (max-width: 640px) {
+  .h-display br,
+  .quote-band blockquote br,
+  .cta-band h2 br { display: none; }
+  /* 히어로 서브 문장도 자연 흐름 (기존 규칙 유지 + 명시) */
+  .hero-sub br { display: none; }
+  /* 주의: .lead의 br은 문단 구분(<br><br>)·주소 줄바꿈에 쓰여 유지 */
+}
+
+/* ── 숫자+단위, 이름+직함처럼 붙어야 할 조각 보호 ── */
+.stat-num, .hero-eyebrow, .quote-band cite, .price-table td:first-child { white-space: nowrap; }
+@media (max-width: 640px) {
+  .hero-eyebrow { white-space: normal; } /* 초소형 화면에선 eyebrow는 접히도록 */
+}
