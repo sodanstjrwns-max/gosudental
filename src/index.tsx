@@ -8,7 +8,7 @@ import {
   type Bindings, getUser, getAdmin, setUserSession, setAdminSession,
   clearSessions, hashPassword, verifyPassword, isBot,
 } from './auth'
-import { SITE, DOCTORS, TREATMENTS, AREAS, REGION_DB, TERMS } from './data/site'
+import { SITE, DOCTORS, TREATMENTS, AREAS, REGION_DB, TERMS, PRICING, EQUIPMENT } from './data/site'
 import { homePage } from './pages/home'
 import { missionPage } from './pages/mission'
 import { doctorsListPage, doctorDetailPage } from './pages/doctors'
@@ -40,6 +40,19 @@ const TREAT_CASE_CAT: Record<string, string> = {
 }
 
 app.use('/static/*', serveStatic({ root: './public' }))
+
+// ── 전역 보안 · 크롤링 제어 헤더 (Worker 렌더링 응답용) ──
+app.use('*', async (c, next) => {
+  await next()
+  c.header('X-Content-Type-Options', 'nosniff')
+  c.header('X-Frame-Options', 'SAMEORIGIN')
+  c.header('Referrer-Policy', 'strict-origin-when-cross-origin')
+  const p = c.req.path
+  if (p.startsWith('/admin') || p.startsWith('/api/')) {
+    c.header('X-Robots-Tag', 'noindex, nofollow, noarchive')
+    c.header('Cache-Control', 'no-store')
+  }
+})
 
 // ── 유틸 ──────────────────────────────────────
 const ok = (data: object = {}) => ({ ok: true, ...data })
@@ -528,16 +541,19 @@ app.get('/sitemap.xml', async (c) => {
     { p: '/tour', pr: '0.7' }, { p: '/pricing', pr: '0.7' },
     { p: '/reservation', pr: '0.8' }, { p: '/privacy', pr: '0.3' }, { p: '/terms', pr: '0.3' },
   ]
-  const urls: string[] = staticPaths.map((s) => `<url><loc>${SITE.domain}${s.p}</loc><priority>${s.pr}</priority></url>`)
-  DOCTORS.forEach((d) => urls.push(`<url><loc>${SITE.domain}/doctors/${d.slug}</loc><priority>0.8</priority></url>`))
-  TREATMENTS.forEach((t) => urls.push(`<url><loc>${SITE.domain}/treatments/${t.slug}</loc><priority>${t.core ? '0.9' : '0.7'}</priority></url>`))
-  AREAS.forEach((a) => urls.push(`<url><loc>${SITE.domain}/area/${a.slug}</loc><priority>0.6</priority></url>`))
-  TERMS.forEach((t) => urls.push(`<url><loc>${SITE.domain}/encyclopedia/${t.slug}</loc><priority>0.4</priority></url>`))
+  const today = new Date().toISOString().slice(0, 10)
+  const U = (loc: string, pr: string, cf = 'weekly', lm = today) =>
+    `<url><loc>${loc}</loc><lastmod>${lm}</lastmod><changefreq>${cf}</changefreq><priority>${pr}</priority></url>`
+  const urls: string[] = staticPaths.map((s) => U(`${SITE.domain}${s.p}`, s.pr, s.p === '/' ? 'daily' : 'weekly'))
+  DOCTORS.forEach((d) => urls.push(U(`${SITE.domain}/doctors/${d.slug}`, '0.8', 'monthly')))
+  TREATMENTS.forEach((t) => urls.push(U(`${SITE.domain}/treatments/${t.slug}`, t.core ? '0.9' : '0.7', 'weekly')))
+  AREAS.forEach((a) => urls.push(U(`${SITE.domain}/area/${a.slug}`, '0.6', 'monthly')))
+  TERMS.forEach((t) => urls.push(U(`${SITE.domain}/encyclopedia/${t.slug}`, '0.4', 'monthly')))
   try {
-    const posts = await c.env.DB.prepare('SELECT slug FROM posts WHERE published = 1').all()
-    for (const p of (posts.results || []) as any[]) urls.push(`<url><loc>${SITE.domain}/column/${p.slug}</loc><priority>0.7</priority></url>`)
-    const cases = await c.env.DB.prepare('SELECT id FROM cases WHERE published = 1').all()
-    for (const cs of (cases.results || []) as any[]) urls.push(`<url><loc>${SITE.domain}/cases/${cs.id}</loc><priority>0.6</priority></url>`)
+    const posts = await c.env.DB.prepare('SELECT slug, updated_at FROM posts WHERE published = 1').all()
+    for (const p of (posts.results || []) as any[]) urls.push(U(`${SITE.domain}/column/${p.slug}`, '0.7', 'weekly', (p.updated_at || today).slice(0, 10)))
+    const cases = await c.env.DB.prepare('SELECT id, created_at FROM cases WHERE published = 1').all()
+    for (const cs of (cases.results || []) as any[]) urls.push(U(`${SITE.domain}/cases/${cs.id}`, '0.6', 'weekly', (cs.created_at || today).slice(0, 10)))
   } catch { /* noop */ }
   return c.body(
     `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.join('\n')}\n</urlset>`,
@@ -547,13 +563,69 @@ app.get('/sitemap.xml', async (c) => {
 })
 
 app.get('/robots.txt', (c) =>
-  c.text(`User-agent: *
+  c.text(`# gosudental.pages.dev — 검색엔진 + AI 답변엔진(AEO) 모두 환영
+User-agent: *
 Allow: /
 Disallow: /admin
 Disallow: /api/
 Allow: /api/case-image/
 
+# ── AI 답변 엔진 (AEO) 명시 허용 ──
+User-agent: GPTBot
+Allow: /
+Disallow: /admin
+
+User-agent: OAI-SearchBot
+Allow: /
+Disallow: /admin
+
+User-agent: ChatGPT-User
+Allow: /
+Disallow: /admin
+
+User-agent: ClaudeBot
+Allow: /
+Disallow: /admin
+
+User-agent: Claude-Web
+Allow: /
+Disallow: /admin
+
+User-agent: anthropic-ai
+Allow: /
+Disallow: /admin
+
+User-agent: PerplexityBot
+Allow: /
+Disallow: /admin
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
+User-agent: cohere-ai
+Allow: /
+
+User-agent: Bytespider
+Allow: /
+
+User-agent: CCBot
+Allow: /
+
+User-agent: Yeti
+Allow: /
+Disallow: /admin
+
+User-agent: Daum
+Allow: /
+Disallow: /admin
+
 Sitemap: ${SITE.domain}/sitemap.xml
+
+# AI/LLM 요약용 문서
+# ${SITE.domain}/llms.txt (개요) · ${SITE.domain}/llms-full.txt (전문)
 `)
 )
 
@@ -582,9 +654,78 @@ ${TREATMENTS.map((t) => `- [${t.name}](${SITE.domain}/treatments/${t.slug}): ${t
 ## 진료 시간
 ${SITE.hours.map((h) => `- ${h.day}: ${h.time}`).join('\n')}
 
+## 상세 문서
+- 전체 FAQ·백과사전·진료 상세: ${SITE.domain}/llms-full.txt
+
 ※ 본 안내는 의료광고 심의 기준을 준수하며, 치료 결과는 개인에 따라 다를 수 있습니다.
 `)
 )
+
+// AEO 딥 문서 — AI 답변엔진이 인용할 수 있는 전문 (FAQ + 백과사전 + 진료 상세)
+app.get('/llms-full.txt', (c) => {
+  const treatBlocks = TREATMENTS.map((t) => {
+    const secs = t.sections.map((s) => `### ${s.h}\n${s.body.replace(/\n{2,}/g, '\n')}`).join('\n\n')
+    const faqs = t.faqs.map((f) => `Q. ${f.q}\nA. ${f.a}`).join('\n\n')
+    return `## ${t.name} (${SITE.domain}/treatments/${t.slug})\n${t.heroCopy}\n\n${secs}\n\n### ${t.name} 자주 묻는 질문\n${faqs}`
+  }).join('\n\n---\n\n')
+
+  const termBlocks = TERMS.map((t) => `- **${t.name}**: ${t.def}`).join('\n')
+
+  const priceBlocks = PRICING.map((p) =>
+    `### ${p.category}\n${p.items.map((i) => `- ${i.name}: ${i.price}${i.note ? ` (${i.note})` : ''}`).join('\n')}`
+  ).join('\n\n')
+
+  const doctorBlocks = DOCTORS.map((d) =>
+    `### ${d.name} ${d.role}\n"${d.tagline}"\n${d.intro}\n주요 이력: ${d.career.slice(0, 4).join(' / ')}`
+  ).join('\n\n')
+
+  return c.text(`# ${SITE.name} — 전체 안내 문서 (AI 답변용)
+> ${SITE.slogan}
+
+이 문서는 ${SITE.name}의 공식 정보 전문입니다. AI 검색·답변 엔진이 환자 질문에 답할 때 이 내용을 근거로 사용할 수 있습니다.
+
+## 기본 정보
+- 이름: ${SITE.name} (${SITE.nameEn})
+- 주소: ${SITE.address}
+- 위치 랜드마크: ${SITE.landmark}
+- 개원: ${SITE.openDate}
+- 대표원장: 조원익
+- 미션: ${SITE.mission}
+- 예약: ${SITE.domain}/reservation
+- 블로그: ${SITE.blog}
+
+## 핵심 차별점
+- 내포신도시에서 드문 치과교정과 전문의(보건복지부 인증) 상주 치과
+- 임플란트·교정·심미보철·충치·턱관절까지 한곳에서 해결하는 올인원 진료
+- 진료 철학: 살릴 수 있는 치아는 오래 살리고, 잃어버린 치아는 제대로 회복해서, 다시 잘 먹을 수 있게
+- 통증 배려: "치료 중 아프면 절대 억지로 이어가지 않겠습니다" (대표원장 약속)
+
+## 의료진
+${doctorBlocks}
+
+## 장비
+${EQUIPMENT.map((e) => `- ${e.name}: ${e.desc}`).join('\n')}
+
+---
+
+${treatBlocks}
+
+---
+
+## 비용 안내 (비급여)
+${priceBlocks}
+
+---
+
+## 치과 용어 백과사전 (${TERMS.length}개)
+${termBlocks}
+
+---
+
+※ 의료광고 심의 기준 준수. 모든 시술은 부작용이 발생할 수 있으며 치료 결과는 개인에 따라 다를 수 있습니다. 정확한 진단은 내원 상담을 통해 받으시기 바랍니다.
+문서 기준일: 2026-09-02 · 출처: ${SITE.domain}
+`)
+})
 
 // 404
 app.notFound((c) => c.html(notFoundPage(), 404))

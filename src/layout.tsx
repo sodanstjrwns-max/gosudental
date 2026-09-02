@@ -12,30 +12,55 @@ export interface PageMeta {
 
 const ORG_SCHEMA = {
   '@context': 'https://schema.org',
-  '@type': 'Dentist',
+  '@type': ['Dentist', 'LocalBusiness'],
+  '@id': `${SITE.domain}/#organization`,
   name: SITE.name,
-  alternateName: SITE.nameEn,
+  alternateName: [SITE.nameEn, '고수치과', '내포 고수치과'],
   url: SITE.domain,
   logo: `${SITE.domain}/static/img/logo-stack.png`,
-  image: `${SITE.domain}/static/img/og-image.jpg`,
+  image: [`${SITE.domain}/static/img/og-image.jpg`, `${SITE.domain}/static/img/interior-lobby.jpg`],
   slogan: SITE.slogan,
+  description: `${SITE.slogan} — 임플란트·교정과 전문의 치아교정·심미보철 올인원 진료. 내포신도시 주키즈소아청소년과 건물 5층, 2026년 11월 2일 개원 예정.`,
   address: {
     '@type': 'PostalAddress',
     streetAddress: '삽교읍 예학로 93, 5층',
     addressLocality: '예산군',
     addressRegion: '충청남도',
+    postalCode: '32419',
     addressCountry: 'KR',
   },
   geo: { '@type': 'GeoCoordinates', latitude: 36.6547, longitude: 126.6716 },
-  areaServed: ['내포신도시', '예산군', '홍성군', '충청남도'],
+  hasMap: 'https://map.naver.com/p/search/충청남도%20예산군%20삽교읍%20예학로%2093',
+  areaServed: ['내포신도시', '예산군', '홍성군', '삽교읍', '덕산면', '충청남도'],
   medicalSpecialty: 'Dentistry',
-  sameAs: [SITE.blog],
+  founder: { '@type': 'Person', name: '조원익', jobTitle: '대표원장' },
+  foundingDate: '2026-11-02',
+  openingHoursSpecification: [
+    { '@type': 'OpeningHoursSpecification', dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'], description: '진료시간 확정 시 안내' },
+  ],
+  availableService: TREATMENTS.map((t) => ({
+    '@type': 'MedicalProcedure',
+    name: t.name,
+    url: `${SITE.domain}/treatments/${t.slug}`,
+  })),
+  knowsAbout: ['임플란트', '치아교정', '투명교정', '심미보철', '라미네이트', '충치치료', '신경치료', '턱관절치료', '자연치아 보존'],
+  sameAs: [SITE.blog, SITE.instagram],
+}
+
+const WEBSITE_SCHEMA = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  '@id': `${SITE.domain}/#website`,
+  url: SITE.domain,
+  name: SITE.name,
+  inLanguage: 'ko-KR',
+  publisher: { '@id': `${SITE.domain}/#organization` },
 }
 
 export function Layout(meta: PageMeta, content: any) {
   const canonical = `${SITE.domain}${meta.path}`
   const og = meta.ogImage || `${SITE.domain}/static/img/og-image.jpg`
-  const schemas = [ORG_SCHEMA, ...(meta.schema || [])]
+  const schemas = [ORG_SCHEMA, WEBSITE_SCHEMA, ...(meta.schema || [])]
   const coreT = TREATMENTS.filter((t) => t.core)
   const otherT = TREATMENTS.filter((t) => !t.core)
 
@@ -46,12 +71,24 @@ export function Layout(meta: PageMeta, content: any) {
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>${meta.title}</title>
 <meta name="description" content="${meta.description}">
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
+<meta name="keywords" content="내포신도시 치과, 예산 치과, 홍성 치과, 고수치과, 내포 임플란트, 내포 치아교정, 교정과 전문의, 삽교읍 치과">
+<meta name="author" content="고수치과의원">
+<meta name="geo.region" content="KR-44">
+<meta name="geo.placename" content="충청남도 예산군 삽교읍 (내포신도시)">
+<meta name="geo.position" content="36.6547;126.6716">
+<meta name="ICBM" content="36.6547, 126.6716">
+<meta name="theme-color" content="#101417">
+<meta name="format-detection" content="telephone=no">
 <link rel="canonical" href="${canonical}">
 <meta property="og:type" content="website">
 <meta property="og:title" content="${meta.title}">
 <meta property="og:description" content="${meta.description}">
 <meta property="og:url" content="${canonical}">
 <meta property="og:image" content="${og}">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="${SITE.name} — ${SITE.slogan}">
 <meta property="og:site_name" content="${SITE.name}">
 <meta property="og:locale" content="ko_KR">
 <meta name="twitter:card" content="summary_large_image">

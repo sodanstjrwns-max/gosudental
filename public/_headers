@@ -1,0 +1,36 @@
+# 고수치과의원 — 캐싱 · 보안 · 크롤링 제어 헤더
+
+# 정적 자산: 1년 캐시 (파일 변경 시 배포로 갱신)
+/static/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# 관리자 영역: 검색엔진 색인 완전 차단
+/admin/*
+  X-Robots-Tag: noindex, nofollow, noarchive
+  Cache-Control: no-store
+
+/api/*
+  X-Robots-Tag: noindex
+  Cache-Control: no-store
+
+# AEO 문서: 자주 갱신되므로 짧은 캐시
+/llms.txt
+  Cache-Control: public, max-age=3600
+  Content-Type: text/plain; charset=utf-8
+
+/llms-full.txt
+  Cache-Control: public, max-age=3600
+  Content-Type: text/plain; charset=utf-8
+
+/robots.txt
+  Cache-Control: public, max-age=3600
+
+/sitemap.xml
+  Cache-Control: public, max-age=3600
+
+# 전역 보안 헤더
+/*
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: SAMEORIGIN
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=()
