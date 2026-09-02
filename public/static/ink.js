@@ -194,7 +194,7 @@
 
   /* ══════════ 5. 먹 와이프 페이지 전환 ══════════ */
   function initInkWipe() {
-    if (reduced) return;
+    if (reduced || !finePointer) return; // 터치 기기: 전환 지연 없이 즉시 이동
     // arrival: sweep the ink away
     try {
       if (sessionStorage.getItem('inkWipe') === '1') {

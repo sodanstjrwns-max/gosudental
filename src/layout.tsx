@@ -68,7 +68,7 @@ export function Layout(meta: PageMeta, content: any) {
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>${meta.title}</title>
 <meta name="description" content="${meta.description}">
 <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
@@ -218,6 +218,11 @@ ${raw(schemas.map((s) => `<script type="application/ld+json">${JSON.stringify(s)
     </div>
   </div>
 </footer>
+
+<nav class="mobile-cta-bar" aria-label="모바일 빠른 메뉴">
+  <a href="/directions" class="cta-dir"><i class="fas fa-location-dot" aria-hidden="true"></i> 오시는 길</a>
+  <a href="/reservation" class="cta-res"><i class="fas fa-calendar-check" aria-hidden="true"></i> 상담 예약</a>
+</nav>
 
 <script src="/static/app.js" defer></script>
 <script src="/static/ink.js" defer></script>

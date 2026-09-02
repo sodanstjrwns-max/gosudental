@@ -8,14 +8,24 @@
   window.addEventListener('scroll', onScroll, { passive: true });
   onScroll();
 
-  // Mobile menu
+  // Mobile menu — 스크롤 잠금 + 링크 클릭 시 자동 닫힘
   const toggle = document.querySelector('.mobile-toggle');
   const menu = document.getElementById('mobile-menu');
   if (toggle && menu) {
-    toggle.addEventListener('click', () => {
-      const open = menu.classList.toggle('open');
+    const setMenu = (open) => {
+      menu.classList.toggle('open', open);
       toggle.setAttribute('aria-expanded', String(open));
+      toggle.setAttribute('aria-label', open ? '메뉴 닫기' : '메뉴 열기');
+      document.body.classList.toggle('menu-open', open);
+    };
+    toggle.addEventListener('click', () => setMenu(!menu.classList.contains('open')));
+    menu.addEventListener('click', (e) => {
+      if (e.target.closest('a')) setMenu(false);
     });
+    // 화면 회전/리사이즈로 데스크톱 폭이 되면 잠금 해제
+    window.addEventListener('resize', () => {
+      if (window.innerWidth > 1024 && menu.classList.contains('open')) setMenu(false);
+    }, { passive: true });
   }
 
   // Reveal on scroll
