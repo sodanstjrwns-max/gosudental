@@ -121,7 +121,9 @@ export function tourPage() {
   )
 }
 
-export function pricingPage() {
+// groups: 관리자 편집기 저장 시 DB(공개 항목만)에서 로드해 전달. 없으면 하드코딩 PRICING 시드로 폴백.
+export function pricingPage(groups?: { category: string; items: { name: string; price: string; note: string }[] }[]) {
+  const list = (groups && groups.length) ? groups : PRICING
   const content = html`
 <section class="page-hero" id="pricing-hero">
   <div class="section-inner">
@@ -134,7 +136,7 @@ export function pricingPage() {
 
 <section class="section" id="pricing-table-section" style="padding-top:30px">
   <div class="section-narrow">
-    ${PRICING.map((cat) => html`
+    ${list.map((cat) => html`
     <div class="reveal">
       <h2 style="font-size:22px;font-weight:800;color:var(--brand-dark);margin:36px 0 6px">${cat.category}</h2>
       <table class="price-table">

@@ -22,6 +22,7 @@ function adminShell(active: string, title: string, body: any) {
     <a href="/admin/cases" class="${active === 'cases' ? 'active' : ''}"><i class="fas fa-images" style="width:20px"></i> 비포&애프터</a>
     <a href="/admin/posts" class="${active === 'posts' ? 'active' : ''}"><i class="fas fa-pen-nib" style="width:20px"></i> 원장 칼럼</a>
     <a href="/admin/notices" class="${active === 'notices' ? 'active' : ''}"><i class="fas fa-bullhorn" style="width:20px"></i> 공지사항</a>
+    <a href="/admin/fees" class="${active === 'fees' ? 'active' : ''}"><i class="fas fa-won-sign" style="width:20px"></i> 비급여 수가</a>
     <a href="/admin/users" class="${active === 'users' ? 'active' : ''}"><i class="fas fa-users" style="width:20px"></i> 회원 관리</a>
     <a href="/admin/reservations" class="${active === 'resv' ? 'active' : ''}"><i class="fas fa-calendar-check" style="width:20px"></i> 예약 관리</a>
     <a href="/" style="margin-top:20px;opacity:0.6"><i class="fas fa-arrow-up-right-from-square" style="width:20px"></i> 사이트 보기</a>
@@ -352,5 +353,73 @@ document.getElementById('notice-form').addEventListener('submit', async (e) => {
   const d = await res.json();
   if (d.ok) { alert('등록되었습니다.'); location.reload(); } else alert(d.error || '오류');
 });
+</script>`)
+}
+
+export function adminFeesPage(groups: { category: string; items: { name: string; price: string; note: string; is_published?: number }[] }[]) {
+  const dataJson = raw(JSON.stringify(groups || []))
+  return adminShell('fees', '비급여 수가', html`
+<h1>비급여 진료비(수가) 관리</h1>
+<p style="color:var(--ink-mute);margin:-6px 0 18px;font-size:14px">
+  분류·항목·금액을 직접 편집할 수 있습니다. 각 항목의 <strong>공개</strong> 체크를 끄면 비용 안내 페이지에서 숨겨지고, 저장 시 반영됩니다.
+  <br>모든 항목이 비공개인 분류는 페이지에 표시되지 않습니다.
+</p>
+
+<div class="admin-card">
+  <div id="fees-editor"></div>
+  <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap">
+    <button type="button" class="admin-btn ghost" onclick="addGroup()"><i class="fas fa-plus"></i> 분류 추가</button>
+    <button type="button" class="admin-btn" id="fees-save" style="padding:10px 28px" onclick="saveFees()"><i class="fas fa-floppy-disk"></i> 저장</button>
+  </div>
+</div>
+
+<script>
+var FEES = ${dataJson};
+
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+function render(){
+  var root = document.getElementById('fees-editor');
+  if(!FEES.length){ root.innerHTML = '<p style="color:var(--ink-mute)">항목이 없습니다. \\'분류 추가\\'로 시작하세요.</p>'; return; }
+  var h = '';
+  FEES.forEach(function(g, gi){
+    h += '<div style="border:1px solid var(--line,#e5e7eb);border-radius:12px;padding:16px;margin-bottom:18px">';
+    h += '<div style="display:flex;gap:10px;align-items:center;margin-bottom:12px">';
+    h += '<input class="form-control" style="font-weight:800;font-size:16px;max-width:340px" value="'+esc(g.category)+'" oninput="FEES['+gi+'].category=this.value" placeholder="분류명 (예: 임플란트)">';
+    h += '<button type="button" class="admin-btn danger" onclick="delGroup('+gi+')" style="margin-left:auto">분류 삭제</button>';
+    h += '</div>';
+    h += '<table class="admin-table"><thead><tr><th style="width:36%">항목</th><th style="width:22%">비용</th><th>비고</th><th style="width:70px;text-align:center">공개</th><th style="width:60px"></th></tr></thead><tbody>';
+    g.items.forEach(function(it, ii){
+      var checked = (it.is_published===0||it.is_published===false)?'':'checked';
+      h += '<tr'+((it.is_published===0||it.is_published===false)?' style="opacity:.5"':'')+'>';
+      h += '<td><input class="form-control" value="'+esc(it.name)+'" oninput="FEES['+gi+'].items['+ii+'].name=this.value" placeholder="항목명"></td>';
+      h += '<td><input class="form-control" value="'+esc(it.price)+'" oninput="FEES['+gi+'].items['+ii+'].price=this.value" placeholder="예: 500,000원"></td>';
+      h += '<td><input class="form-control" value="'+esc(it.note)+'" oninput="FEES['+gi+'].items['+ii+'].note=this.value" placeholder="비고 (선택)"></td>';
+      h += '<td style="text-align:center"><input type="checkbox" '+checked+' onchange="FEES['+gi+'].items['+ii+'].is_published=this.checked?1:0;render()"></td>';
+      h += '<td><button type="button" class="admin-btn danger" onclick="delItem('+gi+','+ii+')">삭제</button></td>';
+      h += '</tr>';
+    });
+    h += '</tbody></table>';
+    h += '<button type="button" class="admin-btn ghost" style="margin-top:10px" onclick="addItem('+gi+')"><i class="fas fa-plus"></i> 항목 추가</button>';
+    h += '</div>';
+  });
+  root.innerHTML = h;
+}
+function addGroup(){ FEES.push({category:'새 분류', items:[{name:'',price:'',note:'',is_published:1}]}); render(); }
+function delGroup(gi){ if(confirm('이 분류 전체를 삭제하시겠습니까?')){ FEES.splice(gi,1); render(); } }
+function addItem(gi){ FEES[gi].items.push({name:'',price:'',note:'',is_published:1}); render(); }
+function delItem(gi,ii){ FEES[gi].items.splice(ii,1); render(); }
+async function saveFees(){
+  var btn = document.getElementById('fees-save');
+  btn.disabled = true; var t = btn.innerHTML; btn.textContent = '저장 중...';
+  try {
+    var res = await fetch('/api/admin/fees', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({groups:FEES}) });
+    var d = await res.json();
+    if (d.ok) { alert('저장되었습니다. (항목 '+d.count+'개)'); location.reload(); }
+    else alert(d.error || '저장 오류');
+  } catch(e){ alert('네트워크 오류'); }
+  btn.disabled = false; btn.innerHTML = t;
+}
+render();
 </script>`)
 }
