@@ -106,6 +106,7 @@ export function Layout(meta: PageMeta, content: any) {
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.2/css/all.min.css">
 <link rel="stylesheet" href="/static/style.css">
 ${raw(schemas.map((s) => `<script type="application/ld+json">${JSON.stringify(s)}</script>`).join('\n'))}
+<script>(function(c,l,a,r,i,t,y){c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);})(window,document,"clarity","script","yenfpw6ija");</script>
 <script defer src="https://pf-dashboard-2nt.pages.dev/beacon.js"></script>
 </head>
 <body class="${meta.bodyClass || ''}">
