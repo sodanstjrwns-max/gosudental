@@ -69,6 +69,7 @@ export function Layout(meta: PageMeta, content: any) {
 <head>
 <meta charset="UTF-8">
 <meta name="naver-site-verification" content="3dced265737138ff84d1265491e0110e1d417508" />
+<meta name="google-site-verification" content="vTQdyiFJBIlYhAgXmWvevyqeQDwJfqbIvK3bHGK5seY" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>${meta.title}</title>
 <meta name="description" content="${meta.description}">
