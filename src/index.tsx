@@ -23,8 +23,9 @@ import { loginPage, registerPage, mypagePage, privacyPage, termsPage, notFoundPa
 import { areaPage } from './pages/area'
 import {
   adminLoginPage, adminDashPage, adminUsersPage, adminReservationsPage,
-  adminCasesPage, adminPostsPage, adminNoticesPage, adminFeesPage,
+  adminCasesPage, adminPostsPage, adminNoticesPage, adminFeesPage, adminStatsPage,
 } from './pages/admin'
+import { AdminStats, fetchSiteStats, STATS_TOKEN, MASTER_KEY } from './pages/stats'
 
 const app = new Hono<{ Bindings: Bindings }>()
 
@@ -331,6 +332,21 @@ app.post('/api/reservation', async (c) => {
   }
 })
 
+// 중앙 대시보드 실예약 집계 — 최근 28일 vs 직전 28일 (created_at 은 UTC CURRENT_TIMESTAMP)
+app.get('/api/local-stats', async (c) => {
+  const key = c.req.query('key') || ''
+  if (key !== STATS_TOKEN && key !== MASTER_KEY) return c.notFound()
+  try {
+    const row = await c.env.DB.prepare(
+      `SELECT
+         SUM(CASE WHEN created_at >= datetime('now','-28 days') THEN 1 ELSE 0 END) AS cur,
+         SUM(CASE WHEN created_at >= datetime('now','-56 days') AND created_at < datetime('now','-28 days') THEN 1 ELSE 0 END) AS prev
+       FROM reservations`
+    ).first<{ cur: number | null; prev: number | null }>()
+    const cur = Number(row?.cur ?? 0), prev = Number(row?.prev ?? 0)
+    return c.json({ supported: true, tables: [{ name: 'reservations', cur, prev }], total: { cur, prev } })
+  } catch { return c.json({ supported: false }) }
+})
 app.get('/api/regions', (c) => c.json(REGION_DB))
 
 // 케이스 사진 서빙 (R2) — after 사진은 로그인 회원 전용 (의료법)
@@ -401,10 +417,16 @@ app.post('/api/admin/logout', (c) => {
   return c.json(ok())
 })
 
+// 통합 통계 키 접근 (세션 없이 ?key= 로 열람 허용)
+const statsKeyOk = (c: any) => {
+  const key = c.req.query('key') || ''
+  return key === STATS_TOKEN || key === MASTER_KEY
+}
 // 관리자 페이지 가드 (login 제외 전체)
 app.use('/admin/*', async (c, next) => {
   const p = new URL(c.req.url).pathname
   if (p === '/admin/login') return next()
+  if (p === '/admin/stats') return next() // 통계는 라우트에서 자체 인증(미인증 시 404)
   if (!(await getAdmin(c))) return c.redirect('/admin/login')
   await next()
 })
@@ -460,6 +482,12 @@ app.get('/admin/notices', async (c) => {
 app.get('/admin/fees', async (c) => {
   const groups = await loadFeeGroupsForAdmin(c.env.DB)
   return c.html(adminFeesPage(groups))
+})
+// 통합 통계 — 관리자 세션 또는 ?key=(사이트 토큰/마스터키) 로만 열람, 그 외 404
+app.get('/admin/stats', async (c) => {
+  if (!(await getAdmin(c)) && !statsKeyOk(c)) return c.notFound()
+  const data = await fetchSiteStats()
+  return c.html(adminStatsPage(AdminStats(data)))
 })
 
 // ── 관리자 CRUD API ──

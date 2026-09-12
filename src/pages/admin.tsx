@@ -25,6 +25,7 @@ function adminShell(active: string, title: string, body: any) {
     <a href="/admin/fees" class="${active === 'fees' ? 'active' : ''}"><i class="fas fa-won-sign" style="width:20px"></i> 비급여 수가</a>
     <a href="/admin/users" class="${active === 'users' ? 'active' : ''}"><i class="fas fa-users" style="width:20px"></i> 회원 관리</a>
     <a href="/admin/reservations" class="${active === 'resv' ? 'active' : ''}"><i class="fas fa-calendar-check" style="width:20px"></i> 예약 관리</a>
+    <a href="/admin/stats" class="${active === 'stats' ? 'active' : ''}"><i class="fas fa-chart-line" style="width:20px"></i> 통합 통계</a>
     <a href="/" style="margin-top:20px;opacity:0.6"><i class="fas fa-arrow-up-right-from-square" style="width:20px"></i> 사이트 보기</a>
     <a href="#" onclick="fetch('/api/admin/logout',{method:'POST'}).then(()=>location.href='/admin/login')" style="opacity:0.6"><i class="fas fa-right-from-bracket" style="width:20px"></i> 로그아웃</a>
   </aside>
@@ -422,4 +423,9 @@ async function saveFees(){
 }
 render();
 </script>`)
+}
+
+// 통합 통계 (중앙 대시보드 연동) — 본문은 pages/stats.ts 의 AdminStats 가 생성
+export function adminStatsPage(body: any) {
+  return adminShell('stats', '통합 통계', body)
 }
