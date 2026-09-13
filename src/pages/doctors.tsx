@@ -1,6 +1,6 @@
 import { html } from 'hono/html'
 import { Layout, breadcrumbSchema } from '../layout'
-import { PHOTOS, CHO_PORTRAITS, CHO_LIFE } from '../data/photos'
+import { PHOTOS, CHO_LIFE } from '../data/photos'
 import { photoFigure, photoGallery } from '../photo-gallery'
 import { SITE, DOCTORS, TREATMENTS } from '../data/site'
 
@@ -94,16 +94,6 @@ export function doctorDetailPage(slug: string, cases: any[]) {
     </div>
   </div>
 </section>
-
-${slug === 'cho-wonik' ? html`
-<section class="section" id="doctor-portraits">
-  <div class="section-inner">
-    <p class="eyebrow">Portraits of Wonik</p>
-    <h2 class="h-display">사진으로 만나는 <em>조원익 원장</em></h2>
-    <p class="lead">한 장의 프로필 너머, 조원익 원장의 여러 모습을 담았습니다. 사진을 누르면 전체 화면으로 볼 수 있습니다.</p>
-    ${photoGallery(CHO_PORTRAITS, 'cho-portraits', 'portrait-gallery')}
-  </div>
-</section>` : ''}
 
 <section class="section" id="doctor-career-section" style="padding-top:60px">
   <div class="section-inner">

@@ -148,5 +148,4 @@ export const PHOTOS: Record<number, ClinicPhoto> = {
   }
 }
 
-export const CHO_PORTRAITS = [15, 13, 11, 8, 14].map(id => PHOTOS[id])
 export const CHO_LIFE = [3, 4, 5, 9, 10, 7, 6].map(id => PHOTOS[id])

@@ -26,11 +26,13 @@ test('all supplied portraits and sixteen distinct photos are used', async ({ pag
   for (const src of photos) expect((await page.request.get(base + src)).status()).toBe(200)
 })
 
-test('Cho portraits and lifestyle galleries open, navigate and restore keyboard focus', async ({ page }) => {
+test('duplicate portrait section is removed; lifestyle gallery remains functional', async ({ page }) => {
   const errors: string[] = []
   page.on('pageerror', error => errors.push(error.message))
   await page.goto(base + '/doctors/cho-wonik')
-  await expect(page.locator('[data-photo-group="cho-portraits"]')).toHaveCount(5)
+  await expect(page.locator('#doctor-portraits')).toHaveCount(0)
+  await expect(page.locator('[data-photo-group="cho-portraits"]')).toHaveCount(0)
+  await expect(page.locator('#doctor-hero + #doctor-career-section')).toHaveCount(1)
   await expect(page.locator('[data-photo-group="cho-life"]')).toHaveCount(7)
   const first = page.locator('[data-photo-group="cho-life"]').first()
   await first.click()
