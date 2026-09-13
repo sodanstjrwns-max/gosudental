@@ -12,7 +12,7 @@ function adminShell(active: string, title: string, body: any) {
 <meta name="robots" content="noindex,nofollow">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.2/css/all.min.css">
-<link rel="stylesheet" href="/static/style.css">
+<link rel="stylesheet" href="/static/style.css?v=20260913-1">
 </head>
 <body>
 <div class="admin-shell">
@@ -29,6 +29,7 @@ function adminShell(active: string, title: string, body: any) {
   </aside>
   <main class="admin-main">${body}</main>
 </div>
+<script src="/static/admin.js?v=20260913-1" defer></script>
 </body>
 </html>`
 }
@@ -41,7 +42,7 @@ export function adminLoginPage() {
 <title>관리자 로그인 — 고수치과</title>
 <meta name="robots" content="noindex,nofollow">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
-<link rel="stylesheet" href="/static/style.css">
+<link rel="stylesheet" href="/static/style.css?v=20260913-1">
 </head>
 <body style="background:var(--brand-mist)">
 <section style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px">
@@ -88,7 +89,7 @@ export function adminUsersPage(users: any[]) {
         <td>${u.id}</td><td>${u.name}</td><td>${u.email}</td><td>${u.phone}</td>
         <td>${u.marketing_consent ? '✅' : '—'}</td>
         <td>${(u.created_at || '').slice(0, 10)}</td>
-        <td><button class="admin-btn danger" onclick="if(confirm('삭제하시겠습니까?'))fetch('/api/admin/users/${u.id}',{method:'DELETE'}).then(()=>location.reload())">삭제</button></td>
+        <td><button class="admin-btn danger" data-delete="users" data-id="${u.id}">삭제</button></td>
       </tr>`)}
     </tbody>
   </table>
@@ -107,7 +108,7 @@ export function adminReservationsPage(items: any[]) {
         <td>${r.id}</td><td>${r.name}</td><td>${r.phone}</td><td>${r.category || '—'}</td>
         <td>${r.preferred_at || '—'}</td><td style="max-width:200px">${r.message || '—'}</td>
         <td>
-          <select onchange="fetch('/api/admin/reservations/${r.id}',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({status:this.value})})">
+          <select data-reservation="${r.id}" data-previous="${r.status}">
             <option value="pending" ${r.status === 'pending' ? 'selected' : ''}>대기</option>
             <option value="confirmed" ${r.status === 'confirmed' ? 'selected' : ''}>확정</option>
             <option value="done" ${r.status === 'done' ? 'selected' : ''}>완료</option>
@@ -126,7 +127,9 @@ export function adminCasesPage(cases: any[]) {
 <h1>비포&애프터 관리</h1>
 <div class="admin-card">
   <h2 style="font-size:17px;font-weight:800;margin-bottom:18px;color:var(--brand-dark)">새 케이스 등록</h2>
-  <form id="case-form">
+  <form id="case-form" data-content-kind="cases">
+    <div class="admin-edit-actions"><strong class="edit-heading">새 콘텐츠 작성</strong><button class="admin-btn ghost cancel-edit" type="button" hidden>수정 취소 / 새로 작성</button></div>
+    <p class="edit-status" role="status" aria-live="polite"></p>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
       <div class="form-group"><label>제목 *</label><input class="form-control" name="title" required placeholder="예: 상실된 어금니, 임플란트로 저작 기능 회복"></div>
       <div class="form-group"><label>진료 카테고리 *</label>
@@ -153,11 +156,13 @@ export function adminCasesPage(cases: any[]) {
     </div>
     <div class="form-group"><label>케이스 설명</label><textarea class="form-control" name="description" placeholder="치료 과정과 결과를 설명해주세요 (SEO에 반영됩니다)"></textarea></div>
     <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px">
-      <div class="form-group"><label>파노라마 전</label><input class="form-control" type="file" name="pano_before" accept="image/*"></div>
-      <div class="form-group"><label>파노라마 후</label><input class="form-control" type="file" name="pano_after" accept="image/*"></div>
-      <div class="form-group"><label>구내포토 전</label><input class="form-control" type="file" name="photo_before" accept="image/*"></div>
-      <div class="form-group"><label>구내포토 후</label><input class="form-control" type="file" name="photo_after" accept="image/*"></div>
+      <div class="form-group"><label>파노라마 전</label><input class="form-control" type="file" name="pano_before" accept="image/jpeg,image/png,image/webp"><div data-preview="pano_before"></div><label class="form-check"><input type="checkbox" name="remove_pano_before"> 기존 이미지 삭제</label></div>
+      <div class="form-group"><label>파노라마 후</label><input class="form-control" type="file" name="pano_after" accept="image/jpeg,image/png,image/webp"><div data-preview="pano_after"></div><label class="form-check"><input type="checkbox" name="remove_pano_after"> 기존 이미지 삭제</label></div>
+      <div class="form-group"><label>구내포토 전</label><input class="form-control" type="file" name="photo_before" accept="image/jpeg,image/png,image/webp"><div data-preview="photo_before"></div><label class="form-check"><input type="checkbox" name="remove_photo_before"> 기존 이미지 삭제</label></div>
+      <div class="form-group"><label>구내포토 후</label><input class="form-control" type="file" name="photo_after" accept="image/jpeg,image/png,image/webp"><div data-preview="photo_after"></div><label class="form-check"><input type="checkbox" name="remove_photo_after"> 기존 이미지 삭제</label></div>
     </div>
+    <div class="form-group"><label>공개 상태</label><select name="published" class="form-control"><option value="1">공개</option><option value="0">비공개</option></select></div>
+    <p>JPG·PNG·WebP, 한 장당 최대 5MB. 새 파일을 선택하지 않으면 기존 사진을 유지합니다.</p>
     <button type="submit" class="admin-btn" style="padding:12px 28px;font-size:15px">케이스 등록</button>
   </form>
 </div>
@@ -174,29 +179,14 @@ export function adminCasesPage(cases: any[]) {
         <td>${c.category}</td><td>${c.region || '—'}</td>
         <td>${(DOCTORS.find((d) => d.slug === c.doctor_slug) || {}).name || '—'}</td>
         <td>${c.views}</td><td>${(c.created_at || '').slice(0, 10)}</td>
-        <td><button class="admin-btn danger" onclick="if(confirm('삭제하시겠습니까?'))fetch('/api/admin/cases/${c.id}',{method:'DELETE'}).then(()=>location.reload())">삭제</button></td>
+        <td><button class="admin-btn ghost" type="button" data-edit="cases" data-id="${c.id}">수정</button> <button class="admin-btn danger" data-delete="cases" data-id="${c.id}">삭제</button></td>
       </tr>`)}
     </tbody>
   </table>
 </div>
 
-<script src="/static/app.js"></script>
-<script>
-document.getElementById('case-form').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const form = e.target;
-  const fd = new FormData(form);
-  const btn = form.querySelector('[type=submit]');
-  btn.disabled = true; btn.textContent = '업로드 중...';
-  try {
-    const res = await fetch('/api/admin/cases', { method: 'POST', body: fd });
-    const d = await res.json();
-    if (d.ok) { alert('등록되었습니다.'); location.reload(); }
-    else alert(d.error || '오류가 발생했습니다.');
-  } catch (err) { alert('네트워크 오류'); }
-  btn.disabled = false; btn.textContent = '케이스 등록';
-});
-</script>`)
+<script src="/static/app.js?v=20260913-1"></script>
+`)
 }
 
 const EDITOR_SCRIPT = raw(`<script>
@@ -206,14 +196,14 @@ async function uploadImage(file) {
   const fd = new FormData(); fd.append('image', file);
   const res = await fetch('/api/admin/upload', { method: 'POST', body: fd });
   const d = await res.json();
+  if (!res.ok || !d.ok) throw new Error(d.error || '이미지 업로드 실패');
   return d.url;
 }
 async function pickImage() {
   const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*';
   inp.onchange = async () => {
     if (!inp.files[0]) return;
-    const url = await uploadImage(inp.files[0]);
-    if (url) document.execCommand('insertImage', false, url);
+    try { const url = await uploadImage(inp.files[0]); if (url) document.execCommand('insertImage', false, url); } catch (e) { alert(e.message); }
   };
   inp.click();
 }
@@ -226,8 +216,7 @@ document.addEventListener('DOMContentLoaded', () => {
     e.preventDefault(); ed.classList.remove('dragover');
     const file = e.dataTransfer.files[0];
     if (file && file.type.startsWith('image/')) {
-      const url = await uploadImage(file);
-      if (url) document.execCommand('insertImage', false, url);
+      try { const url = await uploadImage(file); if (url) document.execCommand('insertImage', false, url); } catch (e) { alert(e.message); }
     }
   });
 });
@@ -238,7 +227,9 @@ export function adminPostsPage(posts: any[]) {
 <h1>원장 칼럼 관리</h1>
 <div class="admin-card">
   <h2 style="font-size:17px;font-weight:800;margin-bottom:18px;color:var(--brand-dark)">새 칼럼 작성</h2>
-  <form id="post-form">
+  <form id="post-form" data-content-kind="posts">
+    <div class="admin-edit-actions"><strong class="edit-heading">새 콘텐츠 작성</strong><button class="admin-btn ghost cancel-edit" type="button" hidden>수정 취소 / 새로 작성</button></div>
+    <p class="edit-status" role="status" aria-live="polite"></p>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
       <div class="form-group"><label>제목 *</label><input class="form-control" name="title" required></div>
       <div class="form-group"><label>슬러그 (URL) *</label><input class="form-control" name="slug" required placeholder="예: implant-care-guide (영문·숫자·하이픈)"></div>
@@ -270,6 +261,7 @@ export function adminPostsPage(posts: any[]) {
       </div>
       <div id="editor" class="editor-area" contenteditable="true"></div>
     </div>
+    <div class="form-group"><label>공개 상태</label><select name="published" class="form-control"><option value="1">공개</option><option value="0">비공개</option></select></div>
     <button type="submit" class="admin-btn" style="padding:12px 28px;font-size:15px">칼럼 발행</button>
   </form>
 </div>
@@ -285,28 +277,14 @@ export function adminPostsPage(posts: any[]) {
         <td><a href="/column/${p.slug}" target="_blank" style="color:var(--brand);font-weight:600">${p.title}</a></td>
         <td>${(DOCTORS.find((d) => d.slug === p.author_slug) || {}).name || '—'}</td>
         <td>${p.views}</td><td>${(p.created_at || '').slice(0, 10)}</td>
-        <td><button class="admin-btn danger" onclick="if(confirm('삭제하시겠습니까?'))fetch('/api/admin/posts/${p.id}',{method:'DELETE'}).then(()=>location.reload())">삭제</button></td>
+        <td><button class="admin-btn ghost" type="button" data-edit="posts" data-id="${p.id}">수정</button> <button class="admin-btn danger" data-delete="posts" data-id="${p.id}">삭제</button></td>
       </tr>`)}
     </tbody>
   </table>
 </div>
 
 ${EDITOR_SCRIPT}
-<script>
-document.getElementById('post-form').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const form = e.target;
-  const body = {
-    title: form.title.value, slug: form.slug.value, author_slug: form.author_slug.value,
-    category: form.category.value, meta_description: form.meta_description.value,
-    content: document.getElementById('editor').innerHTML,
-  };
-  if (!body.content || body.content === '<br>') return alert('본문을 입력해주세요.');
-  const res = await fetch('/api/admin/posts', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-  const d = await res.json();
-  if (d.ok) { alert('발행되었습니다.'); location.reload(); } else alert(d.error || '오류');
-});
-</script>`)
+`)
 }
 
 export function adminNoticesPage(notices: any[]) {
@@ -314,11 +292,13 @@ export function adminNoticesPage(notices: any[]) {
 <h1>공지사항 관리</h1>
 <div class="admin-card">
   <h2 style="font-size:17px;font-weight:800;margin-bottom:18px;color:var(--brand-dark)">새 공지 작성</h2>
-  <form id="notice-form">
+  <form id="notice-form" data-content-kind="notices">
+    <div class="admin-edit-actions"><strong class="edit-heading">새 콘텐츠 작성</strong><button class="admin-btn ghost cancel-edit" type="button" hidden>수정 취소 / 새로 작성</button></div>
+    <p class="edit-status" role="status" aria-live="polite"></p>
     <div class="form-group"><label>제목 *</label><input class="form-control" name="title" required></div>
     <div class="form-group"><label>내용 *</label><textarea class="form-control" name="content" required></textarea></div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:end">
-      <div class="form-group"><label>이미지 (선택)</label><input class="form-control" type="file" name="image" accept="image/*"></div>
+      <div class="form-group"><label>이미지 (선택)</label><input class="form-control" type="file" name="image" accept="image/jpeg,image/png,image/webp"><div data-preview="image"></div><label class="form-check"><input type="checkbox" name="remove_image"> 기존 이미지 삭제</label></div>
       <label class="form-check" style="margin-bottom:22px"><input type="checkbox" name="pinned"> <span><strong>대표 공지로 상단 고정</strong></span></label>
     </div>
     <button type="submit" class="admin-btn" style="padding:12px 28px;font-size:15px">공지 등록</button>
@@ -336,21 +316,14 @@ export function adminNoticesPage(notices: any[]) {
         <td><a href="/notice/${n.id}" target="_blank" style="color:var(--brand);font-weight:600">${n.title}</a></td>
         <td>${n.pinned ? '📌' : '—'}</td><td>${n.views}</td><td>${(n.created_at || '').slice(0, 10)}</td>
         <td>
-          <button class="admin-btn ghost" onclick="fetch('/api/admin/notices/${n.id}',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({pinned:${n.pinned ? 0 : 1}})}).then(()=>location.reload())">${n.pinned ? '고정 해제' : '고정'}</button>
-          <button class="admin-btn danger" onclick="if(confirm('삭제하시겠습니까?'))fetch('/api/admin/notices/${n.id}',{method:'DELETE'}).then(()=>location.reload())">삭제</button>
+          <button class="admin-btn ghost" type="button" data-edit="notices" data-id="${n.id}">수정</button>
+          <button class="admin-btn ghost" data-pin="${n.id}" data-value="${n.pinned ? 0 : 1}">${n.pinned ? '고정 해제' : '고정'}</button>
+          <button class="admin-btn danger" data-delete="notices" data-id="${n.id}">삭제</button>
         </td>
       </tr>`)}
     </tbody>
   </table>
 </div>
 
-<script>
-document.getElementById('notice-form').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const fd = new FormData(e.target);
-  const res = await fetch('/api/admin/notices', { method: 'POST', body: fd });
-  const d = await res.json();
-  if (d.ok) { alert('등록되었습니다.'); location.reload(); } else alert(d.error || '오류');
-});
-</script>`)
+`)
 }

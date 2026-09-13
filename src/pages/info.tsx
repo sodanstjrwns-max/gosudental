@@ -1,6 +1,6 @@
 import { html } from 'hono/html'
 import { Layout, breadcrumbSchema, faqSchema } from '../layout'
-import { SITE, TREATMENTS, PRICING } from '../data/site'
+import { SITE, TREATMENTS, PRICING, PRICING_NOTICE } from '../data/site'
 
 export function directionsPage() {
   const lbSchema = {
@@ -128,22 +128,24 @@ export function pricingPage() {
     <nav class="breadcrumb"><a href="/">홈</a> / <span>비용 안내</span></nav>
     <p class="eyebrow">Pricing</p>
     <h1 class="h-display">비급여 진료비 <em>안내</em></h1>
-    <p class="lead">의료법 제45조 및 관련 고시에 따라 비급여 진료비용을 고지합니다. 정확한 비용은 개원 시 확정하여 게시하며, 진단 후 치료 계획과 함께 상세히 안내드립니다.</p>
+    <p class="lead">주요 진료비용을 안내드립니다. 현재 개원 준비 중인 잠정 수가이며, 진단 후 치료 계획과 함께 최종 비용을 설명드립니다.</p>
   </div>
 </section>
 
 <section class="section" id="pricing-table-section" style="padding-top:30px">
   <div class="section-narrow">
+    <div class="alert info" id="pricing-status">${PRICING_NOTICE}</div>
     ${PRICING.map((cat) => html`
     <div class="reveal">
       <h2 style="font-size:22px;font-weight:800;color:var(--brand-dark);margin:36px 0 6px">${cat.category}</h2>
-      <table class="price-table">
+      <table class="price-table"><caption class="sr-only">${cat.category} 진료비용</caption>
         <thead><tr><th style="width:44%">항목</th><th>비용</th><th>비고</th></tr></thead>
         <tbody>
           ${cat.items.map((it) => html`<tr><td style="font-weight:600;color:var(--brand-dark)">${it.name}</td><td>${it.price}</td><td>${it.note}</td></tr>`)}
         </tbody>
       </table>
     </div>`)}
+    <p class="pricing-footnote">교정: 장치불량 발생 시 추가 비용 및 투명교정장치 분실 시 개당 비용은 확인 후 안내드립니다. 안티에이징 및 라미네이트는 원본에 따라 부가세 별도입니다.</p>
     <div class="alert warn reveal">비급여 진료비용은 부위·난이도·사용 재료에 따라 달라질 수 있으며, 반드시 사전에 충분한 설명과 동의를 거쳐 진행합니다. 최종 비용은 진단 후 안내드립니다.</div>
   </div>
 </section>`
@@ -255,7 +257,7 @@ export function reservationPage() {
         <textarea class="form-control" name="message" placeholder="궁금하신 점이나 현재 불편하신 점을 편하게 적어주세요. 치과 치료가 두려우신 분은 미리 말씀해 주시면 더 세심하게 준비하겠습니다."></textarea>
       </div>
       <label class="form-check">
-        <input type="checkbox" name="privacy" required>
+        <input type="checkbox" name="privacy_consent" required>
         <span>[필수] 개인정보 수집·이용에 동의합니다. (수집 항목: 성함·연락처·이메일 / 목적: 상담 예약 응대 / 보유 기간: 목적 달성 후 파기)</span>
       </label>
       <button type="submit" class="btn-submit">예약 신청하기</button>

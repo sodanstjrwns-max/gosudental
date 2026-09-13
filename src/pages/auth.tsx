@@ -58,11 +58,11 @@ export function registerPage() {
         <input class="form-control" name="password" type="password" required minlength="8" placeholder="8자 이상" autocomplete="new-password">
       </div>
       <label class="form-check">
-        <input type="checkbox" name="privacy" required>
+        <input type="checkbox" name="privacy_consent" required>
         <span>[필수] 개인정보 수집·이용에 동의합니다. (항목: 이름·이메일·전화번호 / 목적: 회원제 콘텐츠 제공·본인 확인 / 보유: 탈퇴 시까지) <a href="/privacy" target="_blank" style="color:var(--brand);font-weight:600">전문 보기</a></span>
       </label>
       <label class="form-check">
-        <input type="checkbox" name="marketing">
+        <input type="checkbox" name="marketing_consent">
         <span>[선택] 마케팅 정보 수신(이벤트·건강 정보 안내)에 동의합니다.</span>
       </label>
       <button type="submit" class="btn-submit">가입하기</button>

@@ -1,4 +1,5 @@
 import { html, raw } from 'hono/html'
+import { safeJson } from './security'
 import { SITE, TREATMENTS, DOCTORS } from './data/site'
 
 export interface PageMeta {
@@ -104,8 +105,8 @@ export function Layout(meta: PageMeta, content: any) {
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-tc-webfont@1.2.0/lxgwwenkaitc-bold.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.2/css/all.min.css">
-<link rel="stylesheet" href="/static/style.css">
-${raw(schemas.map((s) => `<script type="application/ld+json">${JSON.stringify(s)}</script>`).join('\n'))}
+<link rel="stylesheet" href="/static/style.css?v=20260913-1">
+${raw(schemas.map((s) => `<script type="application/ld+json">${safeJson(s)}</script>`).join('\n'))}
 </head>
 <body class="${meta.bodyClass || ''}">
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
@@ -224,8 +225,8 @@ ${raw(schemas.map((s) => `<script type="application/ld+json">${JSON.stringify(s)
   <a href="/reservation" class="cta-res"><i class="fas fa-calendar-check" aria-hidden="true"></i> 상담 예약</a>
 </nav>
 
-<script src="/static/app.js" defer></script>
-<script src="/static/ink.js" defer></script>
+<script src="/static/app.js?v=20260913-1" defer></script>
+<script src="/static/ink.js?v=20260913-1" defer></script>
 </body>
 </html>`
 }

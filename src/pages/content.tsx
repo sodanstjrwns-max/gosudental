@@ -1,3 +1,4 @@
+import { sanitizeContent } from '../security'
 import { html, raw } from 'hono/html'
 import { Layout, breadcrumbSchema } from '../layout'
 import { SITE, TERMS, TREATMENTS, DOCTORS } from '../data/site'
@@ -80,7 +81,7 @@ export function columnDetailPage(post: any) {
 
 <section class="section" id="post-body-section" style="padding-top:20px">
   <div class="section-narrow">
-    <article class="prose">${raw(post.content)}</article>
+    <article class="prose">${raw(sanitizeContent(post.content))}</article>
 
     <div style="display:flex;gap:14px;margin-top:52px;flex-wrap:wrap">
       <a href="/doctors/${author.slug}" class="treat-sub" style="flex:1;min-width:240px">

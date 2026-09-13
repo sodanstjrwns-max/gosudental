@@ -3,12 +3,16 @@
 // Hono + Cloudflare Pages (D1 + R2)
 // ═══════════════════════════════════════════════
 import { Hono } from 'hono'
+import { bodyLimit } from 'hono/body-limit'
+import { HTTPException } from 'hono/http-exception'
+import { registerAdminAPI } from './admin-api'
+import { bad, text, passwordValue, emailValue, phoneValue, consent, jsonObject, rateLimit, clientIP } from './security'
 import { serveStatic } from 'hono/cloudflare-workers'
 import {
   type Bindings, getUser, getAdmin, setUserSession, setAdminSession,
-  clearSessions, hashPassword, verifyPassword, isBot,
+  clearSessions, hashPassword, verifyPassword, isBot, secretOf, constantTimePasswordMatch,
 } from './auth'
-import { SITE, DOCTORS, TREATMENTS, AREAS, REGION_DB, TERMS, PRICING, EQUIPMENT } from './data/site'
+import { SITE, DOCTORS, TREATMENTS, AREAS, REGION_DB, TERMS, PRICING, PRICING_NOTICE, EQUIPMENT } from './data/site'
 import { homePage } from './pages/home'
 import { missionPage } from './pages/mission'
 import { doctorsListPage, doctorDetailPage } from './pages/doctors'
@@ -27,6 +31,12 @@ import {
 } from './pages/admin'
 
 const app = new Hono<{ Bindings: Bindings }>()
+app.onError((error, c) => {
+  const status = error instanceof HTTPException ? error.status : 500
+  if (status === 500) console.error('Request failed:', c.req.method, c.req.path)
+  c.header('Cache-Control', 'no-store')
+  return c.json({ ok: false, error: status === 500 ? '처리 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.' : error.message }, status)
+})
 
 // 진료 slug → 케이스 카테고리 매핑
 const TREAT_CASE_CAT: Record<string, string> = {
@@ -48,11 +58,44 @@ app.use('*', async (c, next) => {
   c.header('X-Frame-Options', 'SAMEORIGIN')
   c.header('Referrer-Policy', 'strict-origin-when-cross-origin')
   const p = c.req.path
+  c.header('Cache-Control', 'no-store')
   if (p.startsWith('/admin') || p.startsWith('/api/')) {
     c.header('X-Robots-Tag', 'noindex, nofollow, noarchive')
     c.header('Cache-Control', 'no-store')
   }
 })
+
+// Same-origin writes and bounded request bodies, including multipart upload requests.
+app.use('/api/*', async (c, next) => {
+  if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(c.req.method)) {
+    if (c.req.header('origin') !== new URL(c.req.url).origin || c.req.header('sec-fetch-site') === 'cross-site')
+      throw new HTTPException(403, { message: '사이트 내에서 다시 요청해주세요.' })
+    const type = (c.req.header('content-type') || '').split(';')[0].trim()
+    if (c.req.method !== 'DELETE' && !c.req.path.endsWith('/logout') && !['application/json', 'multipart/form-data'].includes(type))
+      throw new HTTPException(415, { message: '지원하지 않는 요청 형식입니다.' })
+  }
+  await next()
+})
+app.use('/api/*', bodyLimit({ maxSize: 21 * 1024 * 1024, onError: c => c.json({ ok: false, error: '전체 업로드는 21MB 이하만 가능합니다.' }, 413) }))
+app.use('/api/*', async (c, next) => {
+  if (c.req.header('content-type')?.includes('application/json')) {
+    const maxSize = c.req.path.startsWith('/api/admin/posts') ? 256 * 1024 : 16 * 1024
+    return bodyLimit({ maxSize, onError: c => c.json({ ok: false, error: '입력 내용이 너무 큽니다.' }, 413) })(c, next)
+  }
+  await next()
+})
+for (const path of ['/api/auth/register', '/api/auth/login', '/api/admin/login']) {
+  app.use(path, async (c, next) => { secretOf(c); await next() })
+}
+for (const [path, limit, seconds] of [
+  ['/api/auth/login', 30, 900], ['/api/admin/login', 10, 900],
+  ['/api/auth/register', 10, 3600], ['/api/reservation', 10, 3600],
+] as const) {
+  app.use(path, async (c, next) => {
+    if (c.req.method === 'POST') await rateLimit(c, path, clientIP(c), limit, seconds)
+    await next()
+  })
+}
 
 // ── 유틸 ──────────────────────────────────────
 const ok = (data: object = {}) => ({ ok: true, ...data })
@@ -221,47 +264,34 @@ app.get('/api/auth/me', async (c) => {
 })
 
 app.post('/api/auth/register', async (c) => {
-  let body: any
-  try { body = await c.req.json() } catch { return c.json(err('잘못된 요청입니다.'), 400) }
-  const { name, email, phone, password, privacy_consent, marketing_consent } = body
-  if (!name || !email || !phone || !password) return c.json(err('필수 항목을 모두 입력해주세요.'), 400)
-  if (!privacy_consent || privacy_consent === 'false' || privacy_consent === false)
-    return c.json(err('개인정보 수집·이용 동의는 필수입니다.'), 400)
-  if (String(password).length < 8) return c.json(err('비밀번호는 8자 이상이어야 합니다.'), 400)
-  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(String(email))) return c.json(err('올바른 이메일 형식이 아닙니다.'), 400)
-  const digits = String(phone).replace(/\D/g, '')
-  if (digits.length < 10 || digits.length > 11) return c.json(err('올바른 전화번호를 입력해주세요.'), 400)
-  try {
-    const exists = await c.env.DB.prepare('SELECT id FROM users WHERE email = ?').bind(email).first()
-    if (exists) return c.json(err('이미 가입된 이메일입니다.'), 409)
-    const hash = await hashPassword(String(password))
-    const marketing = marketing_consent === true || marketing_consent === 'true' || marketing_consent === 'on' ? 1 : 0
-    const r = await c.env.DB.prepare(
-      'INSERT INTO users (email, phone, name, password_hash, privacy_consent, marketing_consent) VALUES (?, ?, ?, ?, 1, ?)'
-    ).bind(email, digits, name, hash, marketing).run()
-    await setUserSession(c, { id: Number(r.meta.last_row_id), name, email })
-    return c.json(ok({ redirect: '/auth/mypage', message: '가입이 완료되었습니다.' }))
-  } catch (e) {
-    return c.json(err('가입 처리 중 오류가 발생했습니다.'), 500)
-  }
+  const body = await jsonObject(c)
+  const name = text(body.name, '이름', 80, true)
+  const email = emailValue(body.email, true)
+  const phone = phoneValue(body.phone)
+  const password = passwordValue(body.password)
+  if (password.length < 8) bad('비밀번호는 8자 이상이어야 합니다.')
+  if (!consent(body.privacy_consent)) bad('개인정보 수집·이용 동의는 필수입니다.')
+  const exists = await c.env.DB.prepare('SELECT id FROM users WHERE lower(email) = ?').bind(email).first()
+  if (exists) return c.json(err('이미 가입된 이메일입니다.'), 409)
+  const hash = await hashPassword(password)
+  const r = await c.env.DB.prepare('INSERT INTO users (email, phone, name, password_hash, privacy_consent, marketing_consent) VALUES (?, ?, ?, ?, 1, ?)')
+    .bind(email, phone, name, hash, consent(body.marketing_consent) ? 1 : 0).run()
+  await setUserSession(c, { id: Number(r.meta.last_row_id), name, email })
+  return c.json(ok({ redirect: '/auth/mypage', message: '가입이 완료되었습니다.' }))
 })
 
 app.post('/api/auth/login', async (c) => {
-  let body: any
-  try { body = await c.req.json() } catch { return c.json(err('잘못된 요청입니다.'), 400) }
-  const { email, password } = body
-  if (!email || !password) return c.json(err('이메일과 비밀번호를 입력해주세요.'), 400)
-  try {
-    const user: any = await c.env.DB.prepare('SELECT id, name, email, password_hash FROM users WHERE email = ?').bind(email).first()
-    if (!user || !(await verifyPassword(String(password), user.password_hash)))
-      return c.json(err('이메일 또는 비밀번호가 올바르지 않습니다.'), 401)
-    await setUserSession(c, { id: user.id, name: user.name, email: user.email })
-    const next = c.req.query('next')
-    const redirect = next && next.startsWith('/') && !next.startsWith('//') ? next : '/auth/mypage'
-    return c.json(ok({ redirect }))
-  } catch {
-    return c.json(err('로그인 처리 중 오류가 발생했습니다.'), 500)
-  }
+  const body = await jsonObject(c)
+  const email = emailValue(body.email, true)
+  const password = passwordValue(body.password)
+  await rateLimit(c, 'login-email', email, 10)
+  const user: any = await c.env.DB.prepare('SELECT id, name, email, password_hash FROM users WHERE lower(email) = ?').bind(email).first()
+  const valid = user ? await verifyPassword(password, user.password_hash) : (await hashPassword(password), false)
+  if (!valid) return c.json(err('이메일 또는 비밀번호가 올바르지 않습니다.'), 401)
+  await setUserSession(c, { id: user.id, name: user.name, email: user.email })
+  const next = c.req.query('next')
+  const redirect = next && /^\/(?!\/)/.test(next) && !/[\\\x00-\x20]/.test(next) ? next : '/auth/mypage'
+  return c.json(ok({ redirect }))
 })
 
 app.post('/api/auth/logout', (c) => {
@@ -273,20 +303,18 @@ app.post('/api/auth/logout', (c) => {
 // 예약 / 공용 API
 // ═══════════════════════════════════════════════
 app.post('/api/reservation', async (c) => {
-  let body: any
-  try { body = await c.req.json() } catch { return c.json(err('잘못된 요청입니다.'), 400) }
-  const { name, phone, email, category, preferred_at, message, privacy_consent } = body
-  if (!name || !phone) return c.json(err('이름과 연락처를 입력해주세요.'), 400)
-  if (!privacy_consent || privacy_consent === false || privacy_consent === 'false')
-    return c.json(err('개인정보 수집·이용 동의가 필요합니다.'), 400)
-  try {
-    await c.env.DB.prepare(
-      'INSERT INTO reservations (name, phone, email, category, preferred_at, message) VALUES (?, ?, ?, ?, ?, ?)'
-    ).bind(name, String(phone).replace(/\D/g, ''), email || null, category || null, preferred_at || null, message || null).run()
-    return c.json(ok({ message: '상담 예약이 접수되었습니다. 개원 준비 기간에는 순차적으로 연락드립니다.' }))
-  } catch {
-    return c.json(err('예약 접수 중 오류가 발생했습니다.'), 500)
-  }
+  const body = await jsonObject(c)
+  const name = text(body.name, '이름', 80, true)
+  const phone = phoneValue(body.phone)
+  const email = emailValue(body.email)
+  const category = text(body.category, '진료', 60)
+  if (category && category !== '기타' && !TREATMENTS.some(t => t.name === category)) bad('올바른 진료를 선택해주세요.')
+  const preferred = text(body.preferred_at, '희망 일시', 100)
+  const message = text(body.message, '메시지', 3000)
+  if (!consent(body.privacy_consent)) bad('개인정보 수집·이용 동의가 필요합니다.')
+  await c.env.DB.prepare('INSERT INTO reservations (name, phone, email, category, preferred_at, message) VALUES (?, ?, ?, ?, ?, ?)')
+    .bind(name, phone, email || null, category || null, preferred || null, message || null).run()
+  return c.json(ok({ message: '상담 예약이 접수되었습니다. 개원 준비 기간에는 순차적으로 연락드립니다.' }))
 })
 
 app.get('/api/regions', (c) => c.json(REGION_DB))
@@ -303,8 +331,8 @@ app.get('/api/case-image/:id/:field', async (c) => {
     if (!user && !admin) return c.text('로그인 회원만 열람 가능합니다.', 403)
   }
   try {
-    const cs: any = await c.env.DB.prepare(`SELECT ${field} AS k FROM cases WHERE id = ?`).bind(id).first()
-    if (!cs || !cs.k) return c.notFound()
+    const cs: any = await c.env.DB.prepare(`SELECT ${field} AS k, published FROM cases WHERE id = ?`).bind(id).first()
+    if (!cs || !cs.k || (!cs.published && !(await getAdmin(c)))) return c.notFound()
     const obj = await c.env.R2.get(cs.k)
     if (!obj) return c.notFound()
     return new Response(obj.body as any, {
@@ -338,7 +366,7 @@ app.get('/api/uploads/:key{.+}', async (c) => {
 // ═══════════════════════════════════════════════
 // 관리자
 // ═══════════════════════════════════════════════
-const ADMIN_FALLBACK = 'gosu2026!admin'
+
 
 app.get('/admin/login', async (c) => {
   if (await getAdmin(c)) return c.redirect('/admin')
@@ -346,10 +374,11 @@ app.get('/admin/login', async (c) => {
 })
 
 app.post('/api/admin/login', async (c) => {
-  let body: any
-  try { body = await c.req.json() } catch { return c.json(err('잘못된 요청'), 400) }
-  const expected = c.env.ADMIN_PASSWORD || ADMIN_FALLBACK
-  if (body.password !== expected) return c.json(err('비밀번호가 올바르지 않습니다.'), 401)
+  const expected = c.env.ADMIN_PASSWORD
+  if (!expected || expected.length < 12) throw new HTTPException(503, { message: '관리자 인증 설정을 준비 중입니다.' })
+  const body = await jsonObject(c)
+  const password = passwordValue(body.password)
+  if (!(await constantTimePasswordMatch(password, expected))) return c.json(err('비밀번호가 올바르지 않습니다.'), 401)
   await setAdminSession(c)
   return c.json(ok())
 })
@@ -416,117 +445,8 @@ app.get('/admin/notices', async (c) => {
   return c.html(adminNoticesPage(r.results || []))
 })
 
-// ── 관리자 CRUD API ──
-async function putR2Image(c: any, file: File | null, prefix: string): Promise<string | null> {
-  if (!file || typeof file === 'string' || !file.size) return null
-  const ext = (file.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg'
-  const key = `${prefix}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`
-  await c.env.R2.put(key, await file.arrayBuffer(), {
-    httpMetadata: { contentType: file.type || 'image/jpeg' },
-  })
-  return key
-}
-
-app.post('/api/admin/cases', async (c) => {
-  const fd = await c.req.formData()
-  const title = String(fd.get('title') || '').trim()
-  const category = String(fd.get('category') || '').trim()
-  if (!title || !category) return c.json(err('제목과 카테고리는 필수입니다.'), 400)
-  const keys: Record<string, string | null> = {}
-  for (const f of ['pano_before', 'pano_after', 'photo_before', 'photo_after']) {
-    keys[f] = await putR2Image(c, fd.get(f) as File | null, 'cases')
-  }
-  await c.env.DB.prepare(
-    `INSERT INTO cases (title, description, age_group, gender, category, region, doctor_slug, duration, pano_before, pano_after, photo_before, photo_after)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
-  ).bind(
-    title, String(fd.get('description') || ''), String(fd.get('age_group') || ''), String(fd.get('gender') || ''),
-    category, String(fd.get('region') || ''), String(fd.get('doctor_slug') || ''), String(fd.get('duration') || ''),
-    keys.pano_before, keys.pano_after, keys.photo_before, keys.photo_after
-  ).run()
-  return c.json(ok())
-})
-
-app.delete('/api/admin/cases/:id', async (c) => {
-  const id = Number(c.req.param('id'))
-  const cs: any = await c.env.DB.prepare('SELECT pano_before, pano_after, photo_before, photo_after FROM cases WHERE id = ?').bind(id).first()
-  if (cs) {
-    for (const k of [cs.pano_before, cs.pano_after, cs.photo_before, cs.photo_after]) {
-      if (k) { try { await c.env.R2.delete(k) } catch { /* noop */ } }
-    }
-  }
-  await c.env.DB.prepare('DELETE FROM cases WHERE id = ?').bind(id).run()
-  return c.json(ok())
-})
-
-app.post('/api/admin/upload', async (c) => {
-  const fd = await c.req.formData()
-  const file = fd.get('image') as File | null
-  const key = await putR2Image(c, file, 'uploads')
-  if (!key) return c.json(err('이미지 파일이 필요합니다.'), 400)
-  return c.json(ok({ url: `/api/${key}` }))
-})
-
-app.post('/api/admin/posts', async (c) => {
-  let body: any
-  try { body = await c.req.json() } catch { return c.json(err('잘못된 요청'), 400) }
-  const { title, slug, content, author_slug, category, meta_description } = body
-  if (!title || !slug || !content) return c.json(err('제목·슬러그·본문은 필수입니다.'), 400)
-  if (!/^[a-z0-9-]+$/.test(slug)) return c.json(err('슬러그는 영문 소문자·숫자·하이픈만 가능합니다.'), 400)
-  const exists = await c.env.DB.prepare('SELECT id FROM posts WHERE slug = ?').bind(slug).first()
-  if (exists) return c.json(err('이미 사용 중인 슬러그입니다.'), 409)
-  // 본문 첫 이미지를 썸네일로
-  const m = String(content).match(/<img[^>]+src="([^"]+)"/)
-  await c.env.DB.prepare(
-    'INSERT INTO posts (slug, title, content, thumbnail, author_slug, meta_description, category) VALUES (?, ?, ?, ?, ?, ?, ?)'
-  ).bind(slug, title, content, m ? m[1] : null, author_slug || null, meta_description || null, category || null).run()
-  return c.json(ok())
-})
-
-app.delete('/api/admin/posts/:id', async (c) => {
-  await c.env.DB.prepare('DELETE FROM posts WHERE id = ?').bind(Number(c.req.param('id'))).run()
-  return c.json(ok())
-})
-
-app.post('/api/admin/notices', async (c) => {
-  const fd = await c.req.formData()
-  const title = String(fd.get('title') || '').trim()
-  const content = String(fd.get('content') || '').trim()
-  if (!title || !content) return c.json(err('제목과 내용은 필수입니다.'), 400)
-  const key = await putR2Image(c, fd.get('image') as File | null, 'uploads')
-  const pinned = fd.get('pinned') ? 1 : 0
-  if (pinned) await c.env.DB.prepare('UPDATE notices SET pinned = 0').run()
-  await c.env.DB.prepare('INSERT INTO notices (title, content, image, pinned) VALUES (?, ?, ?, ?)')
-    .bind(title, content, key ? `/api/${key}` : null, pinned).run()
-  return c.json(ok())
-})
-
-app.put('/api/admin/notices/:id', async (c) => {
-  const id = Number(c.req.param('id'))
-  let body: any
-  try { body = await c.req.json() } catch { return c.json(err('잘못된 요청'), 400) }
-  if (body.pinned === 1) await c.env.DB.prepare('UPDATE notices SET pinned = 0').run()
-  await c.env.DB.prepare('UPDATE notices SET pinned = ? WHERE id = ?').bind(body.pinned ? 1 : 0, id).run()
-  return c.json(ok())
-})
-
-app.delete('/api/admin/notices/:id', async (c) => {
-  await c.env.DB.prepare('DELETE FROM notices WHERE id = ?').bind(Number(c.req.param('id'))).run()
-  return c.json(ok())
-})
-
-app.delete('/api/admin/users/:id', async (c) => {
-  await c.env.DB.prepare('DELETE FROM users WHERE id = ?').bind(Number(c.req.param('id'))).run()
-  return c.json(ok())
-})
-
-app.put('/api/admin/reservations/:id', async (c) => {
-  let body: any
-  try { body = await c.req.json() } catch { return c.json(err('잘못된 요청'), 400) }
-  const status = ['pending', 'confirmed', 'done', 'canceled'].includes(body.status) ? body.status : 'pending'
-  await c.env.DB.prepare('UPDATE reservations SET status = ? WHERE id = ?').bind(status, Number(c.req.param('id'))).run()
-  return c.json(ok())
-})
+// 관리자 인증 가드 다음에 CRUD를 등록합니다.
+registerAdminAPI(app)
 
 // ═══════════════════════════════════════════════
 // SEO 파일: sitemap.xml / robots.txt / llms.txt
@@ -712,7 +632,8 @@ ${treatBlocks}
 
 ---
 
-## 비용 안내 (비급여)
+## 비용 안내 (잠정수가)
+${PRICING_NOTICE}
 ${priceBlocks}
 
 ---
@@ -723,7 +644,7 @@ ${termBlocks}
 ---
 
 ※ 의료광고 심의 기준 준수. 모든 시술은 부작용이 발생할 수 있으며 치료 결과는 개인에 따라 다를 수 있습니다. 정확한 진단은 내원 상담을 통해 받으시기 바랍니다.
-문서 기준일: 2026-09-02 · 출처: ${SITE.domain}
+문서 기준일: 2026-09-13 · 출처: ${SITE.domain}
 `)
 })
 

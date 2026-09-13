@@ -1,5 +1,6 @@
 // HMAC 서명 세션 + PBKDF2 비밀번호 해시 (Web Crypto)
 import type { Context } from 'hono'
+import { HTTPException } from 'hono/http-exception'
 import { getCookie, setCookie, deleteCookie } from 'hono/cookie'
 
 export type Bindings = {
@@ -38,14 +39,13 @@ export async function signToken(payload: object, secret: string, maxAgeSec: numb
 }
 
 export async function verifyToken(token: string, secret: string): Promise<any | null> {
-  const [body, sig] = token.split('.')
-  if (!body || !sig) return null
-  const key = await hmacKey(secret)
-  const ok = await crypto.subtle.verify('HMAC', key, b64urlDecode(sig) as unknown as ArrayBuffer, enc.encode(body))
-  if (!ok) return null
   try {
+    if (typeof token !== 'string' || token.length > 4096 || !/^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/.test(token)) return null
+    const [body, sig] = token.split('.')
+    const key = await hmacKey(secret)
+    if (!(await crypto.subtle.verify('HMAC', key, b64urlDecode(sig) as unknown as ArrayBuffer, enc.encode(body)))) return null
     const payload = JSON.parse(new TextDecoder().decode(b64urlDecode(body)))
-    if (payload.exp && payload.exp < Date.now()) return null
+    if (!payload || !Number.isFinite(payload.exp) || payload.exp <= Date.now()) return null
     return payload
   } catch { return null }
 }
@@ -61,27 +61,43 @@ export async function hashPassword(password: string, salt?: Uint8Array): Promise
 }
 
 export async function verifyPassword(password: string, stored: string): Promise<boolean> {
+  if (typeof stored !== 'string') return false
   const [saltB64] = stored.split('.')
   if (!saltB64) return false
   const rehash = await hashPassword(password, b64urlDecode(saltB64))
-  return rehash === stored
+  return constantEqual(rehash, stored)
 }
 
-const SECRET_FALLBACK = 'gosu-dental-dev-secret-key-2026-inpo'
+export async function constantTimePasswordMatch(a: string, b: string) {
+  const [x, y] = await Promise.all([a, b].map(s => crypto.subtle.digest('SHA-256', enc.encode(s))))
+  return constantEqual(b64url(x), b64url(y))
+}
+function constantEqual(a: string, b: string) {
+  if (a.length !== b.length) return false
+  let diff = 0
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i)
+  return diff === 0
+}
 export function secretOf(c: Context<{ Bindings: Bindings }>) {
-  return c.env.SESSION_SECRET || SECRET_FALLBACK
+  const secret = c.env.SESSION_SECRET
+  if (!secret || secret.length < 32) throw new HTTPException(503, { message: '인증 설정을 준비 중입니다. 관리자에게 문의해주세요.' })
+  return secret
 }
 
 export async function getUser(c: Context<{ Bindings: Bindings }>): Promise<{ id: number; name: string; email: string } | null> {
   const token = getCookie(c, 'gosu_session')
   if (!token) return null
+  if (!c.env.SESSION_SECRET || c.env.SESSION_SECRET.length < 32) return null
   const payload = await verifyToken(token, secretOf(c))
-  return payload && payload.t === 'user' ? payload : null
+  if (!payload || payload.t !== 'user' || !Number.isSafeInteger(payload.id) || payload.id < 1) return null
+  // A deleted member must immediately lose all access, including image endpoints.
+  return await c.env.DB.prepare('SELECT id, name, email FROM users WHERE id = ?').bind(payload.id).first<{ id: number; name: string; email: string }>()
 }
 
 export async function getAdmin(c: Context<{ Bindings: Bindings }>): Promise<boolean> {
   const token = getCookie(c, 'gosu_admin')
   if (!token) return false
+  if (!c.env.SESSION_SECRET || c.env.SESSION_SECRET.length < 32 || !c.env.ADMIN_PASSWORD || c.env.ADMIN_PASSWORD.length < 12) return false
   const payload = await verifyToken(token, secretOf(c))
   return !!payload && payload.t === 'admin'
 }

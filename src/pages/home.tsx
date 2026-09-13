@@ -122,7 +122,7 @@ export function homePage() {
       <a href="/doctors/${d.slug}" class="doctor-card reveal reveal-d${i + 1}">
         <div class="doctor-photo">
           <span class="badge">${d.role}</span>
-          <i class="fas fa-user-doctor" aria-hidden="true"></i>
+          ${d.photo ? html`<img src="${d.photo}" alt="${d.name} ${d.role} 프로필 사진" width="800" height="1200" loading="lazy">` : html`<i class="fas fa-user-doctor" aria-hidden="true"></i>`}
         </div>
         <div class="doctor-body">
           <h3>${d.name} 원장</h3>

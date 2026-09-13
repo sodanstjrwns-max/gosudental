@@ -15,12 +15,13 @@ export function doctorsListPage() {
 
 <section class="section" id="doctors-list-section">
   <div class="section-inner">
-    <div class="doctor-grid" style="margin-top:0">
+    <figure class="team-portrait"><img src="/static/img/doctors-team-202609.webp" alt="고수치과 의료진 3인 단체사진" width="1440" height="1800"><figcaption>같이 고민하고, 함께 진료하는 고수치과 의료진</figcaption></figure>
+    <div class="doctor-grid">
       ${DOCTORS.map((d, i) => html`
       <a href="/doctors/${d.slug}" class="doctor-card reveal reveal-d${i + 1}">
         <div class="doctor-photo">
           <span class="badge">${d.role}</span>
-          <i class="fas fa-user-doctor" aria-hidden="true"></i>
+          ${d.photo ? html`<img src="${d.photo}" alt="${d.name} ${d.role} 프로필 사진" width="800" height="1200" loading="lazy">` : html`<i class="fas fa-user-doctor" aria-hidden="true"></i>`}
         </div>
         <div class="doctor-body">
           <h3>${d.name} 원장</h3>
@@ -55,6 +56,7 @@ export function doctorDetailPage(slug: string, cases: any[]) {
     '@type': 'Person',
     name: `${d.name} 원장`,
     jobTitle: d.role,
+    image: d.photo ? `${SITE.domain}${d.photo}` : undefined,
     worksFor: { '@type': 'Dentist', name: SITE.name },
     description: d.tagline,
     url: `${SITE.domain}/doctors/${d.slug}`,
@@ -76,7 +78,7 @@ export function doctorDetailPage(slug: string, cases: any[]) {
         </div>
       </div>
       <div class="doctor-photo" style="border-radius:24px;aspect-ratio:4/4.6">
-        <i class="fas fa-user-doctor" aria-hidden="true" style="font-size:110px"></i>
+        ${d.photo ? html`<img src="${d.photo}" alt="${d.name} ${d.role} 프로필 사진" width="800" height="1200" fetchpriority="high">` : html`<i class="fas fa-user-doctor" aria-hidden="true" style="font-size:110px"></i>`}
       </div>
     </div>
   </div>
@@ -146,6 +148,7 @@ ${cases.length > 0 ? html`
       title: `${d.name} 원장 — ${d.role} | 고수치과의원`,
       description: `고수치과 ${d.name} ${d.role}. ${d.tagline}. ${d.career.slice(0, 3).join(', ')}.`,
       path: `/doctors/${d.slug}`,
+      ogImage: d.photo ? `${SITE.domain}${d.photo}` : undefined,
       schema: [
         personSchema,
         breadcrumbSchema([
