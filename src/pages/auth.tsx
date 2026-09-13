@@ -8,16 +8,16 @@ export function loginPage(next?: string) {
     <div style="text-align:center;margin-bottom:32px">
       <img src="/static/img/logo-stack.png" alt="고수치과" width="120" style="margin:0 auto 16px">
       <h1 style="font-size:26px;font-weight:800;color:var(--brand-dark)">로그인</h1>
-      <p style="font-size:14.5px;color:var(--ink-mute);margin-top:8px">치료 후 사진 열람은 의료법에 따라 <br>회원 로그인 후 가능합니다.</p>
+      <p style="font-size:14.5px;color:var(--ink-mute);margin-top:8px">치료 후 사진은 사이트 열람 정책에 따라 <br>회원 로그인 후 가능합니다.</p>
     </div>
     <form class="form-card" data-ajax action="/api/auth/login${next ? '?next=' + encodeURIComponent(next) : ''}" method="POST">
       <div class="form-group">
-        <label>이메일</label>
-        <input class="form-control" name="email" type="email" required placeholder="example@email.com" autocomplete="email">
+        <label for="auth-field-1">이메일</label>
+        <input id="auth-field-1" class="form-control" name="email" type="email" required placeholder="example@email.com" autocomplete="email">
       </div>
       <div class="form-group">
-        <label>비밀번호</label>
-        <input class="form-control" name="password" type="password" required placeholder="비밀번호" autocomplete="current-password">
+        <label for="auth-field-2">비밀번호</label>
+        <input id="auth-field-2" class="form-control" name="password" type="password" required placeholder="비밀번호" autocomplete="current-password">
       </div>
       <button type="submit" class="btn-submit">로그인</button>
     </form>
@@ -42,20 +42,20 @@ export function registerPage() {
     </div>
     <form class="form-card" data-ajax action="/api/auth/register" method="POST">
       <div class="form-group">
-        <label>이름 <span class="req">*</span></label>
-        <input class="form-control" name="name" required placeholder="홍길동" autocomplete="name">
+        <label for="auth-field-3">이름 <span class="req">*</span></label>
+        <input id="auth-field-3" class="form-control" name="name" required placeholder="홍길동" autocomplete="name">
       </div>
       <div class="form-group">
-        <label>이메일 <span class="req">*</span></label>
-        <input class="form-control" name="email" type="email" required placeholder="example@email.com" autocomplete="email">
+        <label for="auth-field-4">이메일 <span class="req">*</span></label>
+        <input id="auth-field-4" class="form-control" name="email" type="email" required placeholder="example@email.com" autocomplete="email">
       </div>
       <div class="form-group">
-        <label>전화번호 <span class="req">*</span></label>
-        <input class="form-control" name="phone" type="tel" required placeholder="010-0000-0000" autocomplete="tel">
+        <label for="auth-field-5">전화번호 <span class="req">*</span></label>
+        <input id="auth-field-5" class="form-control" name="phone" type="tel" required placeholder="010-0000-0000" autocomplete="tel">
       </div>
       <div class="form-group">
-        <label>비밀번호 <span class="req">*</span></label>
-        <input class="form-control" name="password" type="password" required minlength="8" placeholder="8자 이상" autocomplete="new-password">
+        <label for="auth-field-6">비밀번호 <span class="req">*</span></label>
+        <input id="auth-field-6" class="form-control" name="password" type="password" required minlength="8" placeholder="8자 이상" autocomplete="new-password">
       </div>
       <label class="form-check">
         <input type="checkbox" name="privacy_consent" required>

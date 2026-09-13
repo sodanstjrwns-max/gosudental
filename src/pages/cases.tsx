@@ -11,16 +11,16 @@ export function casesListPage(cases: any[], loggedIn: boolean) {
     <nav class="breadcrumb"><a href="/">홈</a> / <span>비포 &amp; 애프터</span></nav>
     <p class="eyebrow">Before &amp; After</p>
     <h1 class="h-display">나와 비슷한 고민의 <br><em>치료 이야기</em></h1>
-    <p class="lead">비슷한 고민을 가진 분들의 치료 과정을 고민별로 모았습니다. 치료 결과는 개인에 따라 차이가 있을 수 있으며, 치료 후 사진은 의료법에 따라 로그인 후 열람하실 수 있습니다.</p>
+    <p class="lead">비슷한 고민을 가진 분들의 치료 과정을 고민별로 모았습니다. 치료 결과는 개인에 따라 차이가 있을 수 있으며, 치료 후 사진은 사이트 열람 정책에 따라 로그인 후 열람하실 수 있습니다.</p>
     ${!loggedIn ? html`<div class="alert info" style="max-width:560px;margin-top:24px"><i class="fas fa-lock" style="margin-right:8px"></i>치료 후(After) 사진은 <a href="/auth/login" style="font-weight:700;text-decoration:underline">로그인</a> 후 확인하실 수 있습니다.</div>` : ''}
   </div>
 </section>
 
 <section class="section" id="cases-list-section" style="padding-top:40px">
   <div class="section-inner">
-    <div class="case-filter" role="tablist">
-      <button class="active" data-cat="all">전체</button>
-      ${CASE_CATEGORIES.map((c) => html`<button data-cat="${c}">${c}</button>`)}
+    <div class="case-filter" role="group" aria-label="진료별 치료 사례 필터">
+      <button class="active" aria-pressed="true" data-cat="all">전체</button>
+      ${CASE_CATEGORIES.map((c) => html`<button aria-pressed="false" data-cat="${c}">${c}</button>`)}
     </div>
     ${cases.length === 0
       ? html`<div class="empty-state">
@@ -98,9 +98,9 @@ export function caseDetailPage(cs: any, loggedIn: boolean) {
           <img class="ba-after" src="/api/case-image/${cs.id}/${p.label === '파노라마' ? 'pano' : 'photo'}_after" alt="${cs.title} ${p.label} 치료 후">
           <span class="ba-tag before">Before</span>
           <span class="ba-tag after">After</span>
-          <div class="ba-handle"></div>
+          <div class="ba-handle" role="slider" tabindex="0" aria-label="${p.label} 전후 사진 비교" aria-valuemin="2" aria-valuemax="98" aria-valuenow="50"></div>
         </div>
-        <p style="font-size:13px;color:var(--ink-mute);margin-top:10px;text-align:center"><i class="fas fa-arrows-left-right" style="margin-right:6px"></i>슬라이더를 좌우로 움직여 비교해 보세요</p>`
+        <p style="font-size:13px;color:var(--ink-mute);margin-top:10px;text-align:center"><i class="fas fa-arrows-left-right" style="margin-right:6px"></i>슬라이더를 드래그하거나 좌우 방향키로 비교해 보세요</p>`
         : html`
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
           <div class="case-thumb" style="border-radius:14px;position:relative">

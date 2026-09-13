@@ -3,6 +3,8 @@
 // Hono + Cloudflare Pages (D1 + R2)
 // ═══════════════════════════════════════════════
 import { Hono } from 'hono'
+import { html } from 'hono/html'
+import { Layout } from './layout'
 import { bodyLimit } from 'hono/body-limit'
 import { HTTPException } from 'hono/http-exception'
 import { registerAdminAPI } from './admin-api'
@@ -35,7 +37,12 @@ app.onError((error, c) => {
   const status = error instanceof HTTPException ? error.status : 500
   if (status === 500) console.error('Request failed:', c.req.method, c.req.path)
   c.header('Cache-Control', 'no-store')
-  return c.json({ ok: false, error: status === 500 ? '처리 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.' : error.message }, status)
+  const message = status === 500 ? '처리 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.' : error.message
+  if (!c.req.path.startsWith('/api/')) {
+    c.header('X-Robots-Tag', 'noindex, nofollow')
+    return c.html(Layout({ title: '일시적인 오류 | 고수치과', description: message, path: '/error', noindex: true }, html`<section class="section" style="padding-top:160px;min-height:70vh"><div class="section-narrow"><h1>잠시 후 다시 이용해주세요</h1><p role="alert">${message}</p><p>정보를 불러오지 못했습니다. 등록된 내용이 삭제된 것은 아닙니다.</p><a class="btn-brand" href="/">홈으로 돌아가기</a></div></section>`), status)
+  }
+  return c.json({ ok: false, error: message }, status)
 })
 
 // 진료 slug → 케이스 카테고리 매핑
@@ -57,11 +64,19 @@ app.use('*', async (c, next) => {
   c.header('X-Content-Type-Options', 'nosniff')
   c.header('X-Frame-Options', 'SAMEORIGIN')
   c.header('Referrer-Policy', 'strict-origin-when-cross-origin')
+  c.header('Permissions-Policy', 'camera=(), microphone=(), geolocation=()')
+  c.header('Content-Security-Policy', "object-src 'none'; base-uri 'self'; frame-ancestors 'self'; form-action 'self'")
   const p = c.req.path
-  c.header('Cache-Control', 'no-store')
-  if (p.startsWith('/admin') || p.startsWith('/api/')) {
-    c.header('X-Robots-Tag', 'noindex, nofollow, noarchive')
+  const privatePath = p.startsWith('/admin') || p.startsWith('/auth/') || p.startsWith('/cases') || p.startsWith('/api/')
+  if (c.res.status >= 400 || c.req.method !== 'GET' || privatePath || c.res.headers.has('Set-Cookie')) {
     c.header('Cache-Control', 'no-store')
+  } else {
+    // Public, non-personalized HTML only. No shared cache for member/case responses.
+    c.header('Cache-Control', 'public, max-age=0, must-revalidate')
+  }
+  if (p.startsWith('/api/uploads/') && c.res.status === 200) c.header('Cache-Control', 'public, max-age=3600')
+  if (p.startsWith('/admin') || p.startsWith('/auth/') || p.startsWith('/api/') || c.res.status >= 400) {
+    c.header('X-Robots-Tag', 'noindex, nofollow, noarchive')
   }
 })
 
@@ -122,7 +137,7 @@ app.get('/doctors/:slug', async (c) => {
   let cases: any[] = []
   try {
     const r = await c.env.DB.prepare(
-      'SELECT id, title, category, region, views, created_at FROM cases WHERE doctor_slug = ? AND published = 1 ORDER BY created_at DESC LIMIT 6'
+      'SELECT id, title, category, age_group, photo_before, region, views, created_at FROM cases WHERE doctor_slug = ? AND published = 1 ORDER BY created_at DESC LIMIT 6'
     ).bind(slug).all()
     cases = r.results || []
   } catch { /* DB 미준비 시에도 페이지는 렌더 */ }
@@ -139,7 +154,7 @@ app.get('/treatments/:slug', async (c) => {
   let cases: any[] = []
   try {
     const r = await c.env.DB.prepare(
-      'SELECT id, title, category, region, views, created_at FROM cases WHERE category = ? AND published = 1 ORDER BY created_at DESC LIMIT 4'
+      'SELECT id, title, category, age_group, photo_before, region, views, created_at FROM cases WHERE category = ? AND published = 1 ORDER BY created_at DESC LIMIT 4'
     ).bind(TREAT_CASE_CAT[slug] || t.name).all()
     cases = r.results || []
   } catch { /* noop */ }
@@ -156,7 +171,7 @@ app.get('/cases', async (c) => {
       'SELECT id, title, description, age_group, gender, category, region, doctor_slug, duration, photo_before, views, created_at FROM cases WHERE published = 1 ORDER BY created_at DESC'
     ).all()
     cases = r.results || []
-  } catch { /* noop */ }
+  } catch { throw new HTTPException(503, { message: '콘텐츠를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.' }) }
   return c.html(casesListPage(cases, !!user))
 })
 app.get('/cases/:id', async (c) => {
@@ -165,7 +180,7 @@ app.get('/cases/:id', async (c) => {
   let cs: any = null
   try {
     cs = await c.env.DB.prepare('SELECT * FROM cases WHERE id = ? AND published = 1').bind(id).first()
-  } catch { /* noop */ }
+  } catch { throw new HTTPException(503, { message: '콘텐츠를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.' }) }
   if (!cs) return c.html(notFoundPage(), 404)
   const user = await getUser(c)
   await bumpViews(c, 'cases', id)
@@ -180,7 +195,7 @@ app.get('/column', async (c) => {
       'SELECT id, slug, title, thumbnail, author_slug, meta_description, category, views, created_at FROM posts WHERE published = 1 ORDER BY created_at DESC'
     ).all()
     posts = r.results || []
-  } catch { /* noop */ }
+  } catch { throw new HTTPException(503, { message: '콘텐츠를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.' }) }
   return c.html(columnListPage(posts))
 })
 app.get('/column/:slug', async (c) => {
@@ -188,7 +203,7 @@ app.get('/column/:slug', async (c) => {
   let post: any = null
   try {
     post = await c.env.DB.prepare('SELECT * FROM posts WHERE slug = ? AND published = 1').bind(slug).first()
-  } catch { /* noop */ }
+  } catch { throw new HTTPException(503, { message: '콘텐츠를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.' }) }
   if (!post) return c.html(notFoundPage(), 404)
   await bumpViews(c, 'posts', post.id)
   return c.html(columnDetailPage(post))
@@ -209,7 +224,7 @@ app.get('/notice', async (c) => {
       'SELECT id, title, content, image, pinned, views, created_at FROM notices ORDER BY pinned DESC, created_at DESC'
     ).all()
     notices = r.results || []
-  } catch { /* noop */ }
+  } catch { throw new HTTPException(503, { message: '콘텐츠를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.' }) }
   return c.html(noticeListPage(notices))
 })
 app.get('/notice/:id', async (c) => {
@@ -218,7 +233,7 @@ app.get('/notice/:id', async (c) => {
   let n: any = null
   try {
     n = await c.env.DB.prepare('SELECT * FROM notices WHERE id = ?').bind(id).first()
-  } catch { /* noop */ }
+  } catch { throw new HTTPException(503, { message: '콘텐츠를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.' }) }
   if (!n) return c.html(notFoundPage(), 404)
   await bumpViews(c, 'notices', id)
   return c.html(noticeDetailPage(n))
@@ -295,7 +310,7 @@ app.post('/api/auth/login', async (c) => {
 })
 
 app.post('/api/auth/logout', (c) => {
-  clearSessions(c)
+  clearSessions(c, 'user')
   return c.json(ok())
 })
 
@@ -335,10 +350,11 @@ app.get('/api/case-image/:id/:field', async (c) => {
     if (!cs || !cs.k || (!cs.published && !(await getAdmin(c)))) return c.notFound()
     const obj = await c.env.R2.get(cs.k)
     if (!obj) return c.notFound()
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(obj.httpMetadata?.contentType || '')) return c.notFound()
     return new Response(obj.body as any, {
       headers: {
         'Content-Type': obj.httpMetadata?.contentType || 'image/jpeg',
-        'Cache-Control': field.endsWith('_after') ? 'private, max-age=300' : 'public, max-age=86400',
+        'Cache-Control': 'no-store',
       },
     })
   } catch {
@@ -352,6 +368,7 @@ app.get('/api/uploads/:key{.+}', async (c) => {
   try {
     const obj = await c.env.R2.get(key)
     if (!obj) return c.notFound()
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(obj.httpMetadata?.contentType || '')) return c.notFound()
     return new Response(obj.body as any, {
       headers: {
         'Content-Type': obj.httpMetadata?.contentType || 'application/octet-stream',
@@ -384,7 +401,7 @@ app.post('/api/admin/login', async (c) => {
 })
 
 app.post('/api/admin/logout', (c) => {
-  clearSessions(c)
+  clearSessions(c, 'admin')
   return c.json(ok())
 })
 
@@ -408,19 +425,17 @@ app.use('/api/admin/*', async (c, next) => {
 })
 
 app.get('/admin', async (c) => {
-  const q = async (sql: string) => {
-    try { const r: any = await c.env.DB.prepare(sql).first(); return Number(r?.n || 0) } catch { return 0 }
-  }
-  const stats = {
-    users: await q('SELECT COUNT(*) n FROM users'),
-    cases: await q('SELECT COUNT(*) n FROM cases'),
-    posts: await q('SELECT COUNT(*) n FROM posts'),
-    notices: await q('SELECT COUNT(*) n FROM notices'),
-    resv: await q('SELECT COUNT(*) n FROM reservations'),
-    totalViews: (await q('SELECT COALESCE(SUM(views),0) n FROM cases')) +
-      (await q('SELECT COALESCE(SUM(views),0) n FROM posts')) +
-      (await q('SELECT COALESCE(SUM(views),0) n FROM notices')),
-  }
+  const stats = await c.env.DB.prepare(`SELECT
+    (SELECT COUNT(*) FROM users) AS users,
+    (SELECT COUNT(*) FROM cases) AS cases,
+    (SELECT COUNT(*) FROM posts) AS posts,
+    (SELECT COUNT(*) FROM notices) AS notices,
+    (SELECT COUNT(*) FROM reservations) AS resv,
+    (SELECT COALESCE(SUM(views),0) FROM cases) +
+    (SELECT COALESCE(SUM(views),0) FROM posts) +
+    (SELECT COALESCE(SUM(views),0) FROM notices) AS totalViews
+  `).first<{ users: number; cases: number; posts: number; notices: number; resv: number; totalViews: number }>()
+  if (!stats) throw new HTTPException(503, { message: '관리 통계를 불러오지 못했습니다.' })
   return c.html(adminDashPage(stats))
 })
 
@@ -461,9 +476,10 @@ app.get('/sitemap.xml', async (c) => {
     { p: '/tour', pr: '0.7' }, { p: '/pricing', pr: '0.7' },
     { p: '/reservation', pr: '0.8' }, { p: '/privacy', pr: '0.3' }, { p: '/terms', pr: '0.3' },
   ]
-  const today = new Date().toISOString().slice(0, 10)
-  const U = (loc: string, pr: string, cf = 'weekly', lm = today) =>
-    `<url><loc>${loc}</loc><lastmod>${lm}</lastmod><changefreq>${cf}</changefreq><priority>${pr}</priority></url>`
+  const xml = (value: string) => value.replace(/[<>&"']/g, ch => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;', "'": '&apos;' }[ch]!))
+  // Omit lastmod when actual edit time is unavailable (never fabricate today's date).
+  const U = (loc: string, pr: string, cf = 'weekly', lm = '') =>
+    `<url><loc>${xml(loc)}</loc>${/^\d{4}-\d{2}-\d{2}$/.test(lm) ? `<lastmod>${lm}</lastmod>` : ''}<changefreq>${cf}</changefreq><priority>${pr}</priority></url>`
   const urls: string[] = staticPaths.map((s) => U(`${SITE.domain}${s.p}`, s.pr, s.p === '/' ? 'daily' : 'weekly'))
   DOCTORS.forEach((d) => urls.push(U(`${SITE.domain}/doctors/${d.slug}`, '0.8', 'monthly')))
   TREATMENTS.forEach((t) => urls.push(U(`${SITE.domain}/treatments/${t.slug}`, t.core ? '0.9' : '0.7', 'weekly')))
@@ -471,10 +487,12 @@ app.get('/sitemap.xml', async (c) => {
   TERMS.forEach((t) => urls.push(U(`${SITE.domain}/encyclopedia/${t.slug}`, '0.4', 'monthly')))
   try {
     const posts = await c.env.DB.prepare('SELECT slug, updated_at FROM posts WHERE published = 1').all()
-    for (const p of (posts.results || []) as any[]) urls.push(U(`${SITE.domain}/column/${p.slug}`, '0.7', 'weekly', (p.updated_at || today).slice(0, 10)))
+    for (const p of (posts.results || []) as any[]) urls.push(U(`${SITE.domain}/column/${p.slug}`, '0.7', 'weekly', (p.updated_at || '').slice(0, 10)))
     const cases = await c.env.DB.prepare('SELECT id, created_at FROM cases WHERE published = 1').all()
-    for (const cs of (cases.results || []) as any[]) urls.push(U(`${SITE.domain}/cases/${cs.id}`, '0.6', 'weekly', (cs.created_at || today).slice(0, 10)))
-  } catch { /* noop */ }
+    for (const cs of (cases.results || []) as any[]) urls.push(U(`${SITE.domain}/cases/${cs.id}`, '0.6', 'weekly'))
+    const notices = await c.env.DB.prepare('SELECT id FROM notices').all()
+    for (const notice of (notices.results || []) as { id: number }[]) urls.push(U(`${SITE.domain}/notice/${notice.id}`, '0.6', 'weekly'))
+  } catch { throw new HTTPException(503, { message: '사이트맵을 일시적으로 불러올 수 없습니다.' }) }
   return c.body(
     `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.join('\n')}\n</urlset>`,
     200,
@@ -482,72 +500,15 @@ app.get('/sitemap.xml', async (c) => {
   )
 })
 
-app.get('/robots.txt', (c) =>
-  c.text(`# gosudental.pages.dev — 검색엔진 + AI 답변엔진(AEO) 모두 환영
-User-agent: *
+app.get('/robots.txt', (c) => c.text(`User-agent: *
 Allow: /
 Disallow: /admin
+Disallow: /auth/
 Disallow: /api/
-Allow: /api/case-image/
-
-# ── AI 답변 엔진 (AEO) 명시 허용 ──
-User-agent: GPTBot
-Allow: /
-Disallow: /admin
-
-User-agent: OAI-SearchBot
-Allow: /
-Disallow: /admin
-
-User-agent: ChatGPT-User
-Allow: /
-Disallow: /admin
-
-User-agent: ClaudeBot
-Allow: /
-Disallow: /admin
-
-User-agent: Claude-Web
-Allow: /
-Disallow: /admin
-
-User-agent: anthropic-ai
-Allow: /
-Disallow: /admin
-
-User-agent: PerplexityBot
-Allow: /
-Disallow: /admin
-
-User-agent: Google-Extended
-Allow: /
-
-User-agent: Applebot-Extended
-Allow: /
-
-User-agent: cohere-ai
-Allow: /
-
-User-agent: Bytespider
-Allow: /
-
-User-agent: CCBot
-Allow: /
-
-User-agent: Yeti
-Allow: /
-Disallow: /admin
-
-User-agent: Daum
-Allow: /
-Disallow: /admin
+Allow: /api/uploads/
 
 Sitemap: ${SITE.domain}/sitemap.xml
-
-# AI/LLM 요약용 문서
-# ${SITE.domain}/llms.txt (개요) · ${SITE.domain}/llms-full.txt (전문)
-`)
-)
+`))
 
 app.get('/llms.txt', (c) =>
   c.text(`# ${SITE.name}
@@ -577,7 +538,7 @@ ${SITE.hours.map((h) => `- ${h.day}: ${h.time}`).join('\n')}
 ## 상세 문서
 - 전체 FAQ·백과사전·진료 상세: ${SITE.domain}/llms-full.txt
 
-※ 본 안내는 의료광고 심의 기준을 준수하며, 치료 결과는 개인에 따라 다를 수 있습니다.
+※ 본 안내는 일반적인 의료 정보이며, 치료 결과는 개인에 따라 다를 수 있습니다.
 `)
 )
 
@@ -615,7 +576,7 @@ app.get('/llms-full.txt', (c) => {
 - 블로그: ${SITE.blog}
 
 ## 핵심 차별점
-- 내포신도시에서 드문 치과교정과 전문의(보건복지부 인증) 상주 치과
+- 치과교정과 전문의(보건복지부 인증)가 교정 진료 담당
 - 임플란트·교정·심미보철·충치·턱관절까지 한곳에서 해결하는 올인원 진료
 - 진료 철학: 살릴 수 있는 치아는 오래 살리고, 잃어버린 치아는 제대로 회복해서, 다시 잘 먹을 수 있게
 - 통증 배려: "치료 중 아프면 절대 억지로 이어가지 않겠습니다" (대표원장 약속)
@@ -643,7 +604,7 @@ ${termBlocks}
 
 ---
 
-※ 의료광고 심의 기준 준수. 모든 시술은 부작용이 발생할 수 있으며 치료 결과는 개인에 따라 다를 수 있습니다. 정확한 진단은 내원 상담을 통해 받으시기 바랍니다.
+※ 모든 시술은 부작용이 발생할 수 있으며 치료 결과는 개인에 따라 다를 수 있습니다. 정확한 진단은 내원 상담을 통해 받으시기 바랍니다.
 문서 기준일: 2026-09-13 · 출처: ${SITE.domain}
 `)
 })

@@ -6,9 +6,9 @@ export function treatmentsListPage() {
   const core = TREATMENTS.filter((t) => t.core)
   const others = TREATMENTS.filter((t) => !t.core)
   const coreImgs: Record<string, string> = {
-    implant: '/static/img/interior-03.jpg',
-    ortho: '/static/img/interior-07.jpg',
-    aesthetic: '/static/img/interior-01.jpg',
+    implant: '/static/img/interior-03.webp',
+    ortho: '/static/img/interior-07.webp',
+    aesthetic: '/static/img/interior-01.webp',
   }
 
   const content = html`
@@ -53,7 +53,7 @@ export function treatmentsListPage() {
     {
       title: '진료안내 — 임플란트·치아교정·심미보철 | 고수치과의원',
       description:
-        '고수치과 진료안내. 임플란트, 교정과 전문의 치아교정, 라미네이트 심미보철을 핵심으로 충치·신경치료, 보철, 턱관절, 안티에이징까지 내포 유일의 올인원 진료.',
+        '고수치과 진료안내. 임플란트, 교정과 전문의 치아교정, 라미네이트 심미보철을 핵심으로 충치·신경치료, 보철, 턱관절, 안티에이징까지 한곳에서 상담할 수 있는 올인원 진료.',
       path: '/treatments',
       schema: [breadcrumbSchema([{ name: '홈', path: '/' }, { name: '진료안내', path: '/treatments' }])],
     },
@@ -101,18 +101,18 @@ export function treatmentDetailPage(slug: string, relatedCases: any[]) {
   }
 
   const heroImgs: Record<string, string> = {
-    implant: '/static/img/interior-03.jpg',
-    ortho: '/static/img/interior-07.jpg',
-    aesthetic: '/static/img/interior-01.jpg',
-    preservation: '/static/img/interior-02.jpg',
-    prosthetics: '/static/img/interior-04.jpg',
-    tmj: '/static/img/interior-09.jpg',
-    antiaging: '/static/img/interior-17.jpg',
+    implant: '/static/img/interior-03.webp',
+    ortho: '/static/img/interior-07.webp',
+    aesthetic: '/static/img/interior-01.webp',
+    preservation: '/static/img/interior-02.webp',
+    prosthetics: '/static/img/interior-04.webp',
+    tmj: '/static/img/interior-09.webp',
+    antiaging: '/static/img/interior-17.webp',
   }
 
   const content = html`
 <section class="hero" id="treatment-hero" style="min-height:72svh">
-  <div class="hero-bg" style="background-image:url('${heroImgs[t.slug] || '/static/img/interior-lobby.jpg'}')"></div>
+  <div class="hero-bg" style="background-image:url('${heroImgs[t.slug] || '/static/img/interior-lobby.webp'}')"></div>
   <div class="hero-veil"></div>
   <div class="hero-inner" style="padding-top:150px;padding-bottom:80px">
     <nav class="breadcrumb" style="color:rgba(255,255,255,0.6)"><a href="/">홈</a> / <a href="/treatments">진료안내</a> / <span>${t.name}</span></nav>

@@ -2,10 +2,17 @@
 (() => {
   'use strict';
   async function request(url, options = {}) {
-    const res = await fetch(url, options);
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok || !data.ok) throw new Error(data.error || '요청을 처리하지 못했습니다. 다시 로그인하거나 잠시 후 시도해주세요.');
-    return data;
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 45000);
+    try {
+      const res = await fetch(url, { ...options, signal: controller.signal });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok) throw new Error(data.error || '요청을 처리하지 못했습니다. 다시 로그인하거나 잠시 후 시도해주세요.');
+      return data;
+    } catch (error) {
+      if (error.name === 'AbortError') throw new Error('응답이 지연됩니다. 저장 여부를 목록에서 확인한 후 다시 시도해주세요.');
+      throw error;
+    } finally { clearTimeout(timer); }
   }
   const json = (method, body) => ({ method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
   const form = document.querySelector('form[data-content-kind]');
@@ -16,7 +23,14 @@
     const status = form.querySelector('.edit-status');
     const cancel = form.querySelector('.cancel-edit');
     const editor = document.getElementById('editor');
+    let dirty = false;
+    form.addEventListener('input', () => { dirty = true; });
+    form.addEventListener('change', () => { dirty = true; });
+    window.addEventListener('beforeunload', e => {
+      if (dirty) { e.preventDefault(); e.returnValue = ''; }
+    });
     const reset = () => {
+      dirty = false;
       form.reset(); delete form.dataset.editId;
       if (editor) editor.replaceChildren();
       form.querySelectorAll('[data-preview]').forEach(el => el.replaceChildren());
@@ -26,7 +40,7 @@
     };
     cancel.addEventListener('click', () => { if (confirm('수정 중인 내용을 취소하시겠습니까?')) reset(); });
     document.querySelectorAll('[data-edit]').forEach(btn => btn.addEventListener('click', async () => {
-      if (form.dataset.editId && !confirm('현재 수정 중인 내용을 버리고 다른 항목을 여시겠습니까?')) return;
+      if ((dirty || form.dataset.editId) && !confirm('현재 수정 중인 내용을 버리고 다른 항목을 여시겠습니까?')) return;
       btn.disabled = true;
       try {
         const { item } = await request('/api/admin/' + kind + '/' + btn.dataset.id);
@@ -73,6 +87,7 @@
           : { method, body: fd };
         await request(url, options);
         status.textContent = '저장되었습니다.';
+        dirty = false;
         location.reload();
       } catch (e) { status.textContent = e.message; }
       finally { submit.disabled = false; }

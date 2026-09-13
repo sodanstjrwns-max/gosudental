@@ -8,15 +8,15 @@ export function homePage() {
   const core = TREATMENTS.filter((t) => t.core)
   const others = TREATMENTS.filter((t) => !t.core)
   const coreImgs: Record<string, string> = {
-    implant: '/static/img/interior-03.jpg',
-    ortho: '/static/img/interior-07.jpg',
-    aesthetic: '/static/img/interior-01.jpg',
+    implant: '/static/img/interior-03.webp',
+    ortho: '/static/img/interior-07.webp',
+    aesthetic: '/static/img/interior-01.webp',
   }
 
   const content = html`
 <!-- HERO -->
 <section class="hero" id="hero-section">
-  <div class="hero-bg" style="background-image:url('/static/img/interior-lobby.jpg')"></div>
+  <div class="hero-bg" style="background-image:url('/static/img/interior-lobby.webp')"></div>
   <div class="hero-veil"></div>
   <div class="hero-hanja" aria-hidden="true">固守<b>高手</b></div>
   <span class="hero-seal" aria-hidden="true">高手</span>
@@ -101,7 +101,7 @@ export function homePage() {
     <div class="treat-sub-grid">
       ${others.map((t) => html`
       <a href="/treatments/${t.slug}" class="treat-sub reveal">
-        <h4>${t.name}</h4>
+        <h3>${t.name}</h3>
         <p>${t.short}</p>
       </a>`)}
     </div>
@@ -118,10 +118,10 @@ export function homePage() {
 <section class="section stats-band" id="stats-section">
   <div class="section-inner">
     <div class="stats-grid">
-      <div class="reveal"><div class="stat-num"><span data-count="3">0</span><span class="unit">인</span></div><p class="stat-label">의료진 협진 체계</p></div>
-      <div class="reveal reveal-d1"><div class="stat-num"><span data-count="1">0</span><span class="unit">곳</span></div><p class="stat-label">내포 유일 교정과 전문의 상주 치과</p></div>
-      <div class="reveal reveal-d2"><div class="stat-num"><span data-count="6">0</span><span class="unit">과목</span></div><p class="stat-label">한곳에서 해결하는 올인원 진료</p></div>
-      <div class="reveal reveal-d3"><div class="stat-num"><span data-count="30">0</span><span class="unit">회+</span></div><p class="stat-label">의료진 연수 · 교육 이수</p></div>
+      <div class="reveal"><div class="stat-num"><span>${DOCTORS.length}</span><span class="unit">인</span></div><p class="stat-label">의료진 협진 체계</p></div>
+      <div class="reveal reveal-d1"><div class="stat-num"><span>1</span><span class="unit">인</span></div><p class="stat-label">치과교정과 전문의</p></div>
+      <div class="reveal reveal-d2"><div class="stat-num"><span>${TREATMENTS.length}</span><span class="unit">과목</span></div><p class="stat-label">한곳에서 해결하는 올인원 진료</p></div>
+      <div class="reveal reveal-d3"><div class="stat-num"><span>${DOCTORS.reduce((sum, d) => sum + d.courses.length, 0)}</span><span class="unit">건</span></div><p class="stat-label">의료진 교육 · 학술 활동 이력</p></div>
     </div>
   </div>
 </section>
@@ -169,12 +169,13 @@ export function homePage() {
     <p class="eyebrow reveal">Space</p>
     <h2 class="h-display reveal reveal-d1">두려움이 아닌 <br><em>편안함</em>이 먼저인 공간</h2>
     <p class="lead reveal reveal-d2">치과 문을 여는 순간부터 두려움이 아닌 편안함을 느끼실 수 있도록, 공간 하나하나를 설계했습니다.</p>
+    <p class="photo-context-note">아래 이미지는 인테리어 설계 이미지로, 실제 완공 모습과 차이가 있을 수 있습니다.</p>
     <div class="space-gallery">
-      <figure class="space-item sp-a reveal"><img src="/static/img/interior-lobby.jpg" alt="고수치과 로비 전경" loading="lazy"><figcaption class="cap">Lounge</figcaption></figure>
-      <figure class="space-item sp-b reveal reveal-d1"><img src="/static/img/interior-bookcafe.jpg" alt="고수치과 북카페 상담 공간" loading="lazy"><figcaption class="cap">Book Cafe</figcaption></figure>
-      <figure class="space-item sp-c reveal"><img src="/static/img/interior-02.jpg" alt="고수치과 진료 공간" loading="lazy"><figcaption class="cap">Clinic</figcaption></figure>
-      <figure class="space-item sp-d reveal reveal-d1"><img src="/static/img/interior-04.jpg" alt="고수치과 대기 공간" loading="lazy"><figcaption class="cap">Waiting</figcaption></figure>
-      <figure class="space-item sp-e reveal reveal-d2"><img src="/static/img/interior-09.jpg" alt="고수치과 복도" loading="lazy"><figcaption class="cap">Hall</figcaption></figure>
+      <figure class="space-item sp-a reveal"><img src="/static/img/interior-lobby.webp" alt="고수치과 로비 전경" loading="lazy"><figcaption class="cap">Lounge</figcaption></figure>
+      <figure class="space-item sp-b reveal reveal-d1"><img src="/static/img/interior-bookcafe.webp" alt="고수치과 북카페 상담 공간" loading="lazy"><figcaption class="cap">Book Cafe</figcaption></figure>
+      <figure class="space-item sp-c reveal"><img src="/static/img/interior-02.webp" alt="고수치과 진료 공간" loading="lazy"><figcaption class="cap">Clinic</figcaption></figure>
+      <figure class="space-item sp-d reveal reveal-d1"><img src="/static/img/interior-04.webp" alt="고수치과 대기 공간" loading="lazy"><figcaption class="cap">Waiting</figcaption></figure>
+      <figure class="space-item sp-e reveal reveal-d2"><img src="/static/img/interior-09.webp" alt="고수치과 복도" loading="lazy"><figcaption class="cap">Hall</figcaption></figure>
     </div>
     <p style="text-align:center;margin-top:40px" class="reveal"><a href="/tour" class="treat-more" style="font-size:16px">공간 전체 둘러보기 <i class="fas fa-arrow-right"></i></a></p>
   </div>
@@ -189,7 +190,7 @@ export function homePage() {
     <div class="treat-sub-grid" style="grid-template-columns:repeat(3,1fr);margin-top:50px">
       ${EQUIPMENT.map((e, i) => html`
       <div class="treat-sub reveal reveal-d${(i % 3) + 1}">
-        <h4>${e.name}</h4>
+        <h3>${e.name}</h3>
         <p>${e.desc}</p>
       </div>`)}
     </div>
@@ -211,7 +212,7 @@ export function homePage() {
     {
       title: '고수치과의원 | 내포신도시 임플란트·치아교정·심미보철 치과',
       description:
-        '내포신도시 주키즈소아청소년과 건물 5층, 고수치과의원. 좋은 결과·환자 중심 진료·배움과 성장을 고수하는 치과 — 임플란트·교정과 전문의 치아교정·심미보철 올인원 진료. 2026년 11월 개원.',
+        '내포신도시 주키즈소아청소년과 건물 5층, 고수치과의원. 좋은 결과·환자 중심 진료·배움과 성장을 고수하는 치과 — 임플란트·교정과 전문의 치아교정·심미보철 올인원 진료. 2026년 11월 개원 예정.',
       path: '/',
     },
     content

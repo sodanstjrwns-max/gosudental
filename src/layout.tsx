@@ -1,5 +1,6 @@
 import { html, raw } from 'hono/html'
 import { safeJson } from './security'
+import { siteStyles } from './styles.generated'
 import { SITE, TREATMENTS, DOCTORS } from './data/site'
 
 export interface PageMeta {
@@ -7,6 +8,8 @@ export interface PageMeta {
   description: string
   path: string
   ogImage?: string
+  ogType?: 'website' | 'article'
+  noindex?: boolean
   schema?: object[]
   bodyClass?: string
 }
@@ -36,9 +39,6 @@ const ORG_SCHEMA = {
   medicalSpecialty: 'Dentistry',
   founder: { '@type': 'Person', name: '조원익', jobTitle: '대표원장' },
   foundingDate: '2026-11-02',
-  openingHoursSpecification: [
-    { '@type': 'OpeningHoursSpecification', dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'], description: '진료시간 확정 시 안내' },
-  ],
   availableService: TREATMENTS.map((t) => ({
     '@type': 'MedicalProcedure',
     name: t.name,
@@ -60,7 +60,8 @@ const WEBSITE_SCHEMA = {
 
 export function Layout(meta: PageMeta, content: any) {
   const canonical = `${SITE.domain}${meta.path}`
-  const og = meta.ogImage || `${SITE.domain}/static/img/og-image.jpg`
+  const og = new URL(meta.ogImage || '/static/img/og-image.jpg', SITE.domain).href
+  const noindex = meta.noindex || meta.path.startsWith('/auth/') || meta.path === '/404' || meta.path === '/error'
   const schemas = [ORG_SCHEMA, WEBSITE_SCHEMA, ...(meta.schema || [])]
   const coreT = TREATMENTS.filter((t) => t.core)
   const otherT = TREATMENTS.filter((t) => !t.core)
@@ -72,7 +73,7 @@ export function Layout(meta: PageMeta, content: any) {
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>${meta.title}</title>
 <meta name="description" content="${meta.description}">
-<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
+<meta name="robots" content="${noindex ? 'noindex, nofollow' : 'index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1'}">
 <meta name="keywords" content="내포신도시 치과, 예산 치과, 홍성 치과, 고수치과, 내포 임플란트, 내포 치아교정, 교정과 전문의, 삽교읍 치과">
 <meta name="author" content="고수치과의원">
 <meta name="geo.region" content="KR-44">
@@ -82,13 +83,12 @@ export function Layout(meta: PageMeta, content: any) {
 <meta name="theme-color" content="#101417">
 <meta name="format-detection" content="telephone=no">
 <link rel="canonical" href="${canonical}">
-<meta property="og:type" content="website">
+<meta property="og:type" content="${meta.ogType || 'website'}">
 <meta property="og:title" content="${meta.title}">
 <meta property="og:description" content="${meta.description}">
 <meta property="og:url" content="${canonical}">
 <meta property="og:image" content="${og}">
-<meta property="og:image:width" content="1200">
-<meta property="og:image:height" content="630">
+${!meta.ogImage ? html`<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">` : ''}
 <meta property="og:image:alt" content="${SITE.name} — ${SITE.slogan}">
 <meta property="og:site_name" content="${SITE.name}">
 <meta property="og:locale" content="ko_KR">
@@ -98,14 +98,9 @@ export function Layout(meta: PageMeta, content: any) {
 <meta name="twitter:image" content="${og}">
 <link rel="icon" type="image/png" sizes="32x32" href="/static/img/favicon-32.png">
 <link rel="apple-touch-icon" href="/static/img/apple-touch-icon.png">
-<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;500;600;700;900&family=Nanum+Brush+Script&family=Gowun+Batang:wght@400;700&display=swap">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-tc-webfont@1.2.0/lxgwwenkaitc-bold.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.2/css/all.min.css">
-<link rel="stylesheet" href="/static/style.css?v=20260913-photos">
+<style>${raw(siteStyles)}</style>
+${meta.path === '/' ? html`<link rel="preload" as="image" href="/static/img/interior-lobby-mobile.webp" media="(max-width:640px)" fetchpriority="high"><link rel="preload" as="image" href="/static/img/interior-lobby.webp" media="(min-width:641px)" fetchpriority="high">` : ''}
+<noscript><style>.reveal{opacity:1!important;transform:none!important}.mobile-menu{display:block!important;position:static!important}.mobile-toggle{display:none!important}.quote-band{clip-path:none!important}.quote-band blockquote,.quote-band cite{opacity:1!important;transform:none!important}form[data-ajax] button[type=submit]{display:none!important}</style></noscript>
 ${raw(schemas.map((s) => `<script type="application/ld+json">${safeJson(s)}</script>`).join('\n'))}
 </head>
 <body class="${meta.bodyClass || ''}">
@@ -169,7 +164,7 @@ ${raw(schemas.map((s) => `<script type="application/ld+json">${safeJson(s)}</scr
       <a href="/auth/login" class="btn-ghost" id="login-link">로그인</a>
       <a href="/reservation" class="btn-brand">상담 예약</a>
     </div>
-    <button class="mobile-toggle" aria-label="메뉴 열기" aria-expanded="false">
+    <button class="mobile-toggle" aria-controls="mobile-menu" aria-label="메뉴 열기" aria-expanded="false">
       <span></span><span></span><span></span>
     </button>
   </div>
@@ -192,7 +187,7 @@ ${raw(schemas.map((s) => `<script type="application/ld+json">${safeJson(s)}</scr
   </div>
 </header>
 
-<main id="main-content">${content}</main>
+<main id="main-content">${content}<noscript><p class="alert info">온라인 회원가입·로그인·상담 접수는 브라우저의 JavaScript를 켠 후 이용해주세요. 병원·진료 정보는 그대로 확인하실 수 있습니다.</p></noscript></main>
 
 <footer class="site-footer">
   <div class="footer-inner">
@@ -202,13 +197,12 @@ ${raw(schemas.map((s) => `<script type="application/ld+json">${safeJson(s)}</scr
       <div class="footer-sns">
         <a href="${SITE.blog}" target="_blank" rel="noopener" aria-label="네이버 블로그"><i class="fas fa-blog"></i></a>
         <a href="${SITE.instagram}" target="_blank" rel="noopener" aria-label="인스타그램"><i class="fab fa-instagram"></i></a>
-        <a href="#" aria-label="유튜브 (개설 예정)"><i class="fab fa-youtube"></i></a>
       </div>
     </div>
     <div class="footer-info">
       <p><strong>${SITE.name}</strong> | 대표자: 조원익</p>
       <p>${SITE.address} (${SITE.addressShort})</p>
-      <p>${SITE.openDate} | 대표전화: 개원 시 안내</p>
+      <p>${SITE.openDate} | 대표전화: ${SITE.tel || '개원 시 안내'}</p>
       <p class="footer-links">
         <a href="/privacy">개인정보 처리방침</a> · <a href="/terms">이용약관</a> · <a href="/sitemap.xml">사이트맵</a>
       </p>
@@ -225,9 +219,9 @@ ${raw(schemas.map((s) => `<script type="application/ld+json">${safeJson(s)}</scr
   <a href="/reservation" class="cta-res"><i class="fas fa-calendar-check" aria-hidden="true"></i> 상담 예약</a>
 </nav>
 
-<script src="/static/app.js?v=20260913-1" defer></script>
+<script src="/static/app.js?v=20260913-delivery" defer></script>
 <script src="/static/gallery.js?v=20260913-photos" defer></script>
-<script src="/static/ink.js?v=20260913-1" defer></script>
+<script src="/static/ink.js?v=20260913-delivery" defer></script>
 </body>
 </html>`
 }

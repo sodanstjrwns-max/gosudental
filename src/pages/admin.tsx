@@ -1,5 +1,6 @@
 import { html, raw } from 'hono/html'
 import { DOCTORS } from '../data/site'
+import { siteStyles } from '../styles.generated'
 import { CASE_CATEGORIES } from './cases'
 
 function adminShell(active: string, title: string, body: any) {
@@ -10,9 +11,7 @@ function adminShell(active: string, title: string, body: any) {
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>${title} — 고수치과 관리자</title>
 <meta name="robots" content="noindex,nofollow">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.2/css/all.min.css">
-<link rel="stylesheet" href="/static/style.css?v=20260913-1">
+<style>${raw(siteStyles)}</style>
 </head>
 <body>
 <div class="admin-shell">
@@ -24,12 +23,12 @@ function adminShell(active: string, title: string, body: any) {
     <a href="/admin/notices" class="${active === 'notices' ? 'active' : ''}"><i class="fas fa-bullhorn" style="width:20px"></i> 공지사항</a>
     <a href="/admin/users" class="${active === 'users' ? 'active' : ''}"><i class="fas fa-users" style="width:20px"></i> 회원 관리</a>
     <a href="/admin/reservations" class="${active === 'resv' ? 'active' : ''}"><i class="fas fa-calendar-check" style="width:20px"></i> 예약 관리</a>
-    <a href="/" style="margin-top:20px;opacity:0.6"><i class="fas fa-arrow-up-right-from-square" style="width:20px"></i> 사이트 보기</a>
-    <a href="#" onclick="fetch('/api/admin/logout',{method:'POST'}).then(()=>location.href='/admin/login')" style="opacity:0.6"><i class="fas fa-right-from-bracket" style="width:20px"></i> 로그아웃</a>
+    <a href="/" style="margin-top:20px"><i class="fas fa-arrow-up-right-from-square" style="width:20px"></i> 사이트 보기</a>
+    <a href="#" onclick="fetch('/api/admin/logout',{method:'POST'}).then(()=>location.href='/admin/login')" ><i class="fas fa-right-from-bracket" style="width:20px"></i> 로그아웃</a>
   </aside>
   <main class="admin-main">${body}</main>
 </div>
-<script src="/static/admin.js?v=20260913-1" defer></script>
+<script src="/static/admin.js?v=20260913-delivery" defer></script>
 </body>
 </html>`
 }
@@ -41,8 +40,7 @@ export function adminLoginPage() {
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>관리자 로그인 — 고수치과</title>
 <meta name="robots" content="noindex,nofollow">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
-<link rel="stylesheet" href="/static/style.css?v=20260913-1">
+<style>${raw(siteStyles)}</style>
 </head>
 <body style="background:var(--brand-mist)">
 <section style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px">
@@ -51,15 +49,16 @@ export function adminLoginPage() {
       <img src="/static/img/logo-stack.png" alt="고수치과" width="110" style="margin:0 auto 14px">
       <h1 style="font-size:22px;font-weight:800;color:var(--brand-dark)">관리자 로그인</h1>
     </div>
-    <form class="form-card" onsubmit="event.preventDefault();fetch('/api/admin/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:this.password.value})}).then(r=>r.json()).then(d=>{if(d.ok)location.href='/admin';else alert(d.error||'비밀번호가 올바르지 않습니다.')})">
+    <form class="form-card" data-ajax action="/api/admin/login" method="POST" data-success-redirect="/admin">
       <div class="form-group">
-        <label>비밀번호</label>
-        <input class="form-control" name="password" type="password" required autofocus>
+        <label for="admin-field-1">비밀번호</label>
+        <input id="admin-field-1" class="form-control" name="password" type="password" required autocomplete="current-password" autofocus>
       </div>
       <button type="submit" class="btn-submit">로그인</button>
     </form>
   </div>
 </section>
+<script src="/static/app.js?v=20260913-delivery" defer></script>
 </body>
 </html>`
 }
@@ -81,7 +80,7 @@ export function adminUsersPage(users: any[]) {
   return adminShell('users', '회원 관리', html`
 <h1>회원 관리 (${users.length})</h1>
 <div class="admin-card">
-  <table class="admin-table">
+  <table class="admin-table" tabindex="0" aria-label="등록 목록, 좌우 방향키로 가로 스크롤">
     <thead><tr><th>ID</th><th>이름</th><th>이메일</th><th>전화번호</th><th>마케팅 동의</th><th>가입일</th><th></th></tr></thead>
     <tbody>
       ${users.map((u) => html`
@@ -100,7 +99,7 @@ export function adminReservationsPage(items: any[]) {
   return adminShell('resv', '예약 관리', html`
 <h1>예약 관리 (${items.length})</h1>
 <div class="admin-card">
-  <table class="admin-table">
+  <table class="admin-table" tabindex="0" aria-label="등록 목록, 좌우 방향키로 가로 스크롤">
     <thead><tr><th>ID</th><th>이름</th><th>연락처</th><th>진료</th><th>희망 일시</th><th>메시지</th><th>상태</th><th>신청일</th></tr></thead>
     <tbody>
       ${items.map((r) => html`
@@ -108,7 +107,7 @@ export function adminReservationsPage(items: any[]) {
         <td>${r.id}</td><td>${r.name}</td><td>${r.phone}</td><td>${r.category || '—'}</td>
         <td>${r.preferred_at || '—'}</td><td style="max-width:200px">${r.message || '—'}</td>
         <td>
-          <select data-reservation="${r.id}" data-previous="${r.status}">
+          <select aria-label="예약 상태" data-reservation="${r.id}" data-previous="${r.status}">
             <option value="pending" ${r.status === 'pending' ? 'selected' : ''}>대기</option>
             <option value="confirmed" ${r.status === 'confirmed' ? 'selected' : ''}>확정</option>
             <option value="done" ${r.status === 'done' ? 'selected' : ''}>완료</option>
@@ -131,37 +130,37 @@ export function adminCasesPage(cases: any[]) {
     <div class="admin-edit-actions"><strong class="edit-heading">새 콘텐츠 작성</strong><button class="admin-btn ghost cancel-edit" type="button" hidden>수정 취소 / 새로 작성</button></div>
     <p class="edit-status" role="status" aria-live="polite"></p>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
-      <div class="form-group"><label>제목 *</label><input class="form-control" name="title" required placeholder="예: 상실된 어금니, 임플란트로 저작 기능 회복"></div>
-      <div class="form-group"><label>진료 카테고리 *</label>
-        <select class="form-control" name="category" required>
+      <div class="form-group"><label for="admin-field-2">제목 *</label><input id="admin-field-2" class="form-control" name="title" required placeholder="예: 상실된 어금니, 임플란트로 저작 기능 회복"></div>
+      <div class="form-group"><label for="admin-field-3">진료 카테고리 *</label>
+        <select id="admin-field-3" class="form-control" name="category" required>
           ${CASE_CATEGORIES.map((c) => html`<option value="${c}">${c}</option>`)}
         </select>
       </div>
-      <div class="form-group"><label>환자 나이대</label>
-        <select class="form-control" name="age_group"><option value="">선택</option><option>10대</option><option>20대</option><option>30대</option><option>40대</option><option>50대</option><option>60대</option><option>70대 이상</option></select>
+      <div class="form-group"><label for="admin-field-4">환자 나이대</label>
+        <select id="admin-field-4" class="form-control" name="age_group"><option value="">선택</option><option>10대</option><option>20대</option><option>30대</option><option>40대</option><option>50대</option><option>60대</option><option>70대 이상</option></select>
       </div>
-      <div class="form-group"><label>성별</label>
-        <select class="form-control" name="gender"><option value="">선택</option><option>여성</option><option>남성</option></select>
+      <div class="form-group"><label for="admin-field-5">성별</label>
+        <select id="admin-field-5" class="form-control" name="gender"><option value="">선택</option><option>여성</option><option>남성</option></select>
       </div>
-      <div class="form-group ac-wrap"><label>지역 (자동완성)</label>
-        <input class="form-control region-ac" name="region" placeholder="예: 삽교 → 충청남도 예산군 삽교읍" autocomplete="off">
+      <div class="form-group ac-wrap"><label for="admin-field-6">지역 (자동완성)</label>
+        <input id="admin-field-6" class="form-control region-ac" name="region" placeholder="예: 삽교 → 충청남도 예산군 삽교읍" autocomplete="off">
         <div class="ac-list"></div>
       </div>
-      <div class="form-group"><label>담당 원장</label>
-        <select class="form-control" name="doctor_slug">
+      <div class="form-group"><label for="admin-field-7">담당 원장</label>
+        <select id="admin-field-7" class="form-control" name="doctor_slug">
           ${DOCTORS.map((d) => html`<option value="${d.slug}">${d.name} (${d.role})</option>`)}
         </select>
       </div>
-      <div class="form-group"><label>치료 기간</label><input class="form-control" name="duration" placeholder="예: 3개월"></div>
+      <div class="form-group"><label for="admin-field-8">치료 기간</label><input id="admin-field-8" class="form-control" name="duration" placeholder="예: 3개월"></div>
     </div>
-    <div class="form-group"><label>케이스 설명</label><textarea class="form-control" name="description" placeholder="치료 과정과 결과를 설명해주세요 (SEO에 반영됩니다)"></textarea></div>
+    <div class="form-group"><label for="admin-field-9">케이스 설명</label><textarea id="admin-field-9" class="form-control" name="description" placeholder="치료 과정과 결과를 설명해주세요 (SEO에 반영됩니다)"></textarea></div>
     <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px">
-      <div class="form-group"><label>파노라마 전</label><input class="form-control" type="file" name="pano_before" accept="image/jpeg,image/png,image/webp"><div data-preview="pano_before"></div><label class="form-check"><input type="checkbox" name="remove_pano_before"> 기존 이미지 삭제</label></div>
-      <div class="form-group"><label>파노라마 후</label><input class="form-control" type="file" name="pano_after" accept="image/jpeg,image/png,image/webp"><div data-preview="pano_after"></div><label class="form-check"><input type="checkbox" name="remove_pano_after"> 기존 이미지 삭제</label></div>
-      <div class="form-group"><label>구내포토 전</label><input class="form-control" type="file" name="photo_before" accept="image/jpeg,image/png,image/webp"><div data-preview="photo_before"></div><label class="form-check"><input type="checkbox" name="remove_photo_before"> 기존 이미지 삭제</label></div>
-      <div class="form-group"><label>구내포토 후</label><input class="form-control" type="file" name="photo_after" accept="image/jpeg,image/png,image/webp"><div data-preview="photo_after"></div><label class="form-check"><input type="checkbox" name="remove_photo_after"> 기존 이미지 삭제</label></div>
+      <div class="form-group"><label for="admin-field-10">파노라마 전</label><input id="admin-field-10" class="form-control" type="file" name="pano_before" accept="image/jpeg,image/png,image/webp"><div data-preview="pano_before"></div><label class="form-check"><input type="checkbox" name="remove_pano_before"> 기존 이미지 삭제</label></div>
+      <div class="form-group"><label for="admin-field-11">파노라마 후</label><input id="admin-field-11" class="form-control" type="file" name="pano_after" accept="image/jpeg,image/png,image/webp"><div data-preview="pano_after"></div><label class="form-check"><input type="checkbox" name="remove_pano_after"> 기존 이미지 삭제</label></div>
+      <div class="form-group"><label for="admin-field-12">구내포토 전</label><input id="admin-field-12" class="form-control" type="file" name="photo_before" accept="image/jpeg,image/png,image/webp"><div data-preview="photo_before"></div><label class="form-check"><input type="checkbox" name="remove_photo_before"> 기존 이미지 삭제</label></div>
+      <div class="form-group"><label for="admin-field-13">구내포토 후</label><input id="admin-field-13" class="form-control" type="file" name="photo_after" accept="image/jpeg,image/png,image/webp"><div data-preview="photo_after"></div><label class="form-check"><input type="checkbox" name="remove_photo_after"> 기존 이미지 삭제</label></div>
     </div>
-    <div class="form-group"><label>공개 상태</label><select name="published" class="form-control"><option value="1">공개</option><option value="0">비공개</option></select></div>
+    <div class="form-group"><label for="admin-field-14">공개 상태</label><select id="admin-field-14" name="published" class="form-control"><option value="1">공개</option><option value="0">비공개</option></select></div>
     <p>JPG·PNG·WebP, 한 장당 최대 5MB. 새 파일을 선택하지 않으면 기존 사진을 유지합니다.</p>
     <button type="submit" class="admin-btn" style="padding:12px 28px;font-size:15px">케이스 등록</button>
   </form>
@@ -169,7 +168,7 @@ export function adminCasesPage(cases: any[]) {
 
 <div class="admin-card">
   <h2 style="font-size:17px;font-weight:800;margin-bottom:18px;color:var(--brand-dark)">등록된 케이스 (${cases.length})</h2>
-  <table class="admin-table">
+  <table class="admin-table" tabindex="0" aria-label="등록 목록, 좌우 방향키로 가로 스크롤">
     <thead><tr><th>ID</th><th>제목</th><th>카테고리</th><th>지역</th><th>담당</th><th>조회수</th><th>등록일</th><th></th></tr></thead>
     <tbody>
       ${cases.map((c) => html`
@@ -185,7 +184,7 @@ export function adminCasesPage(cases: any[]) {
   </table>
 </div>
 
-<script src="/static/app.js?v=20260913-1"></script>
+<script src="/static/app.js?v=20260913-delivery"></script>
 `)
 }
 
@@ -231,24 +230,24 @@ export function adminPostsPage(posts: any[]) {
     <div class="admin-edit-actions"><strong class="edit-heading">새 콘텐츠 작성</strong><button class="admin-btn ghost cancel-edit" type="button" hidden>수정 취소 / 새로 작성</button></div>
     <p class="edit-status" role="status" aria-live="polite"></p>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
-      <div class="form-group"><label>제목 *</label><input class="form-control" name="title" required></div>
-      <div class="form-group"><label>슬러그 (URL) *</label><input class="form-control" name="slug" required placeholder="예: implant-care-guide (영문·숫자·하이픈)"></div>
-      <div class="form-group"><label>작성자 *</label>
-        <select class="form-control" name="author_slug">
+      <div class="form-group"><label for="admin-field-15">제목 *</label><input id="admin-field-15" class="form-control" name="title" required></div>
+      <div class="form-group"><label for="admin-field-16">슬러그 (URL) *</label><input id="admin-field-16" class="form-control" name="slug" required placeholder="예: implant-care-guide (영문·숫자·하이픈)"></div>
+      <div class="form-group"><label for="admin-field-17">작성자 *</label>
+        <select id="admin-field-17" class="form-control" name="author_slug">
           ${DOCTORS.map((d) => html`<option value="${d.slug}">${d.name} (${d.role})</option>`)}
         </select>
       </div>
-      <div class="form-group"><label>관련 진료 카테고리</label>
-        <select class="form-control" name="category">
+      <div class="form-group"><label for="admin-field-18">관련 진료 카테고리</label>
+        <select id="admin-field-18" class="form-control" name="category">
           <option value="">없음</option>
           <option>임플란트</option><option>치아교정</option><option>심미보철 · 라미네이트</option>
           <option>충치 · 신경치료</option><option>보철치료</option><option>턱관절치료</option><option>피부미용 · 안티에이징</option>
         </select>
       </div>
     </div>
-    <div class="form-group"><label>메타 설명 (검색 결과 노출용, 120~160자)</label><input class="form-control" name="meta_description" maxlength="170"></div>
+    <div class="form-group"><label for="admin-field-19">메타 설명 (검색 결과 노출용, 120~160자)</label><input id="admin-field-19" class="form-control" name="meta_description" maxlength="170"></div>
     <div class="form-group">
-      <label>본문 * <span style="font-weight:400;color:var(--ink-mute)">(이미지 드래그&드롭 삽입 가능)</span></label>
+      <label for="admin-field-20">본문 * <span style="font-weight:400;color:var(--ink-mute)">(이미지 드래그&드롭 삽입 가능)</span></label>
       <div class="editor-toolbar">
         <button type="button" onclick="insertHeading('h2')">H2</button>
         <button type="button" onclick="insertHeading('h3')">H3</button>
@@ -259,16 +258,16 @@ export function adminPostsPage(posts: any[]) {
         <button type="button" onclick="execCmd('createLink', prompt('링크 URL'))">🔗 링크</button>
         <button type="button" onclick="pickImage()">🖼 사진</button>
       </div>
-      <div id="editor" class="editor-area" contenteditable="true"></div>
+      <div id="editor" class="editor-area" role="textbox" aria-label="칼럼 본문" aria-multiline="true" contenteditable="true"></div>
     </div>
-    <div class="form-group"><label>공개 상태</label><select name="published" class="form-control"><option value="1">공개</option><option value="0">비공개</option></select></div>
+    <div class="form-group"><label>공개 상태</label><select id="admin-field-20" name="published" class="form-control"><option value="1">공개</option><option value="0">비공개</option></select></div>
     <button type="submit" class="admin-btn" style="padding:12px 28px;font-size:15px">칼럼 발행</button>
   </form>
 </div>
 
 <div class="admin-card">
   <h2 style="font-size:17px;font-weight:800;margin-bottom:18px;color:var(--brand-dark)">발행된 칼럼 (${posts.length})</h2>
-  <table class="admin-table">
+  <table class="admin-table" tabindex="0" aria-label="등록 목록, 좌우 방향키로 가로 스크롤">
     <thead><tr><th>ID</th><th>제목</th><th>작성자</th><th>조회수</th><th>발행일</th><th></th></tr></thead>
     <tbody>
       ${posts.map((p) => html`
@@ -295,10 +294,10 @@ export function adminNoticesPage(notices: any[]) {
   <form id="notice-form" data-content-kind="notices">
     <div class="admin-edit-actions"><strong class="edit-heading">새 콘텐츠 작성</strong><button class="admin-btn ghost cancel-edit" type="button" hidden>수정 취소 / 새로 작성</button></div>
     <p class="edit-status" role="status" aria-live="polite"></p>
-    <div class="form-group"><label>제목 *</label><input class="form-control" name="title" required></div>
-    <div class="form-group"><label>내용 *</label><textarea class="form-control" name="content" required></textarea></div>
+    <div class="form-group"><label for="admin-field-21">제목 *</label><input id="admin-field-21" class="form-control" name="title" required></div>
+    <div class="form-group"><label for="admin-field-22">내용 *</label><textarea id="admin-field-22" class="form-control" name="content" required></textarea></div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:end">
-      <div class="form-group"><label>이미지 (선택)</label><input class="form-control" type="file" name="image" accept="image/jpeg,image/png,image/webp"><div data-preview="image"></div><label class="form-check"><input type="checkbox" name="remove_image"> 기존 이미지 삭제</label></div>
+      <div class="form-group"><label for="admin-field-23">이미지 (선택)</label><input id="admin-field-23" class="form-control" type="file" name="image" accept="image/jpeg,image/png,image/webp"><div data-preview="image"></div><label class="form-check"><input type="checkbox" name="remove_image"> 기존 이미지 삭제</label></div>
       <label class="form-check" style="margin-bottom:22px"><input type="checkbox" name="pinned"> <span><strong>대표 공지로 상단 고정</strong></span></label>
     </div>
     <button type="submit" class="admin-btn" style="padding:12px 28px;font-size:15px">공지 등록</button>
@@ -307,7 +306,7 @@ export function adminNoticesPage(notices: any[]) {
 
 <div class="admin-card">
   <h2 style="font-size:17px;font-weight:800;margin-bottom:18px;color:var(--brand-dark)">등록된 공지 (${notices.length})</h2>
-  <table class="admin-table">
+  <table class="admin-table" tabindex="0" aria-label="등록 목록, 좌우 방향키로 가로 스크롤">
     <thead><tr><th>ID</th><th>제목</th><th>대표</th><th>조회수</th><th>등록일</th><th></th></tr></thead>
     <tbody>
       ${notices.map((n) => html`

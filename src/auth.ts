@@ -61,11 +61,13 @@ export async function hashPassword(password: string, salt?: Uint8Array): Promise
 }
 
 export async function verifyPassword(password: string, stored: string): Promise<boolean> {
-  if (typeof stored !== 'string') return false
-  const [saltB64] = stored.split('.')
-  if (!saltB64) return false
-  const rehash = await hashPassword(password, b64urlDecode(saltB64))
-  return constantEqual(rehash, stored)
+  if (typeof stored !== 'string' || !/^[A-Za-z0-9_-]{22}\.[A-Za-z0-9_-]{43}$/.test(stored)) return false
+  try {
+    const [saltB64] = stored.split('.')
+    const salt = b64urlDecode(saltB64)
+    if (salt.length !== 16) return false
+    return constantEqual(await hashPassword(password, salt), stored)
+  } catch { return false }
 }
 
 export async function constantTimePasswordMatch(a: string, b: string) {
@@ -103,7 +105,7 @@ export async function getAdmin(c: Context<{ Bindings: Bindings }>): Promise<bool
 }
 
 export async function setUserSession(c: Context<{ Bindings: Bindings }>, user: { id: number; name: string; email: string }) {
-  const token = await signToken({ t: 'user', id: user.id, name: user.name, email: user.email }, secretOf(c), 30 * 86400)
+  const token = await signToken({ t: 'user', id: user.id }, secretOf(c), 30 * 86400)
   setCookie(c, 'gosu_session', token, { httpOnly: true, secure: true, sameSite: 'Lax', path: '/', maxAge: 30 * 86400 })
 }
 
@@ -112,9 +114,9 @@ export async function setAdminSession(c: Context<{ Bindings: Bindings }>) {
   setCookie(c, 'gosu_admin', token, { httpOnly: true, secure: true, sameSite: 'Lax', path: '/', maxAge: 86400 })
 }
 
-export function clearSessions(c: Context<{ Bindings: Bindings }>) {
-  deleteCookie(c, 'gosu_session', { path: '/' })
-  deleteCookie(c, 'gosu_admin', { path: '/' })
+export function clearSessions(c: Context<{ Bindings: Bindings }>, kind?: 'user' | 'admin') {
+  if (kind !== 'admin') deleteCookie(c, 'gosu_session', { path: '/' })
+  if (kind !== 'user') deleteCookie(c, 'gosu_admin', { path: '/' })
 }
 
 export function isBot(ua: string | undefined): boolean {

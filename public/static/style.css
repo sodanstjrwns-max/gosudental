@@ -7,7 +7,7 @@
   /* 로고 실측 컬러 */
   --sky: #acd7e5;            /* 로고 원형 하늘색 그대로 */
   --sky-bright: #b8e6f5;     /* 로고 반짝임 */
-  --sky-deep: #4f9cbe;       /* 텍스트용 딥 스카이 (접근성) */
+  --sky-deep: #337a99;       /* 텍스트용 딥 스카이 (접근성) */
   --sky-mist: #eef6fa;
   --sky-line: #d7e9f1;
   /* 먹(墨) */
@@ -15,7 +15,7 @@
   --ink-deep: #0a0d0f;
   --ink-2: #2e353b;
   --ink-soft: #4d565e;
-  --ink-mute: #8a949c;
+  --ink-mute: #626e78;
   /* 낙관(落款) */
   --seal: #b8382b;
   --seal-soft: #d4574a;
@@ -23,11 +23,11 @@
   --paper: #fcfdfe;
   --line: #e5ecf0;
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
-  --font: 'Gowun Batang', 'Noto Serif KR', 'Pretendard Variable', serif; /* 수묵 본문 — 붓 세리프 바탕체 */
-  --sans: 'Pretendard Variable', Pretendard, -apple-system, sans-serif;   /* UI·폼 전용 */
-  --serif: 'Noto Serif KR', 'Nanum Myeongjo', serif;
-  --brush: 'LXGW WenKai TC', 'Noto Serif KR', serif;          /* 해서(楋書) 붓글씨 — 한자 워터마크·낙관 */
-  --hangul-brush: 'Nanum Brush Script', 'Noto Serif KR', serif; /* 한글 붓 손글씨 — 포인트 강조 */
+  --font: 'Gosu Batang', 'Gosu Serif', 'Gosu UI', serif; /* 수묵 본문 — 붓 세리프 바탕체 */
+  --sans: 'Gosu UI', Pretendard, -apple-system, sans-serif;   /* UI·폼 전용 */
+  --serif: 'Gosu Serif', 'Nanum Myeongjo', serif;
+  --brush: 'Gosu Hanja', 'Gosu Serif', serif;          /* 해서(楋書) 붓글씨 — 한자 워터마크·낙관 */
+  --hangul-brush: 'Gosu Brush', 'Gosu Serif', serif; /* 한글 붓 손글씨 — 포인트 강조 */
   /* 하위 호환 별칭 (기존 인라인 스타일 대응) */
   --brand: var(--sky-deep);
   --brand-soft: var(--sky);
@@ -365,7 +365,7 @@ ul { list-style: none; }
   transition: all 0.4s var(--ease); display: block;
 }
 .treat-sub:hover { border-color: var(--ink); transform: translateY(-4px); box-shadow: 6px 6px 0 var(--sky-mist); }
-.treat-sub h4 { font-family: var(--serif); font-size: 17px; font-weight: 700; color: var(--ink); margin-bottom: 7px; }
+.treat-sub :is(h3,h4) { font-family: var(--serif); font-size: 17px; font-weight: 700; color: var(--ink); margin-bottom: 7px; }
 .treat-sub p { font-size: 13.5px; color: var(--ink-mute); line-height: 1.65; }
 
 /* ═══ Stats ═══ */
@@ -864,7 +864,7 @@ textarea.form-control { min-height: 110px; resize: vertical; }
   .brush-divider { height: 22px; }
 }
 
-/* ═══ 붓글씨 폰트 세트 (LXGW WenKai TC + Nanum Brush) ═══ */
+/* ═══ 붓글씨 폰트 세트 (Gosu Hanja + Nanum Brush) ═══ */
 /* 히어로 '고수' — 한글 붓 손글씨, 살짝 크게·기울여 낙관 느낌 */
 .hero-title em {
   font-family: var(--hangul-brush); font-weight: 400;
@@ -1243,4 +1243,34 @@ p, .lead, .hero-sub { text-wrap: pretty; }
   .photo-lightbox { padding:12px; width:calc(100vw - 16px); max-width:calc(100vw - 16px); height:calc(100dvh - 16px); max-height:calc(100dvh - 16px); gap:8px; }
   .photo-lightbox button { padding:8px 12px; }
   .lightbox-caption { font-size:13px; }
+}
+
+/* Delivery: progressive enhancement, focus visibility and narrow screens. */
+:focus-visible { outline: 3px solid #337a99; outline-offset: 4px; }
+.reveal { opacity: 1; transform: none; }
+.hero-title .line > span,.hero-eyebrow,.hero-sub,.hero-actions { animation: none; opacity: 1; transform: none; }
+.alert.info { color: #285c72; }
+.form-feedback { margin: 16px 0; padding: 12px; background: var(--sky-mist); color: var(--ink); border-radius: 8px; }
+.form-feedback:empty { display: none; }
+.form-feedback[data-error="true"] { color: #912b22; background: #fff3f1; }
+button:disabled { opacity: .65; cursor: wait; }
+.notice-content { white-space: pre-line; overflow-wrap: anywhere; }
+.ba-handle[role="slider"] { cursor: ew-resize; }
+.admin-main { min-width: 0; }
+@media(max-width:640px) {
+  .admin-main [style*="display:grid"] { grid-template-columns: minmax(0,1fr)!important; }
+  .admin-main .form-control { min-width: 0; }
+  .form-control { font-size:16px; }
+}
+@media(prefers-reduced-motion:reduce) {
+  html { scroll-behavior:auto; }
+  *,*::before,*::after { animation-duration:.01ms!important; animation-iteration-count:1!important; transition-duration:.01ms!important; }
+}
+
+/* Mobile: keep the visual identity without expensive full-screen SVG filters. */
+@media(max-width:640px) {
+  #hero-section .hero-bg { background-image:url('/static/img/interior-lobby-mobile.webp')!important; animation:none; }
+  .hero-hanja,.hero-seal { animation:none; opacity:1; }
+  .hero-hanja,.h-display em::after,.seal-stamp,.site-footer::before,.philosophy::before,.stats-band::before,.cta-band::before,.hero-seal { filter:none; }
+  body::before { display:none; }
 }

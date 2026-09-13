@@ -12,6 +12,7 @@ test('strict consent: false-like values never become consent', () => {
   for (const value of [true, 'true', 'on']) assert.equal(consent(value), true)
 })
 test('password hashes salted and verifiable', async () => {
+  for (const malformed of ['!', 'bad.hash', 'x'.repeat(22) + '.' + 'x'.repeat(43)]) assert.equal(await verifyPassword('test', malformed), false)
   const hash = await hashPassword('a long test password')
   assert.ok(await verifyPassword('a long test password', hash))
   assert.equal(await verifyPassword('wrong password', hash), false)
@@ -58,4 +59,24 @@ test('API rejects cross-origin writes and missing auth configuration', async () 
   assert.equal(absent.status, 503)
   const cross = await app.request('http://localhost/api/reservation', { method: 'POST', headers: { ...headers, Origin: 'https://evil.test' }, body: '{}' }, {} as any)
   assert.equal(cross.status, 403)
+})
+
+test('database failures are service errors, not empty content or misleading 404s', async () => {
+  const DB = { prepare: () => { throw new Error('database temporarily unavailable') } }
+  for (const path of ['/cases', '/column/example', '/notice', '/sitemap.xml']) {
+    const response = await app.request('http://localhost' + path, {}, { DB } as any)
+    assert.equal(response.status, 503)
+    assert.equal(response.headers.get('Cache-Control'), 'no-store')
+    assert.match(response.headers.get('X-Robots-Tag') || '', /noindex/)
+    assert.match(await response.text(), /잠시 후|일시적/)
+  }
+})
+
+test('logout clears only its own session cookie', async () => {
+  for (const [route, expected, retained] of [['auth', 'gosu_session', 'gosu_admin'], ['admin', 'gosu_admin', 'gosu_session']]) {
+    const response = await app.request(`http://localhost/api/${route}/logout`, { method: 'POST', headers: { Origin: 'http://localhost' } }, {} as any)
+    assert.equal(response.status, 200)
+    assert.match(response.headers.get('Set-Cookie') || '', new RegExp(expected))
+    assert.doesNotMatch(response.headers.get('Set-Cookie') || '', new RegExp(retained))
+  }
 })

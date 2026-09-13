@@ -17,10 +17,22 @@
       toggle.setAttribute('aria-expanded', String(open));
       toggle.setAttribute('aria-label', open ? '메뉴 닫기' : '메뉴 열기');
       document.body.classList.toggle('menu-open', open);
+      document.querySelectorAll('main,.site-footer,.mobile-cta-bar').forEach((el) => { el.inert = open; });
+      if (!open && menu.contains(document.activeElement)) toggle.focus();
     };
     toggle.addEventListener('click', () => setMenu(!menu.classList.contains('open')));
     menu.addEventListener('click', (e) => {
       if (e.target.closest('a')) setMenu(false);
+    });
+    document.addEventListener('keydown', (e) => {
+      if (!menu.classList.contains('open')) return;
+      if (e.key === 'Escape') { setMenu(false); toggle.focus(); }
+      if (e.key === 'Tab') {
+        const items = [toggle, ...menu.querySelectorAll('a,summary')].filter((el) => el.getClientRects().length);
+        const first = items[0], last = items[items.length - 1];
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+        if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+      }
     });
     // 화면 회전/리사이즈로 데스크톱 폭이 되면 잠금 해제
     window.addEventListener('resize', () => {
@@ -71,13 +83,21 @@
     const after = slider.querySelector('.ba-after');
     const handle = slider.querySelector('.ba-handle');
     if (!after || !handle) return;
-    const setPos = (clientX) => {
-      const rect = slider.getBoundingClientRect();
-      let pct = ((clientX - rect.left) / rect.width) * 100;
-      pct = Math.max(2, Math.min(98, pct));
+    const setPercent = (value) => {
+      const pct = Math.max(2, Math.min(98, value));
       after.style.clipPath = `inset(0 0 0 ${pct}%)`;
       handle.style.left = pct + '%';
+      handle.setAttribute('aria-valuenow', String(Math.round(pct)));
     };
+    const setPos = (clientX) => {
+      const rect = slider.getBoundingClientRect();
+      if (rect.width) setPercent(((clientX - rect.left) / rect.width) * 100);
+    };
+    handle.addEventListener('keydown', (e) => {
+      const current = Number(handle.getAttribute('aria-valuenow'));
+      const next = { ArrowLeft: current - 5, ArrowRight: current + 5, Home: 2, End: 98 }[e.key];
+      if (next !== undefined) { e.preventDefault(); setPercent(next); }
+    });
     let dragging = false;
     const start = (e) => { dragging = true; setPos(e.touches ? e.touches[0].clientX : e.clientX); };
     const move = (e) => { if (dragging) setPos(e.touches ? e.touches[0].clientX : e.clientX); };
@@ -93,11 +113,14 @@
   // Case filter
   const filterBar = document.querySelector('.case-filter');
   if (filterBar) {
+    filterBar.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(b.classList.contains('active'))));
     filterBar.addEventListener('click', (e) => {
       const btn = e.target.closest('button');
       if (!btn) return;
-      filterBar.querySelectorAll('button').forEach((b) => b.classList.remove('active'));
-      btn.classList.add('active');
+      filterBar.querySelectorAll('button').forEach((b) => {
+        b.classList.toggle('active', b === btn);
+        b.setAttribute('aria-pressed', String(b === btn));
+      });
       const cat = btn.dataset.cat;
       document.querySelectorAll('.case-grid [data-cat]').forEach((card) => {
         card.style.display = cat === 'all' || card.dataset.cat === cat ? '' : 'none';
@@ -106,7 +129,7 @@
   }
 
   // Login state in header
-  fetch('/api/auth/me').then((r) => r.json()).then((d) => {
+  if (document.getElementById('login-link')) fetch('/api/auth/me').then((r) => r.json()).then((d) => {
     const link = document.getElementById('login-link');
     if (link && d.user) { link.textContent = d.user.name + '님'; link.href = '/auth/mypage'; }
   }).catch(() => {});
@@ -135,10 +158,23 @@
 
   // Generic AJAX forms
   document.querySelectorAll('form[data-ajax]').forEach((form) => {
+    const status = document.createElement('p');
+    status.className = 'form-feedback';
+    status.setAttribute('role', 'status');
+    status.setAttribute('aria-live', 'polite');
+    status.tabIndex = -1;
+    form.append(status);
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       const btn = form.querySelector('[type=submit]');
+      if (form.dataset.submitting === 'true') return;
+      form.dataset.submitting = 'true';
+      form.setAttribute('aria-busy', 'true');
       if (btn) btn.disabled = true;
+      status.textContent = '처리 중입니다…';
+      status.dataset.error = 'false';
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 20000);
       try {
         const fd = new FormData(form);
         const body = {};
@@ -148,18 +184,25 @@
           method: form.method || 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(body),
+          signal: controller.signal,
         });
         const data = await res.json();
-        if (data.ok) {
-          if (data.redirect) { location.href = data.redirect; return; }
-          alert(data.message || '완료되었습니다.');
-          form.reset();
-        } else {
-          alert(data.error || '오류가 발생했습니다.');
-        }
+        if (!res.ok || !data.ok) throw new Error(data.error || '처리에 실패했습니다. 잠시 후 다시 시도해주세요.');
+        const redirect = data.redirect || form.dataset.successRedirect;
+        if (redirect) { location.href = redirect; return; }
+        status.textContent = data.message || '완료되었습니다.';
+        form.reset();
+        status.focus();
       } catch (err) {
-        alert('네트워크 오류가 발생했습니다.');
+        status.dataset.error = 'true';
+        status.textContent = err.name === 'AbortError'
+          ? '응답이 지연되고 있습니다. 접수 여부를 확인한 후 다시 시도해주세요.'
+          : err instanceof TypeError ? '연결이 끊겼습니다. 입력 내용은 유지됩니다. 접수 여부를 확인 후 다시 시도해주세요.' : err.message;
+        status.focus();
       } finally {
+        clearTimeout(timeout);
+        form.dataset.submitting = 'false';
+        form.removeAttribute('aria-busy');
         if (btn) btn.disabled = false;
       }
     });

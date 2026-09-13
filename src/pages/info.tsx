@@ -76,16 +76,16 @@ export function directionsPage() {
 
 export function tourPage() {
   const shots = [
-    { img: 'interior-lobby.jpg', cap: '라운지 — 치과 문을 여는 순간부터 편안하게', cls: 'sp-a' },
-    { img: 'interior-bookcafe.jpg', cap: '북카페 — 기다림이 지루하지 않은 공간', cls: 'sp-b' },
-    { img: 'interior-01.jpg', cap: '데스크 & 라운지', cls: 'sp-c' },
-    { img: 'interior-02.jpg', cap: '진료 존', cls: 'sp-d' },
-    { img: 'interior-03.jpg', cap: '진료실 — 프라이버시를 지키는 구조', cls: 'sp-e' },
-    { img: 'interior-04.jpg', cap: '대기 공간', cls: 'sp-a' },
-    { img: 'interior-07.jpg', cap: '상담실', cls: 'sp-b' },
-    { img: 'interior-09.jpg', cap: '복도 — 동선까지 설계한 공간', cls: 'sp-c' },
-    { img: 'interior-17.jpg', cap: '진료 공간 전경', cls: 'sp-d' },
-    { img: 'interior-04.jpg', cap: '수술 · 특수 진료 존', cls: 'sp-e' },
+    { img: 'interior-lobby.webp', cap: '라운지 — 치과 문을 여는 순간부터 편안하게', cls: 'sp-a' },
+    { img: 'interior-bookcafe.webp', cap: '북카페 — 기다림이 지루하지 않은 공간', cls: 'sp-b' },
+    { img: 'interior-01.webp', cap: '데스크 & 라운지', cls: 'sp-c' },
+    { img: 'interior-02.webp', cap: '진료 존', cls: 'sp-d' },
+    { img: 'interior-03.webp', cap: '진료실 — 프라이버시를 지키는 구조', cls: 'sp-e' },
+    { img: 'interior-04.webp', cap: '대기 공간', cls: 'sp-a' },
+    { img: 'interior-07.webp', cap: '상담실', cls: 'sp-b' },
+    { img: 'interior-09.webp', cap: '복도 — 동선까지 설계한 공간', cls: 'sp-c' },
+    { img: 'interior-17.webp', cap: '진료 공간 전경', cls: 'sp-d' },
+    { img: 'interior-04.webp', cap: '수술 · 특수 진료 존', cls: 'sp-e' },
   ]
   const content = html`
 <section class="page-hero dark" id="tour-hero">
@@ -93,7 +93,7 @@ export function tourPage() {
     <nav class="breadcrumb"><a href="/">홈</a> / <span>공간 둘러보기</span></nav>
     <p class="eyebrow" style="color:var(--brand-accent)">Space Tour</p>
     <h1 class="h-display">치과 같지 않은 치과, <br><em style="color:var(--brand-soft)">고수치과의 공간</em></h1>
-    <p class="lead">두려움은 공간에서부터 시작됩니다. 그래서 고수치과는 첫인상부터 다르게 설계했습니다. 내포에서 가장 큰 규모, 가장 쾌적한 환경으로 준비하고 있습니다.</p>
+    <p class="lead">두려움은 공간에서부터 시작됩니다. 그래서 고수치과는 첫인상부터 다르게 설계했습니다. 환자분이 편안하게 머무를 수 있는 공간을 준비하고 있습니다.</p>
   </div>
 </section>
 
@@ -112,7 +112,7 @@ export function tourPage() {
 
   return Layout(
     {
-      title: '공간 둘러보기 | 고수치과의원 — 내포 최대 규모 치과',
+      title: '공간 둘러보기 | 고수치과의원 — 내포신도시 치과 공간 안내',
       description: '고수치과 공간 둘러보기. 라운지·북카페·진료실·상담실까지 — 치과 같지 않은 편안한 공간을 만나보세요.',
       path: '/tour',
       schema: [breadcrumbSchema([{ name: '홈', path: '/' }, { name: '공간 둘러보기', path: '/tour' }])],
@@ -152,8 +152,8 @@ export function pricingPage() {
 
   return Layout(
     {
-      title: '비용 안내 — 비급여 진료비 고지 | 고수치과의원',
-      description: '고수치과 비급여 진료비용 안내. 임플란트·치아교정·라미네이트 등 주요 진료 비용을 투명하게 고지합니다.',
+      title: '비용 안내 — 개원 준비 중 잠정수가 | 고수치과의원',
+      description: '고수치과 비급여 진료비용 안내. 임플란트·치아교정·라미네이트 등 주요 진료의 잠정 비용을 안내합니다. 최종 금액과 적용 조건은 병원 확인 후 확정됩니다.',
       path: '/pricing',
       schema: [breadcrumbSchema([{ name: '홈', path: '/' }, { name: '비용 안내', path: '/pricing' }])],
     },
@@ -221,7 +221,7 @@ export function reservationPage() {
     <nav class="breadcrumb"><a href="/">홈</a> / <span>상담 예약</span></nav>
     <p class="eyebrow">Reservation</p>
     <h1 class="h-display">상담 <em>예약</em></h1>
-    <p class="lead">어려운 예약은 고수치과와 어울리지 않습니다. 아래 양식만 남겨주시면, 확인 후 바로 연락드리겠습니다.</p>
+    <p class="lead">어려운 예약은 고수치과와 어울리지 않습니다. 아래 양식을 남겨주시면 확인 후 순차적으로 연락드리겠습니다. 신청만으로 예약이 확정되지는 않습니다.</p>
   </div>
 </section>
 
@@ -229,32 +229,32 @@ export function reservationPage() {
   <div class="auth-wrap" style="max-width:640px">
     <form class="form-card" data-ajax action="/api/reservation" method="POST">
       <div class="form-group">
-        <label>성함 <span class="req">*</span></label>
-        <input class="form-control" name="name" required placeholder="홍길동">
+        <label for="info-field-1">성함 <span class="req">*</span></label>
+        <input id="info-field-1" class="form-control" name="name" required placeholder="홍길동">
       </div>
       <div class="form-group">
-        <label>연락처 <span class="req">*</span></label>
-        <input class="form-control" name="phone" type="tel" required placeholder="010-0000-0000">
+        <label for="info-field-2">연락처 <span class="req">*</span></label>
+        <input id="info-field-2" class="form-control" name="phone" type="tel" required placeholder="010-0000-0000">
       </div>
       <div class="form-group">
-        <label>이메일</label>
-        <input class="form-control" name="email" type="email" placeholder="example@email.com">
+        <label for="info-field-3">이메일</label>
+        <input id="info-field-3" class="form-control" name="email" type="email" placeholder="example@email.com">
       </div>
       <div class="form-group">
-        <label>관심 진료</label>
-        <select class="form-control" name="category">
+        <label for="info-field-4">관심 진료</label>
+        <select id="info-field-4" class="form-control" name="category">
           <option value="">선택해주세요</option>
           ${TREATMENTS.map((t) => html`<option value="${t.name}">${t.name}</option>`)}
           <option value="기타">기타 / 상담 후 결정</option>
         </select>
       </div>
       <div class="form-group">
-        <label>희망 일시</label>
-        <input class="form-control" name="preferred_at" placeholder="예: 11월 첫째 주 평일 오후">
+        <label for="info-field-5">희망 일시</label>
+        <input id="info-field-5" class="form-control" name="preferred_at" placeholder="예: 11월 첫째 주 평일 오후">
       </div>
       <div class="form-group">
-        <label>남기실 말씀</label>
-        <textarea class="form-control" name="message" placeholder="궁금하신 점이나 현재 불편하신 점을 편하게 적어주세요. 치과 치료가 두려우신 분은 미리 말씀해 주시면 더 세심하게 준비하겠습니다."></textarea>
+        <label for="info-field-6">남기실 말씀</label>
+        <textarea id="info-field-6" class="form-control" name="message" placeholder="궁금하신 점이나 현재 불편하신 점을 편하게 적어주세요. 치과 치료가 두려우신 분은 미리 말씀해 주시면 더 세심하게 준비하겠습니다."></textarea>
       </div>
       <label class="form-check">
         <input type="checkbox" name="privacy_consent" required>

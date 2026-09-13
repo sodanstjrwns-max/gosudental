@@ -61,7 +61,6 @@ export function columnDetailPage(post: any) {
     datePublished: post.created_at,
     dateModified: post.updated_at || post.created_at,
     author: { '@type': 'Person', name: `${author.name} 원장`, url: `${SITE.domain}/doctors/${author.slug}` },
-    reviewedBy: { '@type': 'Person', name: `${author.name} 원장` },
     publisher: { '@type': 'Organization', name: SITE.name, logo: { '@type': 'ImageObject', url: `${SITE.domain}/static/img/logo-stack.png` } },
     mainEntityOfPage: `${SITE.domain}/column/${post.slug}`,
   }
@@ -74,7 +73,7 @@ export function columnDetailPage(post: any) {
     <h1 class="h-display" style="font-size:clamp(26px,3.8vw,44px)">${post.title}</h1>
     <p style="font-size:14.5px;color:var(--ink-mute)">
       <a href="/doctors/${author.slug}" style="font-weight:700;color:var(--brand)">${author.name} 원장</a> · ${(post.created_at || '').slice(0, 10)}
-      ${post.updated_at && post.updated_at !== post.created_at ? html` (최종 검토 ${(post.updated_at || '').slice(0, 10)})` : ''}
+      ${post.updated_at && post.updated_at !== post.created_at ? html` (최종 수정 ${(post.updated_at || '').slice(0, 10)})` : ''}
     </p>
   </div>
 </section>
@@ -105,6 +104,7 @@ export function columnDetailPage(post: any) {
       description: post.meta_description || post.title,
       path: `/column/${post.slug}`,
       ogImage: post.thumbnail || undefined,
+      ogType: 'article',
       schema: [
         articleSchema,
         breadcrumbSchema([
@@ -129,7 +129,7 @@ export function encyclopediaPage(q?: string) {
     <h1 class="h-display">치과 <em>백과사전</em></h1>
     <p class="lead">진료실에서 들었던 낯선 용어들, 쉽게 풀어 설명해 드립니다. 총 ${TERMS.length}개 용어 수록 (계속 추가됩니다).</p>
     <form method="GET" action="/encyclopedia" style="max-width:420px;margin-top:24px;display:flex;gap:10px">
-      <input class="form-control" type="search" name="q" value="${q || ''}" placeholder="용어 검색 (예: 임플란트, 신경치료)">
+      <input class="form-control" type="search" id="dictionary-search" aria-label="치과 용어 검색" name="q" value="${q || ''}" placeholder="용어 검색 (예: 임플란트, 신경치료)">
       <button class="btn-brand" type="submit" style="border:none;cursor:pointer;font-family:var(--font)">검색</button>
     </form>
   </div>
@@ -159,6 +159,7 @@ export function encyclopediaPage(q?: string) {
       title: q ? `"${q}" 검색 결과 — 치과 백과사전 | 고수치과` : `치과 백과사전 — ${TERMS.length}개 치과 용어 사전 | 고수치과의원`,
       description: '임플란트·교정·신경치료 등 진료실에서 만나는 치과 용어를 알기 쉽게 정리한 고수치과 백과사전.',
       path: '/encyclopedia',
+      noindex: Boolean(q),
       schema: [breadcrumbSchema([{ name: '홈', path: '/' }, { name: '백과사전', path: '/encyclopedia' }])],
     },
     content
@@ -166,7 +167,9 @@ export function encyclopediaPage(q?: string) {
 }
 
 export function termDetailPage(slug: string) {
-  const term = TERMS.find((t) => t.slug === slug || t.name === decodeURIComponent(slug))
+  let decoded = slug
+  try { decoded = decodeURIComponent(slug) } catch { return null }
+  const term = TERMS.find((t) => t.slug === slug || t.name === decoded)
   if (!term) return null
   const rel = TREATMENTS.filter((tr) => term.related.includes(tr.slug))
   const relTerms = TERMS.filter((t) => t.slug !== term.slug && t.related.some((r) => term.related.includes(r))).slice(0, 8)
@@ -277,7 +280,7 @@ export function noticeDetailPage(n: any) {
 <section class="section" style="padding-top:10px" id="notice-detail-body">
   <div class="section-narrow prose">
     ${n.image ? html`<img src="${n.image}" alt="${n.title}">` : ''}
-    <p>${n.content}</p>
+    <p class="notice-content">${n.content}</p>
     <p style="margin-top:40px"><a href="/notice" class="treat-more"><i class="fas fa-arrow-left"></i> 목록으로</a></p>
   </div>
 </section>`
