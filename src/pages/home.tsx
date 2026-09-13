@@ -1,5 +1,7 @@
 import { html } from 'hono/html'
 import { Layout } from '../layout'
+import { PHOTOS } from '../data/photos'
+import { photoFigure, photoGallery } from '../photo-gallery'
 import { SITE, TREATMENTS, DOCTORS, EQUIPMENT } from '../data/site'
 
 export function homePage() {
@@ -37,6 +39,19 @@ export function homePage() {
 <section class="quote-band" id="belief-quote-section">
   <blockquote class="reveal">치과의사는 <br><em>한 사람의 세상</em>을 바꿀 수 있습니다.</blockquote>
   <cite class="reveal reveal-d1">고수치과의원 대표원장 조원익</cite>
+</section>
+
+<section class="section" id="director-introduction">
+  <div class="section-inner photo-story-split">
+    ${photoFigure(PHOTOS[13], 'home-director', 'feature-portrait')}
+    <article class="photo-story-copy">
+      <p class="eyebrow">Meet the Director</p>
+      <h2 class="h-display">고수치과 대표원장,<br><em>조원익</em>입니다</h2>
+      <p class="lead">“잘 치료하는 것만큼, 오래 편안한 결과를 생각합니다.”</p>
+      <p>진료실에서 지키고 싶은 원칙부터, 진료실 밖의 일상까지. 고수치과를 이끄는 사람의 이야기를 만나보세요.</p>
+      <a href="/doctors/cho-wonik" class="hero-btn primary">조원익 원장 자세히 보기</a>
+    </article>
+  </div>
 </section>
 
 <!-- 철학 -->
@@ -117,6 +132,10 @@ export function homePage() {
     <p class="eyebrow reveal">Medical Team</p>
     <h2 class="h-display reveal reveal-d1">전국의 고수들을 찾아가 <br>배움을 멈추지 않는 <em>의료진</em></h2>
     <p class="lead reveal reveal-d2">스스로를 '고수'라고 이야기하는 치과보다, 환자분들께서 "여기는 정말 믿고 맡길 수 있는 치과다"라고 이야기해 주시는 치과가 되고자 합니다.</p>
+    <div class="home-team-story">
+      ${photoFigure(PHOTOS[1], 'home-team')}
+      <article><p class="eyebrow">Three Doctors, One Team</p><h3>같이 고민하고,<br>함께 진료합니다</h3><p>조원익 대표원장, 김경환 치과교정과 전문의, 이민우 진료원장. 고수치과의 의료진을 소개합니다.</p><a href="/doctors" class="treat-more">의료진 전체 소개 <i class="fas fa-arrow-right" aria-hidden="true"></i></a></article>
+    </div>
     <div class="doctor-grid">
       ${DOCTORS.map((d, i) => html`
       <a href="/doctors/${d.slug}" class="doctor-card reveal reveal-d${i + 1}">
@@ -131,6 +150,16 @@ export function homePage() {
         </div>
       </a>`)}
     </div>
+  </div>
+</section>
+
+<section class="section photo-story-band" id="director-life-preview">
+  <div class="section-inner">
+    <p class="eyebrow">Another Side of Wonik</p>
+    <h2 class="h-display">가운을 벗고,<br><em>코트 위에서</em></h2>
+    <p class="lead">농구를 즐기는 조원익 원장의 또 다른 모습. 진료실 밖의 이야기도 함께 나눕니다.</p>
+    ${photoGallery([PHOTOS[3], PHOTOS[5], PHOTOS[10]], 'home-life')}
+    <a href="/doctors/cho-wonik#doctor-life" class="treat-more">일상 사진 더 보기 <i class="fas fa-arrow-right" aria-hidden="true"></i></a>
   </div>
 </section>
 

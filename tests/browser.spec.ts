@@ -6,6 +6,56 @@ const adminPassword = readFileSync('.dev.vars', 'utf8').split('\n').find(s => s.
 const marker = 'browserqa' + Date.now()
 test.setTimeout(90000)
 
+test('all supplied portraits and sixteen distinct photos are used', async ({ page }) => {
+  const photos = new Set<string>()
+  for (const path of ['/', '/mission', '/doctors', '/doctors/cho-wonik', '/doctors/kim-kyunghwan', '/doctors/lee-minwoo']) {
+    await page.goto(base + path)
+    const sources = await page.locator('img[src*="gosu-photo-"]').evaluateAll(nodes => nodes.map(node => (node as any).getAttribute('src').replace('-thumb.webp', '.webp')))
+    sources.forEach(src => photos.add(src))
+    if (path.startsWith('/doctors/')) {
+      const img = page.locator('#doctor-hero img')
+      await expect(img).toBeVisible()
+      expect(await img.evaluate((el: any) => el.complete && el.naturalWidth > 0)).toBeTruthy()
+    }
+    for (const width of [390, 1440]) {
+      await page.setViewportSize({ width, height: 900 })
+      expect(await page.evaluate(() => (globalThis as any).document.documentElement.scrollWidth <= (globalThis as any).innerWidth), path + ' width=' + width).toBeTruthy()
+    }
+  }
+  expect(photos.size).toBe(16)
+  for (const src of photos) expect((await page.request.get(base + src)).status()).toBe(200)
+})
+
+test('Cho portraits and lifestyle galleries open, navigate and restore keyboard focus', async ({ page }) => {
+  const errors: string[] = []
+  page.on('pageerror', error => errors.push(error.message))
+  await page.goto(base + '/doctors/cho-wonik')
+  await expect(page.locator('[data-photo-group="cho-portraits"]')).toHaveCount(5)
+  await expect(page.locator('[data-photo-group="cho-life"]')).toHaveCount(7)
+  const first = page.locator('[data-photo-group="cho-life"]').first()
+  await first.click()
+  const modal = page.getByRole('dialog', { name: '사진 크게 보기' })
+  await expect(modal).toBeVisible()
+  await expect(modal.locator('.lightbox-counter')).toHaveText('1 / 7')
+  await expect(modal.locator('img')).toHaveAttribute('src', /gosu-photo-03-/)
+  await page.keyboard.press('ArrowRight')
+  await expect(modal.locator('.lightbox-counter')).toHaveText('2 / 7')
+  await page.getByRole('button', { name: '이전 사진' }).click()
+  await expect(modal.locator('.lightbox-counter')).toHaveText('1 / 7')
+  await page.keyboard.press('Escape')
+  await expect(modal).not.toBeVisible()
+  await expect(first).toBeFocused()
+  await page.waitForTimeout(600)
+  await expect(page).toHaveURL(base + '/doctors/cho-wonik')
+  await page.setViewportSize({ width: 390, height: 844 })
+  await first.click()
+  await page.getByRole('button', { name: '다음 사진' }).click()
+  await expect(modal.locator('.lightbox-counter')).toHaveText('2 / 7')
+  await page.getByRole('button', { name: '사진 닫기' }).click()
+  await expect(page.locator('body')).not.toHaveClass(/photo-viewer-open/)
+  expect(errors).toEqual([])
+})
+
 test('mobile portraits/pricing and actual signup/reservation forms', async ({ page }) => {
   const errors: string[] = []
   page.on('pageerror', e => errors.push(e.message))

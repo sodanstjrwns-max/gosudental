@@ -1198,7 +1198,49 @@ p, .lead, .hero-sub { text-wrap: pretty; }
 @media(max-width:640px) { .price-table th,.price-table td { padding:10px 8px; font-size:13px; } .price-table th:first-child { width:40% !important; } }
 
 @media(max-width:767px) {
-  #doctor-treatments-section .treat-sub-grid { grid-template-columns:repeat(2,minmax(0,1fr)) !important; }
+  #doctor-treatments-section .treat-sub-grid,
+  #equipment-section .treat-sub-grid { grid-template-columns:repeat(2,minmax(0,1fr)) !important; }
   #pricing-table-section .price-table { display:table; table-layout:fixed; min-width:0; }
   #pricing-table-section .price-table th, #pricing-table-section .price-table td { white-space:normal; overflow-wrap:anywhere; min-width:0; }
+}
+
+/* Photo stories — preserve full composition, including group shots and sports photos. */
+.photo-story-band { background:var(--sky-mist); }
+.photo-story-split, .home-team-story { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:clamp(28px,6vw,88px); align-items:center; }
+.photo-story-copy p:not(.eyebrow), .home-team-story article > p:not(.eyebrow) { color:var(--ink-soft); line-height:1.9; margin:22px 0; }
+.photo-story-copy .hero-btn { background:var(--ink-deep); color:#fff; margin-top:18px; }
+.home-team-story { max-width:1000px; margin:48px auto; padding:32px; border:1px solid var(--sky-soft); background:var(--sky-mist); }
+.home-team-story h3 { font-family:var(--serif); font-size:clamp(26px,3vw,40px); line-height:1.5; }
+.clinic-photo { margin:0; min-width:0; break-inside:avoid; }
+.clinic-photo.team-portrait { margin:0 auto 48px; max-width:580px; }
+.photo-open { display:block; position:relative; background:#eef0f1; border-radius:6px; overflow:hidden; }
+.photo-open img { display:block; width:100%; height:auto; object-fit:contain; transition:filter .25s ease; }
+.photo-open:hover img { filter:brightness(.94); }
+.photo-open:focus-visible { outline:3px solid var(--sky-deep); outline-offset:5px; }
+.photo-expand { position:absolute; bottom:14px; right:14px; background:rgba(16,20,23,.82); color:#fff; padding:7px 12px; font-family:var(--sans); font-size:12px; border-radius:2px; pointer-events:none; }
+.clinic-photo figcaption { margin:12px 0 0; color:var(--ink-soft); font-family:var(--sans); font-size:13px; line-height:1.65; }
+.feature-portrait { width:100%; max-width:430px; justify-self:center; }
+.photo-gallery { columns:3; column-gap:24px; margin:36px 0 24px; }
+.photo-gallery .clinic-photo { margin:0 0 28px; }
+.portrait-gallery { columns:3; }
+.photo-context-note { color:var(--ink-mute); font-family:var(--sans); font-size:13px; margin-top:24px; }
+.photo-viewer-open { overflow:hidden; }
+.photo-lightbox { width:min(1100px,calc(100vw - 32px)); max-width:calc(100vw - 32px); height:calc(100dvh - 40px); max-height:calc(100dvh - 40px); margin:auto; padding:18px 24px; border:1px solid #40464c; border-radius:8px; background:#101417; color:#fff; overflow:hidden; }
+.photo-lightbox::backdrop { background:rgba(0,0,0,.85); }
+.photo-lightbox[open] { display:flex; flex-direction:column; gap:12px; }
+.lightbox-toolbar,.lightbox-controls { display:flex; justify-content:space-between; align-items:center; flex-shrink:0; gap:16px; font-family:var(--sans); }
+.photo-lightbox button { background:#272e34; border:1px solid #61707b; color:#fff; min-width:80px; min-height:44px; padding:10px 16px; border-radius:4px; cursor:pointer; }
+.photo-lightbox button:focus-visible { outline:3px solid #acdae9; outline-offset:3px; }
+.lightbox-stage { min-height:0; flex:1; display:flex; justify-content:center; align-items:center; }
+.lightbox-image { display:block; width:100%; height:100%; object-fit:contain; touch-action:pan-y; }
+.lightbox-caption { margin:0; text-align:center; color:#f1f4f6; font-family:var(--sans); font-size:14px; line-height:1.5; flex-shrink:0; }
+@media(max-width:900px) { .photo-gallery,.portrait-gallery { columns:2; } }
+@media(max-width:640px) {
+  .photo-story-split,.home-team-story { grid-template-columns:minmax(0,1fr); gap:28px; }
+  .home-team-story { padding:20px; margin:32px auto; }
+  .photo-gallery,.portrait-gallery { columns:1; }
+  .feature-portrait { max-width:340px; }
+  .photo-lightbox { padding:12px; width:calc(100vw - 16px); max-width:calc(100vw - 16px); height:calc(100dvh - 16px); max-height:calc(100dvh - 16px); gap:8px; }
+  .photo-lightbox button { padding:8px 12px; }
+  .lightbox-caption { font-size:13px; }
 }

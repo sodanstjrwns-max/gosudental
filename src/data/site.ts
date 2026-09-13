@@ -39,7 +39,7 @@ export interface Doctor {
 export const DOCTORS: Doctor[] = [
   {
     slug: 'cho-wonik',
-    photo: '/static/img/doctor-cho-wonik-202609.webp',
+    photo: '/static/img/gosu-photo-14-20260913.webp',
     name: '조원익',
     role: '대표원장',
     tagline: '잘 치료하는 것만큼, 오래 편안한 결과를 생각합니다',
@@ -74,6 +74,7 @@ export const DOCTORS: Doctor[] = [
   },
   {
     slug: 'kim-kyunghwan',
+    photo: '/static/img/gosu-photo-00-20260913.webp',
     name: '김경환',
     role: '교정과 전문의',
     tagline: '오랜 경험을 바탕으로, 한 분 한 분에게 알맞은 교정을 찾아드립니다',
@@ -101,6 +102,7 @@ export const DOCTORS: Doctor[] = [
   },
   {
     slug: 'lee-minwoo',
+    photo: '/static/img/gosu-photo-16-20260913.webp',
     name: '이민우',
     role: '진료원장',
     tagline: '작은 불편도 놓치지 않는 진료를 하겠습니다',

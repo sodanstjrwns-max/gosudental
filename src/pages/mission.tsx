@@ -1,5 +1,7 @@
 import { html } from 'hono/html'
 import { Layout, breadcrumbSchema } from '../layout'
+import { PHOTOS } from '../data/photos'
+import { photoFigure, photoGallery } from '../photo-gallery'
 import { SITE } from '../data/site'
 
 export function missionPage() {
@@ -36,6 +38,18 @@ export function missionPage() {
       <p>그리고 또 하나의 '고수'가 있습니다. 전국의 수많은 고수(高手) 치과의사들을 직접 찾아뵙고 배우면서 깨달았습니다 — 좋은 원칙을 오랫동안 固守하는 과정이 쌓이면, 언젠가는 환자분들에게 高手로 인정받을 수 있다는 것을.</p>
       <p>스스로를 '고수'라고 이야기하는 치과보다, 치료를 받고 난 환자분들이 <strong>"여기는 정말 믿고 맡길 수 있는 치과다"</strong>라고 이야기해 주시는 치과가 되고 싶습니다.</p>
     </div>
+  </div>
+</section>
+
+<section class="section mission-portrait-section" id="mission-director-portrait">
+  <div class="section-inner photo-story-split">
+    ${photoFigure(PHOTOS[11], 'mission-portraits', 'feature-landscape')}
+    <article class="photo-story-copy">
+      <p class="eyebrow">The Person Behind GOSU</p>
+      <h2 class="h-display">이름보다 먼저,<br>지키고 싶은 <em>원칙</em></h2>
+      <p class="lead">좋은 결과, 환자 중심의 진료, 배움과 성장. 고수치과의 시작에는 이 세 가지를 오래도록 지키고 싶은 마음이 있습니다.</p>
+      <a href="/doctors/cho-wonik" class="treat-more">조원익 원장 소개 보기 <i class="fas fa-arrow-right" aria-hidden="true"></i></a>
+    </article>
   </div>
 </section>
 
@@ -93,6 +107,16 @@ export function missionPage() {
       <p>그리고 이 모든 것의 중심에는 결국 사람이 있습니다. 원장과 직원 모두가 같은 기준으로 움직일 수 있는 체계적인 내부 교육 시스템과 진료 프로토콜을 만들어, 누가 진료를 돕더라도 일관되고 수준 높은 의료서비스를 경험하실 수 있도록 하겠습니다.</p>
       <p style="font-size:19px;font-weight:700;color:var(--sky-deep);font-family:var(--serif)">"우리 지역에도 충분히 믿고 치료받을 수 있는 치과가 있다." <br>환자분들이 그렇게 생각할 수 있는 선택지가 되겠습니다.</p>
     </div>
+  </div>
+</section>
+
+<section class="section" id="mission-photo-story">
+  <div class="section-inner">
+    <p class="eyebrow">A More Personal Story</p>
+    <h2 class="h-display">진료실의 모습,<br>그리고 <em>일상의 순간</em></h2>
+    <p class="lead">원장이라는 소개 뒤에 있는 한 사람의 모습도 전합니다. 조원익 원장의 프로필과 농구 활동 사진을 함께 만나보세요.</p>
+    ${photoGallery([PHOTOS[8], PHOTOS[15], PHOTOS[4], PHOTOS[7]], 'mission-story')}
+    <a href="/doctors/cho-wonik#doctor-life" class="treat-more">조원익 원장의 사진 이야기 <i class="fas fa-arrow-right" aria-hidden="true"></i></a>
   </div>
 </section>
 

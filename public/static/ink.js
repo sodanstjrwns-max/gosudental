@@ -209,7 +209,7 @@
     document.addEventListener('click', function (e) {
       if (wiping) return;
       var a = e.target.closest('a');
-      if (!a) return;
+      if (!a || e.defaultPrevented || a.hasAttribute('data-photo-group')) return;
       var href = a.getAttribute('href');
       if (!href || href.charAt(0) === '#') return;
       if (a.target === '_blank' || a.hasAttribute('download')) return;

@@ -1,5 +1,7 @@
 import { html } from 'hono/html'
 import { Layout, breadcrumbSchema } from '../layout'
+import { PHOTOS, CHO_PORTRAITS, CHO_LIFE } from '../data/photos'
+import { photoFigure, photoGallery } from '../photo-gallery'
 import { SITE, DOCTORS, TREATMENTS } from '../data/site'
 
 export function doctorsListPage() {
@@ -15,7 +17,7 @@ export function doctorsListPage() {
 
 <section class="section" id="doctors-list-section">
   <div class="section-inner">
-    <figure class="team-portrait"><img src="/static/img/doctors-team-202609.webp" alt="고수치과 의료진 3인 단체사진" width="1440" height="1800"><figcaption>같이 고민하고, 함께 진료하는 고수치과 의료진</figcaption></figure>
+    ${photoFigure(PHOTOS[2], 'team', 'team-portrait')}
     <div class="doctor-grid">
       ${DOCTORS.map((d, i) => html`
       <a href="/doctors/${d.slug}" class="doctor-card reveal reveal-d${i + 1}">
@@ -31,6 +33,15 @@ export function doctorsListPage() {
         </div>
       </a>`)}
     </div>
+  </div>
+</section>
+<section class="section photo-story-band" id="doctors-story-preview">
+  <div class="section-inner">
+    <p class="eyebrow">Beyond the White Coat</p>
+    <h2 class="h-display">진료실 밖에서 만나는 <em>조원익 원장</em></h2>
+    <p class="lead">화이트 코트와 진료복, 그리고 농구 유니폼. 사진으로 만나는 대표원장의 또 다른 모습입니다.</p>
+    ${photoGallery([PHOTOS[15], PHOTOS[13], PHOTOS[3]], 'team-story')}
+    <a href="/doctors/cho-wonik#doctor-life" class="treat-more">조원익 원장의 사진 이야기 전체 보기 <i class="fas fa-arrow-right" aria-hidden="true"></i></a>
   </div>
 </section>`
 
@@ -84,6 +95,16 @@ export function doctorDetailPage(slug: string, cases: any[]) {
   </div>
 </section>
 
+${slug === 'cho-wonik' ? html`
+<section class="section" id="doctor-portraits">
+  <div class="section-inner">
+    <p class="eyebrow">Portraits of Wonik</p>
+    <h2 class="h-display">사진으로 만나는 <em>조원익 원장</em></h2>
+    <p class="lead">한 장의 프로필 너머, 조원익 원장의 여러 모습을 담았습니다. 사진을 누르면 전체 화면으로 볼 수 있습니다.</p>
+    ${photoGallery(CHO_PORTRAITS, 'cho-portraits', 'portrait-gallery')}
+  </div>
+</section>` : ''}
+
 <section class="section" id="doctor-career-section" style="padding-top:60px">
   <div class="section-inner">
     <div class="career-cols">
@@ -130,6 +151,17 @@ ${cases.length > 0 ? html`
         </div>
       </a>`)}
     </div>
+  </div>
+</section>` : ''}
+
+${slug === 'cho-wonik' ? html`
+<section class="section photo-story-band" id="doctor-life">
+  <div class="section-inner">
+    <p class="eyebrow">Off the Clock</p>
+    <h2 class="h-display">진료실 밖의 <em>조원익</em></h2>
+    <p class="lead">농구 코트에서, 경기가 끝난 뒤, 운동을 기록하는 순간에. 대표원장의 일상을 사진으로 소개합니다.</p>
+    ${photoGallery(CHO_LIFE, 'cho-life', 'life-gallery')}
+    <p class="photo-context-note">개인 취미·스포츠 활동 사진입니다. 농구 트로피 등은 의료 분야의 수상 경력과 무관합니다.</p>
   </div>
 </section>` : ''}
 
