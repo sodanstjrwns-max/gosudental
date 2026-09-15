@@ -12,7 +12,8 @@
 - 개발 미리보기: https://3000-ibwcewnougzmi7rx3gacu-d0b9e1e2.sandbox.novita.ai
 - **2026-09-15 사용자 승인 후 사진·수가표·보안·CMS·최적화·AI 진료 카드를 실제 운영 배포하고 검증 완료.** 미리보기는 임시 실행 환경입니다.
 - 사용자 Cloudflare 계정(BYOK), Pages 프로젝트 `gosudental`, production branch `main`.
-- 배포: https://8b218d77.gosudental.pages.dev · 배포 코드 커밋 `ec4f1c0`.
+- 최신 배포: https://f215e00f.gosudental.pages.dev · 배포 코드 커밋 `d5c8799` (농구 에디토리얼).
+- 사진·보안 통합 배포 기록: https://8b218d77.gosudental.pages.dev · 코드 `ec4f1c0`.
 - Pages의 Git Provider는 연결되어 있지 않습니다. **GitHub push만으로 운영은 갱신되지 않습니다.** `npm run build` 후 `npx wrangler pages deploy dist --project-name gosudental --branch main`을 별도 실행하고 운영 URL을 검증해야 합니다.
 - 운영 D1 백업 후 3개 미적용 마이그레이션(0002_request_protection, 0003_delivery_indexes, 0004_merge_supplied_fees) 적용. 예전 미수정 기본수가 11행을 제공자료 106행으로 전환. 기존 칼럼 2개·공지 1개 보존, R2 데이터 변경 없음.
 - 운영 `ADMIN_PASSWORD`·`SESSION_SECRET` 유지. `STATS_TOKEN`·`MASTER_KEY`는 stdin으로 운영 secrets 등록, 키 기반 API 200 확인.
@@ -120,6 +121,7 @@
 - PC 2열 / 모바일 1열, 320·390·768·1024·1440px 화면과 3장 확대보기·방향키·Escape·포커스 복귀 회귀 테스트 추가.
 - 새로운 이미지·외부 폰트·JavaScript 의존성 없음. 공통 CSS는 기존 빌드에서 압축 및 인라인 처리. DB·운영 secrets 변경 없음.
 - 개인 농구 기록은 진료 성과·의료 수상으로 표현하지 않음. 삭제된 `#doctor-portraits`는 복구하지 않음.
+- 운영 반영 완료. 실제 gosudc.kr에서 1440/390px 사진 3장 디코딩·확대보기·가로 넘침 없음 확인. 로컬 단위 13개·브라우저 12개 통과, 해당 섹션 axe 자동 접근성 위반 0.
 
 ## 사진 출처와 배치
 - 공유폴더: https://drive.google.com/drive/folders/1j2nk8xt5qYxZVLfBwDEhFy273T1lniJV
