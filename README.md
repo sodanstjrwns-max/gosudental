@@ -8,12 +8,18 @@
 - 수묵 콘셉트 유지. 모바일에서는 고비용 SVG 필터를 줄이고 정보·예약 접근성을 우선.
 
 ## URL 및 배포 상태
-- 기존 프로덕션: https://gosudental.pages.dev
+- 프로덕션: https://gosudc.kr (https://gosudental.pages.dev 및 www 호스트는 공개 페이지를 운영 도메인으로 301 이동)
 - 개발 미리보기: https://3000-ibwcewnougzmi7rx3gacu-d0b9e1e2.sandbox.novita.ai
-- **2026-09-13 사진·수가표·보안·CMS·납품 최적화는 미리보기 반영, 프로덕션 미배포.** 미리보기는 임시 실행 환경입니다.
-- 기존 운영 기록: 사용자 Cloudflare 계정(BYOK), Pages 프로젝트 `gosudental`, production branch `main`.
-- 이번 작업은 원격 DB, 운영 secrets, 운영 사이트를 변경하지 않았습니다.
-- 운영 배포 경로를 사용자와 확인한 뒤 `0002_fees.sql`, `0002_request_protection.sql`, `0003_delivery_indexes.sql`, `0004_merge_supplied_fees.sql`을 포함한 미적용 마이그레이션과 secrets를 점검해야 합니다.
+- **2026-09-15 사용자 승인 후 사진·수가표·보안·CMS·최적화·AI 진료 카드를 실제 운영 배포하고 검증 완료.** 미리보기는 임시 실행 환경입니다.
+- 사용자 Cloudflare 계정(BYOK), Pages 프로젝트 `gosudental`, production branch `main`.
+- 배포: https://8b218d77.gosudental.pages.dev · 배포 코드 커밋 `ec4f1c0`.
+- Pages의 Git Provider는 연결되어 있지 않습니다. **GitHub push만으로 운영은 갱신되지 않습니다.** `npm run build` 후 `npx wrangler pages deploy dist --project-name gosudental --branch main`을 별도 실행하고 운영 URL을 검증해야 합니다.
+- 운영 D1 백업 후 3개 미적용 마이그레이션(0002_request_protection, 0003_delivery_indexes, 0004_merge_supplied_fees) 적용. 예전 미수정 기본수가 11행을 제공자료 106행으로 전환. 기존 칼럼 2개·공지 1개 보존, R2 데이터 변경 없음.
+- 운영 `ADMIN_PASSWORD`·`SESSION_SECRET` 유지. `STATS_TOKEN`·`MASTER_KEY`는 stdin으로 운영 secrets 등록, 키 기반 API 200 확인.
+- 백업: 비공개 `.reference/production-before-deploy-20260915.sql` (권한 600, Git 제외, SQLite 복원 검증 완료). SHA-256 `db0d4710331cde8942b4cb4ad6d4f2c4d0d3539217e106604391c679e3337c2a`.
+- 이전 배포 복구 참조: `f5baef4c-8e9a-4bc5-be8c-d1b98d2d402d` / 코드 `36178e1`. DB 복원은 신규 접수 데이터 손실 가능성을 검토한 후 별도 수행해야 합니다.
+- `/handover`의 공개 관리자 비밀번호 출력을 배포 전에 제거. 비밀번호는 별도 전달하며 no-store/noindex/no-referrer 및 제한 CSP 유지. 실제 로그인 및 `/admin`, `/admin/fees`, `/admin/reservations` 200 확인.
+- 운영 검증: 공개 12경로 200, 의료진 사진 및 AI 3종 포함 정적 자산 21개 SHA-256 일치, PC/모바일 사진 디코딩 성공·가로 넘침 없음·브라우저 오류 없음. 테스트 회원/예약은 운영에 생성하지 않음.
 
 ## Git 통합 및 재발 방지
 - 기준 GitHub: https://github.com/sodanstjrwns-max/gosudental (`origin/main`). Genspark 자동백업(`genspark/main`)과 별개 저장소입니다.
@@ -22,9 +28,9 @@
 - 사진 16장·106행 수가·보안·CMS·최적화와 원격의 수가 편집기·통합 통계·GA4·Clarity·beacon·Google/Naver 인증 메타를 함께 유지.
 - `/admin/fees`에서 분류·항목·금액·비고·공개 여부 편집, `POST /api/admin/fees`로 전체 저장. 256KB/30분류/300항목 제한과 선검증 적용. 모든 수가 비공개/삭제 시 `/pricing`, `/llms-full.txt`에서 기본 수가로 되돌아가지 않음.
 - 기존 `0002_fees.sql`은 원격 적용 이력 보존을 위해 이름/내용을 유지. 번호가 겹치는 `0002_request_protection.sql`과 서로 다른 파일이며 둘 다 필요.
-- `0004_merge_supplied_fees.sql`은 fees가 수정되지 않은 옛 11행 시드와 정확히 같을 때만 106행 잠정수가로 전환. 편집/비공개/삭제된 DB 수가는 변경하지 않음. 해당 4가지 조건 검증 완료. 운영 DB에는 이번 작업에서 적용하지 않음.
+- `0004_merge_supplied_fees.sql`은 fees가 수정되지 않은 옛 11행 시드와 정확히 같을 때만 106행 잠정수가로 전환. 편집/비공개/삭제된 DB 수가는 변경하지 않음. 해당 4가지 조건 검증 완료. 2026-09-15 운영 DB의 조건 충족을 읽기 전용 쿼리로 확인 후 적용 완료.
 - `/admin/stats`: 관리자 세션 또는 기존 키 인증을 유지. `/api/local-stats`: 최근/직전 28일 실예약 집계. `Authorization: Bearer ...` 권장, 기존 `?key=` 호환도 유지.
-- **배포 전 필수:** `STATS_TOKEN`, `MASTER_KEY`를 운영 secrets에 설정해야 키 기반 통계 연동이 동작합니다. 코드에 있던 키는 제거하고 로컬 `.dev.vars`(Git 제외)로 이전. 이전 Git 이력에 남아 있으므로 운영 키 교체를 권장하며 중앙 대시보드와 함께 갱신해야 합니다. 키를 로그/문서/프런트엔드에 적지 말 것.
+- **운영 설정 완료:** `STATS_TOKEN`, `MASTER_KEY`를 운영 secrets에 등록하고 키 기반 통계 API 응답을 검증했습니다. 코드에 있던 키는 제거하고 로컬 `.dev.vars`(Git 제외)로 이전. 이전 Git 이력에 남아 있으므로 운영 키 교체를 권장하며 중앙 대시보드와 함께 갱신해야 합니다. 키를 로그/문서/프런트엔드에 적지 말 것.
 - 분석 스크립트는 운영 호스트(gosudental.pages.dev, gosudc.kr, www.gosudc.kr)의 공개 콘텐츠에서 동작. 로컬 QA·미리보기·로그인·예약·사례 화면은 분석 대상 제외. 운영 개인정보 정책과 분석 설정 확인 필요.
 - `git fetch origin` 후 `git log --left-right HEAD...origin/main`으로 시작점 확인 → 변경 보존·병합 → 테스트 → 일반 `git push origin main` → `git ls-remote`로 실제 원격 해시 확인. 자동백업을 GitHub push로 간주하지 말 것.
 - 다른 작업창에서도 변경을 커밋/보존한 뒤 `git fetch origin && git merge origin/main`으로 통합본 반영. 미커밋 변경을 `reset --hard`로 버리지 말 것.
@@ -36,7 +42,7 @@
 - 각 카드의 ‘AI 생성 이미지’ 표기와 카드 아래 설명을 유지. 기존 의료진 실제 사진 16장과 인테리어 투어 사진은 변경하지 않음.
 - `public/static/img/treatment-{implant|ortho|aesthetic}-ai-20260915.webp`: 1200×800. `-640.webp`: 640×427. 총 6파일 약 241KiB, srcset·지연 로딩·명시적 크기 적용.
 - 생성 모델 GPT Image 2. 최종 원본 파일 ID: 임플란트 K5c7mU8G, 교정 YQlxUycw, 심미 CbS9l3uk. 원본/검수용 파일은 비공개 작업 폴더 `.reference/`(Git 제외)에 보존.
-- 원격 최신 `2d86049`와 일치한 상태에서 작업 시작. 별도 운영 배포는 실행하지 않음.
+- 원격 최신 `2d86049`와 일치한 상태에서 이미지 작업 시작. 이미지 작업 당시 미배포였으며, 2026-09-15 통합 운영 배포에서 반영 완료.
 
 ## 납품 최적화 결과
 ### 병합 이전 측정 (로컬 Lighthouse, 모바일 시뮬레이션, 동일 명령)
@@ -102,6 +108,8 @@
 | `/reservation` | 상담 희망 접수 (즉시 확정 예약 아님) |
 | `/privacy`, `/terms` | 개인정보·이용약관 |
 | `/sitemap.xml`, `/robots.txt`, `/llms.txt`, `/llms-full.txt` | 검색 안내 |
+| `/handover` | 공개 납품 안내서, 비밀번호 미포함·검색 제외 |
+| `/admin/fees`, `/admin/stats` | 수가 편집·통합 통계 |
 | `/admin/login`, `/admin` | 관리자 로그인·대시보드 |
 | `/admin/cases`, `/admin/posts`, `/admin/notices` | 등록·조회·수정·삭제 |
 | `/admin/users`, `/admin/reservations` | 회원 삭제·예약 상태 변경 |
@@ -161,7 +169,7 @@ npm audit
 ```
 - 기존 서버 재시작 전 3000 포트 정리, build 후 PM2 사용. 실제 실행은 `ecosystem.config.cjs` 참고.
 - 최초 브라우저 준비: `npx playwright install --with-deps chromium`.
-- 최종 검증: **단위 12개, 로컬 D1/R2 통합 2개, 브라우저 11개 모두 통과**, npm audit 알려진 취약점 0개.
+- 최종 검증: **단위 13개, 로컬 D1/R2 통합 2개, 브라우저 11개 모두 통과**, npm audit 알려진 취약점 0개.
 - 브라우저: 16개 사진/삭제 섹션, 회원가입·예약·관리자 CRUD, 모바일/키보드, no-JS, 장애 응답 복구, SEO/캐시.
 - axe WCAG 2A/2AA/2.1AA: 공개/로그인 9경로(390px), 인증된 관리자 7경로(수가 편집 포함, 390/1440px) 위반 0. 자동 검사 범위 내 결과이며 전체 접근성 인증을 의미하지 않음.
 - 측정 파일 `.test-artifacts/lighthouse-before.json`, `lighthouse-after.json`, `axe-after.json`, `axe-admin-after.json`은 로컬 작업 산출물(Git 제외).
@@ -174,7 +182,7 @@ npm audit
 2. 대표전화, 확정 진료시간, 지도 위치·주차 안내·개원일 확인.
 3. 의료진 자격·이력과 의료광고 문구, 환자 사례 공개 동의/비식별화 검토.
 4. 개인정보처리방침(문의 채널·보유/파기·클라우드 위탁/국외 처리 등 실제 운영 사항) 확정. 실제 개인정보 수집 전 운영 검토 필요.
-5. 운영 배포 경로 확인 → DB/R2 백업·마이그레이션·운영 secrets 점검 → 배포 → 실기기/폼/이미지 접근 재검증.
+5. BYOK 운영 배포·DB 백업·마이그레이션·secrets·이미지/관리자 접근 검증 완료. 후속 배포도 Git push와 별도로 실행하고 실기기 동작을 점검할 것.
 6. 고객에게 관리자 접근정보를 안전한 별도 채널로 전달. 세션 전체 폐기 필요 시 SESSION_SECRET 교체. 이 저장소에 비밀번호를 적지 말 것.
 
 ## 미구현·권장 후속 작업
