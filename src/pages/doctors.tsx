@@ -26,7 +26,7 @@ export function doctorsListPage() {
           ${d.photo ? html`<img src="${d.photo}" alt="${d.name} ${d.role} 프로필 사진" width="800" height="1200" loading="lazy">` : html`<i class="fas fa-user-doctor" aria-hidden="true"></i>`}
         </div>
         <div class="doctor-body">
-          <h3>${d.name} 원장</h3>
+          <h2>${d.name} 원장</h2>
           <p class="role">${d.role === '교정과 전문의' ? '치과교정과 전문의 (보건복지부 인증)' : d.role}</p>
           <p>"${d.tagline}"</p>
           <span class="treat-more" style="margin-top:16px">프로필 보기 <i class="fas fa-arrow-right"></i></span>
@@ -51,6 +51,7 @@ export function doctorsListPage() {
       description:
         '고수치과 의료진을 소개합니다. 대표원장 조원익, 치과교정과 전문의 김경환, 이민우 원장 — 3인 협진 체계로 임플란트·교정·심미보철 올인원 진료를 제공합니다.',
       path: '/doctors',
+      pageType: 'CollectionPage',
       schema: [breadcrumbSchema([{ name: '홈', path: '/' }, { name: '의료진', path: '/doctors' }])],
     },
     content
@@ -65,13 +66,13 @@ export function doctorDetailPage(slug: string, cases: any[]) {
   const personSchema = {
     '@context': 'https://schema.org',
     '@type': 'Person',
+    '@id': `${SITE.domain}/doctors/${d.slug}#person`,
     name: `${d.name} 원장`,
     jobTitle: d.role,
     image: d.photo ? `${SITE.domain}${d.photo}` : undefined,
-    worksFor: { '@type': 'Dentist', name: SITE.name },
+    worksFor: { '@id': `${SITE.domain}/#organization` },
     description: d.tagline,
     url: `${SITE.domain}/doctors/${d.slug}`,
-    alumniOf: d.career[0],
   }
 
   const content = html`
@@ -99,11 +100,11 @@ export function doctorDetailPage(slug: string, cases: any[]) {
   <div class="section-inner">
     <div class="career-cols">
       <div class="career-block reveal">
-        <h3>Career &amp; Membership</h3>
+        <h2>경력 및 학회 활동</h2>
         <ul>${d.career.map((c) => html`<li>${c}</li>`)}</ul>
       </div>
       <div class="career-block reveal reveal-d1">
-        <h3>Education &amp; Courses</h3>
+        <h2>교육 및 학술 활동</h2>
         <ul>${d.courses.map((c) => html`<li>${c}</li>`)}</ul>
       </div>
     </div>
@@ -117,7 +118,7 @@ export function doctorDetailPage(slug: string, cases: any[]) {
     <div class="treat-sub-grid" style="grid-template-columns:repeat(${Math.min(specs.length, 4)},1fr)">
       ${specs.map((t, i) => html`
       <a href="/treatments/${t.slug}" class="treat-sub reveal reveal-d${i + 1}" style="background:#fff">
-        <h4>${t.name}</h4>
+        <h3>${t.name}</h3>
         <p>${t.short}</p>
       </a>`)}
     </div>
@@ -170,6 +171,7 @@ ${slug === 'cho-wonik' ? html`
       title: `${d.name} 원장 — ${d.role} | 고수치과의원`,
       description: `고수치과 ${d.name} ${d.role}. ${d.tagline}. ${d.career.slice(0, 3).join(', ')}.`,
       path: `/doctors/${d.slug}`,
+      pageType: 'ProfilePage',
       ogImage: d.photo ? `${SITE.domain}${d.photo}` : undefined,
       schema: [
         personSchema,

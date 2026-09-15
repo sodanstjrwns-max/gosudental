@@ -10,13 +10,17 @@ export interface PageMeta {
   ogImage?: string
   ogType?: 'website' | 'article'
   noindex?: boolean
+  pageType?: 'WebPage' | 'MedicalWebPage' | 'CollectionPage' | 'ProfilePage' | 'AboutPage' | 'ContactPage'
+  ogImageAlt?: string
+  publishedTime?: string
+  modifiedTime?: string
   schema?: object[]
   bodyClass?: string
 }
 
 const ORG_SCHEMA = {
   '@context': 'https://schema.org',
-  '@type': ['Dentist', 'LocalBusiness'],
+  '@type': 'Dentist',
   '@id': `${SITE.domain}/#organization`,
   name: SITE.name,
   alternateName: [SITE.nameEn, '고수치과', '내포 고수치과'],
@@ -33,14 +37,13 @@ const ORG_SCHEMA = {
     postalCode: '32419',
     addressCountry: 'KR',
   },
-  geo: { '@type': 'GeoCoordinates', latitude: 36.6547, longitude: 126.6716 },
   hasMap: 'https://map.naver.com/p/search/충청남도%20예산군%20삽교읍%20예학로%2093',
   areaServed: ['내포신도시', '예산군', '홍성군', '삽교읍', '덕산면', '충청남도'],
   medicalSpecialty: 'Dentistry',
-  founder: { '@type': 'Person', name: '조원익', jobTitle: '대표원장' },
-  foundingDate: '2026-11-02',
+  founder: { '@type': 'Person', '@id': `${SITE.domain}/doctors/cho-wonik#person`, name: '조원익', jobTitle: '대표원장' },
   availableService: TREATMENTS.map((t) => ({
     '@type': 'MedicalProcedure',
+    '@id': `${SITE.domain}/treatments/${t.slug}#procedure`,
     name: t.name,
     url: `${SITE.domain}/treatments/${t.slug}`,
   })),
@@ -58,11 +61,45 @@ const WEBSITE_SCHEMA = {
   publisher: { '@id': `${SITE.domain}/#organization` },
 }
 
+// One production URL per document; tracking queries and fragments are never canonical.
+export function canonicalUrl(path: string) {
+  const url = new URL(path, SITE.domain)
+  return `${SITE.domain}${url.pathname.replace(/\/+$/, '') || '/'}`
+}
+
+// D1 timestamps are UTC; omit malformed/missing dates rather than inventing review dates.
+export function schemaDate(value?: string): string | undefined {
+  if (!value) return undefined
+  const input = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(value) ? value.replace(' ', 'T') + 'Z' : value
+  if (!/^\d{4}-\d{2}-\d{2}(?:T.*)?$/.test(input)) return undefined
+  const timestamp = Date.parse(input)
+  return Number.isFinite(timestamp) ? new Date(timestamp).toISOString() : undefined
+}
+
 export function Layout(meta: PageMeta, content: any) {
-  const canonical = `${SITE.domain}${meta.path}`
+  const canonical = canonicalUrl(meta.path)
   const og = new URL(meta.ogImage || '/static/img/og-image.jpg', SITE.domain).href
-  const noindex = meta.noindex || meta.path.startsWith('/auth/') || meta.path === '/404' || meta.path === '/error'
-  const schemas = [ORG_SCHEMA, WEBSITE_SCHEMA, ...(meta.schema || [])]
+  const imageAlt = meta.ogImageAlt || (meta.ogImage ? meta.title : `${SITE.name} — ${SITE.slogan}`)
+  const noindex = meta.noindex || meta.path.startsWith('/auth/') || meta.path.startsWith('/cases/') || meta.path === '/404' || meta.path === '/error'
+  const supplied = (meta.schema || []) as Record<string, any>[]
+  const pageKinds = new Set(['WebPage', 'MedicalWebPage', 'FAQPage', 'CollectionPage', 'ProfilePage', 'AboutPage', 'ContactPage'])
+  const pageExtras = supplied.filter(s => pageKinds.has(s['@type']))
+  const entities = supplied.filter(s => !pageKinds.has(s['@type'])).map(s => s['@type'] === 'BreadcrumbList' ? { ...s, '@id': `${canonical}#breadcrumb` } : s)
+  const mainEntity = entities.find(s => ['Person', 'MedicalProcedure', 'DefinedTerm', 'BlogPosting'].includes(s['@type']))
+  const kinds = [...new Set([meta.pageType || 'WebPage', ...pageExtras.map(s => s['@type'])])]
+  const pageTypes = kinds.length > 1 ? kinds.filter(type => type !== 'WebPage') : kinds
+  const webpage = {
+    '@context': 'https://schema.org',
+    ...Object.assign({}, ...pageExtras),
+    '@type': pageTypes.length === 1 ? pageTypes[0] : pageTypes,
+    '@id': `${canonical}#webpage`, url: canonical, name: meta.title, description: meta.description,
+    inLanguage: 'ko-KR', isPartOf: { '@id': `${SITE.domain}/#website` },
+    publisher: { '@id': `${SITE.domain}/#organization` },
+    primaryImageOfPage: { '@type': 'ImageObject', url: og, caption: imageAlt },
+    ...(entities.some(s => s['@type'] === 'BreadcrumbList') ? { breadcrumb: { '@id': `${canonical}#breadcrumb` } } : {}),
+    ...(mainEntity?.['@id'] && !pageExtras.some(s => s.mainEntity) ? { mainEntity: { '@id': mainEntity['@id'] } } : {}),
+  }
+  const schemas = noindex ? [] : [ORG_SCHEMA, WEBSITE_SCHEMA, webpage, ...entities]
   const coreT = TREATMENTS.filter((t) => t.core)
   const otherT = TREATMENTS.filter((t) => !t.core)
 
@@ -76,12 +113,9 @@ export function Layout(meta: PageMeta, content: any) {
 <title>${meta.title}</title>
 <meta name="description" content="${meta.description}">
 <meta name="robots" content="${noindex ? 'noindex, nofollow' : 'index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1'}">
-<meta name="keywords" content="내포신도시 치과, 예산 치과, 홍성 치과, 고수치과, 내포 임플란트, 내포 치아교정, 교정과 전문의, 삽교읍 치과">
 <meta name="author" content="고수치과의원">
 <meta name="geo.region" content="KR-44">
 <meta name="geo.placename" content="충청남도 예산군 삽교읍 (내포신도시)">
-<meta name="geo.position" content="36.6547;126.6716">
-<meta name="ICBM" content="36.6547, 126.6716">
 <meta name="theme-color" content="#101417">
 <meta name="format-detection" content="telephone=no">
 <link rel="canonical" href="${canonical}">
@@ -91,13 +125,16 @@ export function Layout(meta: PageMeta, content: any) {
 <meta property="og:url" content="${canonical}">
 <meta property="og:image" content="${og}">
 ${!meta.ogImage ? html`<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">` : ''}
-<meta property="og:image:alt" content="${SITE.name} — ${SITE.slogan}">
+<meta property="og:image:alt" content="${imageAlt}">
+${schemaDate(meta.publishedTime) ? html`<meta property="article:published_time" content="${schemaDate(meta.publishedTime)}">` : ''}
+${schemaDate(meta.modifiedTime) ? html`<meta property="article:modified_time" content="${schemaDate(meta.modifiedTime)}">` : ''}
 <meta property="og:site_name" content="${SITE.name}">
 <meta property="og:locale" content="ko_KR">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="${meta.title}">
 <meta name="twitter:description" content="${meta.description}">
 <meta name="twitter:image" content="${og}">
+<meta name="twitter:image:alt" content="${imageAlt}">
 <link rel="icon" type="image/png" sizes="32x32" href="/static/img/favicon-32.png">
 <link rel="apple-touch-icon" href="/static/img/apple-touch-icon.png">
 <style>${raw(siteStyles)}</style>
@@ -244,7 +281,7 @@ export function breadcrumbSchema(items: { name: string; path: string }[]) {
       '@type': 'ListItem',
       position: i + 1,
       name: it.name,
-      item: `${SITE.domain}${it.path}`,
+      item: canonicalUrl(it.path),
     })),
   }
 }

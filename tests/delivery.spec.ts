@@ -1,10 +1,78 @@
 import { test, expect } from '@playwright/test'
 import AxeBuilder from '@axe-core/playwright'
-import { SITE } from '../src/data/site'
+import { SITE, TERMS, AREAS } from '../src/data/site'
 import { readFileSync, writeFileSync } from 'node:fs'
 
 const base = 'http://localhost:3000'
 test.setTimeout(180000)
+
+test('SEO: every sitemap document has a coherent heading and connected schema structure', async ({ page, request }) => {
+  await page.goto(base)
+  const xml = await (await request.get(base + '/sitemap.xml')).text()
+  const urls = [...xml.matchAll(/<loc>(.*?)<\/loc>/g)].map(m => m[1])
+  expect(new Set(urls).size).toBe(urls.length)
+  const titles = new Set<string>()
+  for (const canonical of urls) {
+    expect(canonical).toMatch(/^https:\/\/gosudc\.kr\//)
+    const path = canonical.replace(SITE.domain, '')
+    expect(path).not.toMatch(/^\/(admin|auth|handover|api|cases\/)/)
+    const response = await request.get(base + path)
+    expect(response.status(), path).toBe(200)
+    const html = await response.text()
+    const result = await page.evaluate(source => {
+      const doc = new (globalThis as any).DOMParser().parseFromString(source, 'text/html')
+      const schemas = [...doc.querySelectorAll('script[type="application/ld+json"]')].map((n: any) => JSON.parse(n.textContent))
+      let previous = 0
+      const skipped: string[] = []
+      for (const h of doc.querySelectorAll('main h1, main h2, main h3, main h4, main h5, main h6')) {
+        const rank = Number(h.tagName.slice(1))
+        if (rank > previous + 1) skipped.push(h.textContent)
+        previous = rank
+      }
+      return { h1: doc.querySelectorAll('h1').length, skipped, title: doc.title, descriptions: [...doc.querySelectorAll('meta[name=description]')].map((n: any) => n.content), canonicals: [...doc.querySelectorAll('link[rel=canonical]')].map((n: any) => n.getAttribute('href')), robots: doc.querySelector('meta[name=robots]')?.content, og: doc.querySelector('meta[property="og:url"]')?.content, schemas }
+    }, html)
+    expect(result.h1, path).toBe(1)
+    expect(result.skipped, path).toEqual([])
+    expect(result.canonicals, path).toEqual([canonical])
+    expect(result.og, path).toBe(canonical)
+    expect(result.descriptions, path).toHaveLength(1)
+    expect(result.descriptions[0]?.trim().length, path).toBeGreaterThan(10)
+    expect(result.robots, path).not.toContain('noindex')
+    expect(titles.has(result.title), path + ' duplicate title').toBeFalsy()
+    titles.add(result.title)
+    const webpage = result.schemas.filter((s: any) => s['@id'] === canonical + '#webpage')
+    expect(webpage, path).toHaveLength(1)
+    expect(webpage[0].isPartOf['@id']).toBe(SITE.domain + '/#website')
+    expect(result.schemas.filter((s: any) => s['@id'] === SITE.domain + '/#organization'), path).toHaveLength(1)
+    expect(JSON.stringify(result.schemas)).not.toMatch(/lastReviewed|reviewedBy|NoninvasiveProcedure|SpeakableSpecification/)
+  }
+})
+
+test('SEO: medical answers, mobile grids, FAQ parity and navigation are usable without JavaScript', async ({ browser, request }) => {
+  const context = await browser.newContext({ javaScriptEnabled: false })
+  const page = await context.newPage()
+  for (const width of [320, 390, 768]) {
+    await page.setViewportSize({ width, height: 844 })
+    for (const path of ['/treatments/implant', '/treatments/ortho', '/treatments/preservation', '/area/' + AREAS[0].slug, '/encyclopedia/' + TERMS[0].slug, '/directions', '/faq']) {
+      const response = await page.goto(base + path)
+      expect(response!.status(), path).toBe(200)
+      expect(await page.evaluate(() => (globalThis as any).document.documentElement.scrollWidth <= (globalThis as any).innerWidth), path + ' ' + width).toBeTruthy()
+      if (path.startsWith('/treatments/')) {
+        await expect(page.locator('.answer-summary')).toBeVisible()
+        await expect(page.locator('.article-toc a').first()).toHaveAttribute('href', '#section-0')
+        expect(await page.locator('#treatment-doctors-section .doctor-grid').evaluate(el => (globalThis as any).getComputedStyle(el).gridTemplateColumns.split(' ').length)).toBe(1)
+        const faqCount = await page.locator('.faq-item').count()
+        const schemas = await page.locator('script[type="application/ld+json"]').allTextContents()
+        const faq = schemas.map(s => JSON.parse(s)).find(s => [s['@type']].flat().includes('FAQPage'))
+        expect(faq.mainEntity.length).toBe(faqCount)
+      }
+    }
+  }
+  await context.close()
+  const variant = await request.get(base + '/treatments/implant/?utm_source=test', { maxRedirects: 0 })
+  expect(variant.status()).toBe(301)
+  expect(variant.headers().location).toBe(base + '/treatments/implant?utm_source=test')
+})
 
 test('delivery: public/mobile accessibility and local font dependencies', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })

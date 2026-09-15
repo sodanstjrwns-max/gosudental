@@ -25,7 +25,7 @@ export function areaPage(slug: string) {
   const content = html`
 <section class="page-hero dark" id="area-hero">
   <div class="section-inner">
-    <nav class="breadcrumb"><a href="/">홈</a> / <a href="/treatments/${t.slug}">${t.name}</a> / <span>${area.region} ${area.treatment}</span></nav>
+    <nav class="breadcrumb" aria-label="현재 위치"><a href="/">홈</a> / <a href="/treatments/${t.slug}">${t.name}</a> / <span>${area.region} ${area.treatment}</span></nav>
     <p class="eyebrow" style="color:var(--brand-accent)">${area.region} · ${area.treatment}</p>
     <h1 class="h-display">${area.region} ${area.treatment}, <br><em style="color:var(--brand-soft)">고수치과</em>가 함께합니다</h1>
     <p class="lead">${area.region}에서 ${area.treatment}를 고민하고 계신가요? 굳이 멀리 가지 않아도, 내포신도시 안에서 충분히 믿고 치료받을 수 있도록 — 고수치과가 준비했습니다.</p>
@@ -49,7 +49,7 @@ export function areaPage(slug: string) {
     <div class="treat-sub-grid" style="grid-template-columns:repeat(${Math.min(docs.length, 3)},1fr)">
       ${docs.map((d) => html`
       <a href="/doctors/${d.slug}" class="treat-sub" style="background:#fff">
-        <h4>${d.name} 원장 · ${d.role}</h4>
+        <h3>${d.name} 원장 · ${d.role}</h3>
         <p>"${d.tagline}"</p>
       </a>`)}
     </div>
@@ -78,13 +78,13 @@ export function areaPage(slug: string) {
     '@context': 'https://schema.org',
     '@type': 'WebPage',
     name: `${area.region} ${area.treatment} — ${SITE.name}`,
-    about: { '@type': 'City', name: area.region },
+    about: { '@type': 'Place', name: area.region },
     url: `${SITE.domain}/area/${area.slug}`,
   }
 
   return Layout(
     {
-      title: `${area.region} ${area.treatment} — ${area.region} 치과 추천 | 고수치과의원`,
+      title: `${area.region} ${area.treatment} 진료·방문 안내 | 고수치과의원`,
       description: `${area.region} ${area.treatment} 치과를 찾으신다면 — 내포신도시 고수치과. ${t.short}. 주키즈소아과 건물 5층, 주차 가능.`,
       path: `/area/${area.slug}`,
       schema: [

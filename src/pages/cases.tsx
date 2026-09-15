@@ -8,7 +8,7 @@ export function casesListPage(cases: any[], loggedIn: boolean) {
   const content = html`
 <section class="page-hero" id="cases-hero">
   <div class="section-inner">
-    <nav class="breadcrumb"><a href="/">홈</a> / <span>비포 &amp; 애프터</span></nav>
+    <nav class="breadcrumb" aria-label="현재 위치"><a href="/">홈</a> / <span>비포 &amp; 애프터</span></nav>
     <p class="eyebrow">Before &amp; After</p>
     <h1 class="h-display">나와 비슷한 고민의 <br><em>치료 이야기</em></h1>
     <p class="lead">비슷한 고민을 가진 분들의 치료 과정을 고민별로 모았습니다. 치료 결과는 개인에 따라 차이가 있을 수 있으며, 치료 후 사진은 사이트 열람 정책에 따라 로그인 후 열람하실 수 있습니다.</p>
@@ -42,7 +42,7 @@ export function casesListPage(cases: any[], loggedIn: boolean) {
               ${cs.age_group ? html`<span>${cs.age_group}</span>` : ''}
               ${cs.gender ? html`<span>${cs.gender}</span>` : ''}
             </div>
-            <h3>${cs.title}</h3>
+            <h2>${cs.title}</h2>
             <p>${cs.region || ''} ${cs.duration ? '· 치료기간 ' + cs.duration : ''}</p>
           </div>
         </a>`)}
@@ -56,6 +56,7 @@ export function casesListPage(cases: any[], loggedIn: boolean) {
       description:
         '고수치과의 실제 치료 케이스를 고민별로 모았습니다. 임플란트·치아교정·심미보철 치료 전후 비교. 치료 결과는 개인에 따라 차이가 있을 수 있습니다.',
       path: '/cases',
+      pageType: 'CollectionPage',
       schema: [breadcrumbSchema([{ name: '홈', path: '/' }, { name: '비포 & 애프터', path: '/cases' }])],
     },
     content
@@ -74,7 +75,7 @@ export function caseDetailPage(cs: any, loggedIn: boolean) {
   const content = html`
 <section class="page-hero" id="case-hero" style="padding-bottom:50px">
   <div class="section-inner">
-    <nav class="breadcrumb"><a href="/">홈</a> / <a href="/cases">비포 &amp; 애프터</a> / <span>${cs.title}</span></nav>
+    <nav class="breadcrumb" aria-label="현재 위치"><a href="/">홈</a> / <a href="/cases">비포 &amp; 애프터</a> / <span>${cs.title}</span></nav>
     <div class="case-meta" style="margin-bottom:14px">
       <span>${cs.category}</span>
       ${cs.age_group ? html`<span>${cs.age_group}</span>` : ''}
@@ -132,13 +133,13 @@ export function caseDetailPage(cs: any, loggedIn: boolean) {
       ${doctor ? html`
       <a href="/doctors/${doctor.slug}" class="treat-sub" style="flex:1;min-width:240px">
         <p style="font-size:12px;font-weight:700;color:var(--brand);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px">담당 의료진</p>
-        <h4>${doctor.name} 원장 (${doctor.role})</h4>
+        <h2>${doctor.name} 원장 (${doctor.role})</h2>
         <p>"${doctor.tagline}"</p>
       </a>` : ''}
       ${treatment ? html`
       <a href="/treatments/${treatment.slug}" class="treat-sub" style="flex:1;min-width:240px">
         <p style="font-size:12px;font-weight:700;color:var(--brand);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px">관련 진료</p>
-        <h4>${treatment.name}</h4>
+        <h2>${treatment.name}</h2>
         <p>${treatment.short}</p>
       </a>` : ''}
     </div>
@@ -150,6 +151,7 @@ export function caseDetailPage(cs: any, loggedIn: boolean) {
       title: `${cs.title} — ${cs.category} 치료 케이스 | 고수치과의원`,
       description: `${cs.region || '내포'} ${cs.category} 치료 케이스. ${(cs.description || cs.title).slice(0, 120)}`,
       path: `/cases/${cs.id}`,
+      noindex: true,
       schema: [
         breadcrumbSchema([
           { name: '홈', path: '/' },

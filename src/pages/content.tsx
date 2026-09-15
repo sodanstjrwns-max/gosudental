@@ -1,6 +1,6 @@
 import { sanitizeContent } from '../security'
 import { html, raw } from 'hono/html'
-import { Layout, breadcrumbSchema } from '../layout'
+import { Layout, breadcrumbSchema, schemaDate } from '../layout'
 import { SITE, TERMS, TREATMENTS, DOCTORS } from '../data/site'
 
 // ── 원장 칼럼 ──
@@ -8,7 +8,7 @@ export function columnListPage(posts: any[]) {
   const content = html`
 <section class="page-hero" id="column-hero">
   <div class="section-inner">
-    <nav class="breadcrumb"><a href="/">홈</a> / <span>원장 칼럼</span></nav>
+    <nav class="breadcrumb" aria-label="현재 위치"><a href="/">홈</a> / <span>원장 칼럼</span></nav>
     <p class="eyebrow">Column</p>
     <h1 class="h-display">원장이 직접 쓰는 <br><em>치과 이야기</em></h1>
     <p class="lead">광고가 아닌, 진짜 도움이 되는 치과 이야기를 기록합니다. 배우고 성장하는 과정도 함께 남깁니다.</p>
@@ -31,7 +31,7 @@ export function columnListPage(posts: any[]) {
           </div>
           <div class="post-body">
             <p class="date">${(p.created_at || '').slice(0, 10)} ${p.category ? '· ' + p.category : ''}</p>
-            <h3>${p.title}</h3>
+            <h2>${p.title}</h2>
             <p>${p.meta_description || ''}</p>
           </div>
         </a>`)}
@@ -44,6 +44,7 @@ export function columnListPage(posts: any[]) {
       title: '원장 칼럼 | 고수치과의원',
       description: '고수치과 원장이 직접 쓰는 치과 이야기. 임플란트·교정·심미보철에 대한 정확하고 솔직한 의료 정보를 전합니다.',
       path: '/column',
+      pageType: 'CollectionPage',
       schema: [breadcrumbSchema([{ name: '홈', path: '/' }, { name: '원장 칼럼', path: '/column' }])],
     },
     content
@@ -56,19 +57,23 @@ export function columnDetailPage(post: any) {
 
   const articleSchema = {
     '@context': 'https://schema.org',
-    '@type': 'MedicalWebPage',
+    '@type': 'BlogPosting',
+    '@id': `${SITE.domain}/column/${post.slug}#article`,
     headline: post.title,
-    datePublished: post.created_at,
-    dateModified: post.updated_at || post.created_at,
-    author: { '@type': 'Person', name: `${author.name} 원장`, url: `${SITE.domain}/doctors/${author.slug}` },
-    publisher: { '@type': 'Organization', name: SITE.name, logo: { '@type': 'ImageObject', url: `${SITE.domain}/static/img/logo-stack.png` } },
-    mainEntityOfPage: `${SITE.domain}/column/${post.slug}`,
+    description: post.meta_description || post.title,
+    inLanguage: 'ko-KR',
+    datePublished: schemaDate(post.created_at),
+    dateModified: schemaDate(post.updated_at || post.created_at),
+    image: new URL(post.thumbnail || '/static/img/og-image.jpg', SITE.domain).href,
+    author: { '@type': 'Person', '@id': `${SITE.domain}/doctors/${author.slug}#person`, name: `${author.name} 원장`, url: `${SITE.domain}/doctors/${author.slug}` },
+    publisher: { '@id': `${SITE.domain}/#organization` },
+    mainEntityOfPage: { '@id': `${SITE.domain}/column/${post.slug}#webpage` },
   }
 
   const content = html`
 <section class="page-hero" id="post-hero" style="padding-bottom:40px">
   <div class="section-narrow">
-    <nav class="breadcrumb"><a href="/">홈</a> / <a href="/column">원장 칼럼</a> / <span>${post.title}</span></nav>
+    <nav class="breadcrumb" aria-label="현재 위치"><a href="/">홈</a> / <a href="/column">원장 칼럼</a> / <span>${post.title}</span></nav>
     ${post.category ? html`<p class="eyebrow">${post.category}</p>` : ''}
     <h1 class="h-display" style="font-size:clamp(26px,3.8vw,44px)">${post.title}</h1>
     <p style="font-size:14.5px;color:var(--ink-mute)">
@@ -85,13 +90,13 @@ export function columnDetailPage(post: any) {
     <div style="display:flex;gap:14px;margin-top:52px;flex-wrap:wrap">
       <a href="/doctors/${author.slug}" class="treat-sub" style="flex:1;min-width:240px">
         <p style="font-size:12px;font-weight:700;color:var(--brand);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px">글쓴이</p>
-        <h4>${author.name} 원장 (${author.role})</h4>
+        <h2>${author.name} 원장 (${author.role})</h2>
         <p>"${author.tagline}"</p>
       </a>
       ${relTreatment ? html`
       <a href="/treatments/${relTreatment.slug}" class="treat-sub" style="flex:1;min-width:240px">
         <p style="font-size:12px;font-weight:700;color:var(--brand);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px">관련 진료</p>
-        <h4>${relTreatment.name}</h4>
+        <h2>${relTreatment.name}</h2>
         <p>${relTreatment.short}</p>
       </a>` : ''}
     </div>
@@ -105,6 +110,9 @@ export function columnDetailPage(post: any) {
       path: `/column/${post.slug}`,
       ogImage: post.thumbnail || undefined,
       ogType: 'article',
+      pageType: 'MedicalWebPage',
+      publishedTime: post.created_at,
+      modifiedTime: post.updated_at || post.created_at,
       schema: [
         articleSchema,
         breadcrumbSchema([
@@ -120,11 +128,12 @@ export function columnDetailPage(post: any) {
 
 // ── 백과사전 ──
 export function encyclopediaPage(q?: string) {
+  q = q?.trim()
   const filtered = q ? TERMS.filter((t) => t.name.includes(q) || t.def.includes(q)) : TERMS
   const content = html`
 <section class="page-hero" id="dict-hero">
   <div class="section-inner">
-    <nav class="breadcrumb"><a href="/">홈</a> / <span>치과 백과사전</span></nav>
+    <nav class="breadcrumb" aria-label="현재 위치"><a href="/">홈</a> / <span>치과 백과사전</span></nav>
     <p class="eyebrow">Encyclopedia</p>
     <h1 class="h-display">치과 <em>백과사전</em></h1>
     <p class="lead">진료실에서 들었던 낯선 용어들, 쉽게 풀어 설명해 드립니다. 총 ${TERMS.length}개 용어 수록 (계속 추가됩니다).</p>
@@ -143,7 +152,7 @@ export function encyclopediaPage(q?: string) {
         const rel = TREATMENTS.filter((tr) => t.related.includes(tr.slug))
         return html`
         <article class="dict-card" id="${t.name}">
-          <h3><a href="/encyclopedia/${t.slug}">${t.name}</a></h3>
+          <h2><a href="/encyclopedia/${t.slug}">${t.name}</a></h2>
           <p>${t.def}</p>
           <div class="dict-links">
             ${rel.map((tr) => html`<a href="/treatments/${tr.slug}">${tr.name}</a>`)}
@@ -159,7 +168,8 @@ export function encyclopediaPage(q?: string) {
       title: q ? `"${q}" 검색 결과 — 치과 백과사전 | 고수치과` : `치과 백과사전 — ${TERMS.length}개 치과 용어 사전 | 고수치과의원`,
       description: '임플란트·교정·신경치료 등 진료실에서 만나는 치과 용어를 알기 쉽게 정리한 고수치과 백과사전.',
       path: '/encyclopedia',
-      noindex: Boolean(q),
+      noindex: Boolean(q?.trim()),
+      pageType: 'CollectionPage',
       schema: [breadcrumbSchema([{ name: '홈', path: '/' }, { name: '백과사전', path: '/encyclopedia' }])],
     },
     content
@@ -177,16 +187,17 @@ export function termDetailPage(slug: string) {
   const defSchema = {
     '@context': 'https://schema.org',
     '@type': 'DefinedTerm',
+    '@id': `${SITE.domain}/encyclopedia/${term.slug}#term`,
     name: term.name,
     description: term.def,
     url: `${SITE.domain}/encyclopedia/${term.slug}`,
-    inDefinedTermSet: { '@type': 'DefinedTermSet', name: '고수치과 치과 백과사전' },
+    inDefinedTermSet: { '@type': 'DefinedTermSet', '@id': `${SITE.domain}/encyclopedia#terms`, name: '고수치과 치과 백과사전', url: `${SITE.domain}/encyclopedia` },
   }
 
   const content = html`
 <section class="page-hero" id="term-hero">
   <div class="section-narrow">
-    <nav class="breadcrumb"><a href="/">홈</a> / <a href="/encyclopedia">백과사전</a> / <span>${term.name}</span></nav>
+    <nav class="breadcrumb" aria-label="현재 위치"><a href="/">홈</a> / <a href="/encyclopedia">백과사전</a> / <span>${term.name}</span></nav>
     <p class="eyebrow">Dental Term</p>
     <h1 class="h-display">${term.name}</h1>
     <p class="lead" style="font-size:19px">${term.def}</p>
@@ -200,7 +211,7 @@ export function termDetailPage(slug: string) {
     <div class="treat-sub-grid" style="grid-template-columns:repeat(${Math.min(rel.length, 3)},1fr)">
       ${rel.map((tr) => html`
       <a href="/treatments/${tr.slug}" class="treat-sub">
-        <h4>${tr.name}</h4>
+        <h3>${tr.name}</h3>
         <p>${tr.short}</p>
       </a>`)}
     </div>` : ''}
@@ -217,6 +228,7 @@ export function termDetailPage(slug: string) {
       title: `${term.name}이란? — 치과 백과사전 | 고수치과의원`,
       description: `${term.name}: ${term.def}`,
       path: `/encyclopedia/${term.slug}`,
+      pageType: 'MedicalWebPage',
       schema: [
         defSchema,
         breadcrumbSchema([
@@ -235,7 +247,7 @@ export function noticeListPage(notices: any[]) {
   const content = html`
 <section class="page-hero" id="notice-hero">
   <div class="section-inner">
-    <nav class="breadcrumb"><a href="/">홈</a> / <span>공지사항</span></nav>
+    <nav class="breadcrumb" aria-label="현재 위치"><a href="/">홈</a> / <span>공지사항</span></nav>
     <p class="eyebrow">Notice</p>
     <h1 class="h-display">공지사항</h1>
   </div>
@@ -249,7 +261,7 @@ export function noticeListPage(notices: any[]) {
         ${notices.map((n) => html`
         <a href="/notice/${n.id}" class="notice-row">
           ${n.pinned ? html`<span class="pin">공지</span>` : ''}
-          <h3>${n.title}</h3>
+          <h2>${n.title}</h2>
           <time>${(n.created_at || '').slice(0, 10)}</time>
         </a>`)}
       </div>`}
@@ -261,6 +273,7 @@ export function noticeListPage(notices: any[]) {
       title: '공지사항 | 고수치과의원',
       description: '고수치과 공지사항 — 개원 소식, 진료 안내, 이벤트 소식을 전해드립니다.',
       path: '/notice',
+      pageType: 'CollectionPage',
       schema: [breadcrumbSchema([{ name: '홈', path: '/' }, { name: '공지사항', path: '/notice' }])],
     },
     content
@@ -271,7 +284,7 @@ export function noticeDetailPage(n: any) {
   const content = html`
 <section class="page-hero" id="notice-detail-hero" style="padding-bottom:40px">
   <div class="section-narrow">
-    <nav class="breadcrumb"><a href="/">홈</a> / <a href="/notice">공지사항</a> / <span>${n.title}</span></nav>
+    <nav class="breadcrumb" aria-label="현재 위치"><a href="/">홈</a> / <a href="/notice">공지사항</a> / <span>${n.title}</span></nav>
     ${n.pinned ? html`<span class="pin" style="font-size:12px;font-weight:800;color:#fff;background:var(--brand);padding:5px 13px;border-radius:999px">대표 공지</span>` : ''}
     <h1 class="h-display" style="font-size:clamp(24px,3.4vw,40px);margin-top:14px">${n.title}</h1>
     <p style="font-size:14px;color:var(--ink-mute)">${(n.created_at || '').slice(0, 10)}</p>

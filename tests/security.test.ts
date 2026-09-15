@@ -3,6 +3,7 @@ import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { Hono } from 'hono'
 import app from '../src/index'
+import { canonicalUrl, schemaDate } from '../src/layout'
 import { getUser, hashPassword, verifyPassword, signToken, verifyToken, secretOf, type Bindings } from '../src/auth'
 import { consent, sanitizeContent, validateImage, safeJson } from '../src/security'
 
@@ -22,6 +23,43 @@ test('public handover never reveals credentials and retains restrictive headers'
     assert.equal(response.headers.get('Referrer-Policy'), 'no-referrer')
   }
 })
+test('SEO canonical URLs exclude tracking, fragments and alternate hosts', () => {
+  assert.equal(canonicalUrl('/treatments/implant/?utm_source=test#faq'), 'https://gosudc.kr/treatments/implant')
+  assert.equal(canonicalUrl('https://preview.example/doctors/'), 'https://gosudc.kr/doctors')
+  assert.equal(canonicalUrl('/'), 'https://gosudc.kr/')
+  assert.equal(schemaDate('2026-09-15 12:00:00'), '2026-09-15T12:00:00.000Z')
+  assert.equal(schemaDate('not a date'), undefined)
+})
+
+test('public trailing slash redirects preserve queries but never redirect write APIs', async () => {
+  const response = await app.request('https://www.gosudc.kr/treatments/?utm_source=test')
+  assert.equal(response.status, 301)
+  assert.equal(response.headers.get('location'), 'https://gosudc.kr/treatments?utm_source=test')
+  const api = await app.request('https://gosudc.kr/api/unknown/', { method: 'POST', headers: { Origin: 'https://gosudc.kr', 'Content-Type': 'application/json' }, body: '{}' }, {} as any)
+  assert.notEqual(api.status, 301)
+  assert.notEqual(api.status, 302)
+})
+
+test('search results and member-gated case details remain excluded from search', async () => {
+  const search = await app.request('https://gosudc.kr/encyclopedia?q=implant', {}, {} as any)
+  assert.match(search.headers.get('X-Robots-Tag') || '', /noindex/)
+  assert.doesNotMatch(await search.text(), /type="application\/ld\+json"/)
+  const DB = { prepare: () => ({ bind: () => ({ first: async () => ({ id: 1, title: '사례', published: 1, category: '임플란트' }) }) }) }
+  const detail = await app.request('https://gosudc.kr/cases/1', {}, { DB } as any)
+  assert.match(detail.headers.get('X-Robots-Tag') || '', /noindex/)
+})
+
+test('public editorial images can be indexed, missing images and private APIs cannot', async () => {
+  const R2 = { get: async (key: string) => key === 'uploads/public.webp' ? { body: new Uint8Array([1]), httpMetadata: { contentType: 'image/webp' } } : null }
+  const image = await app.request('https://gosudc.kr/api/uploads/public.webp', {}, { R2 } as any)
+  assert.equal(image.status, 200)
+  assert.equal(image.headers.get('X-Robots-Tag'), null)
+  assert.match(image.headers.get('Cache-Control') || '', /public/)
+  const missing = await app.request('https://gosudc.kr/api/uploads/missing.webp', {}, { R2 } as any)
+  assert.equal(missing.status, 404)
+  assert.match(missing.headers.get('X-Robots-Tag') || '', /noindex/)
+})
+
 test('strict consent: false-like values never become consent', () => {
   for (const value of [false, 'false', '0', 0, 1, {}, [], null, undefined]) assert.equal(consent(value), false)
   for (const value of [true, 'true', 'on']) assert.equal(consent(value), true)

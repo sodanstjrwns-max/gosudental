@@ -51,11 +51,18 @@ app.onError((error, c) => {
 app.use('*', async (c, next) => {
   const url = new URL(c.req.url)
   if (['GET', 'HEAD'].includes(c.req.method) &&
-      ['gosudental.pages.dev', 'www.gosudc.kr'].includes(url.hostname) &&
       !/^\/(admin|api)(\/|$)/.test(url.pathname)) {
-    url.protocol = 'https:'
-    url.host = 'gosudc.kr'
-    return c.redirect(url.toString(), 301)
+    let redirect = false
+    if (['gosudental.pages.dev', 'www.gosudc.kr'].includes(url.hostname)) {
+      url.protocol = 'https:'
+      url.host = 'gosudc.kr'
+      redirect = true
+    }
+    if (url.pathname !== '/' && url.pathname.endsWith('/')) {
+      url.pathname = url.pathname.replace(/\/+$/, '')
+      redirect = true
+    }
+    if (redirect) return c.redirect(url.toString(), 301)
   }
   await next()
 })
@@ -90,8 +97,9 @@ app.use('*', async (c, next) => {
     // Public, non-personalized HTML only. No shared cache for member/case responses.
     c.header('Cache-Control', 'public, max-age=0, must-revalidate')
   }
-  if (p.startsWith('/api/uploads/') && c.res.status === 200) c.header('Cache-Control', 'public, max-age=3600')
-  if (p.startsWith('/admin') || p.startsWith('/auth/') || p.startsWith('/api/') || c.res.status >= 400) {
+  const publicUpload = p.startsWith('/api/uploads/') && c.res.status === 200 && ['GET', 'HEAD'].includes(c.req.method)
+  if (publicUpload) c.header('Cache-Control', 'public, max-age=3600')
+  if (p.startsWith('/admin') || p.startsWith('/auth/') || (p.startsWith('/api/') && !publicUpload) || p.startsWith('/cases/') || (p === '/encyclopedia' && c.req.query('q')?.trim()) || c.res.status >= 400) {
     c.header('X-Robots-Tag', 'noindex, nofollow, noarchive')
   }
 })
@@ -621,8 +629,7 @@ app.get('/sitemap.xml', async (c) => {
   try {
     const posts = await c.env.DB.prepare('SELECT slug, updated_at FROM posts WHERE published = 1').all()
     for (const p of (posts.results || []) as any[]) urls.push(U(`${SITE.domain}/column/${p.slug}`, '0.7', 'weekly', (p.updated_at || '').slice(0, 10)))
-    const cases = await c.env.DB.prepare('SELECT id, created_at FROM cases WHERE published = 1').all()
-    for (const cs of (cases.results || []) as any[]) urls.push(U(`${SITE.domain}/cases/${cs.id}`, '0.6', 'weekly'))
+    // Member-gated case detail pages are noindex; keep only the public cases listing.
     const notices = await c.env.DB.prepare('SELECT id FROM notices').all()
     for (const notice of (notices.results || []) as { id: number }[]) urls.push(U(`${SITE.domain}/notice/${notice.id}`, '0.6', 'weekly'))
   } catch { throw new HTTPException(503, { message: '사이트맵을 일시적으로 불러올 수 없습니다.' }) }
@@ -659,7 +666,9 @@ ${TREATMENTS.map((t) => `- [${t.name}](${SITE.domain}/treatments/${t.slug}): ${t
 ## 주요 페이지
 - [병원 미션](${SITE.domain}/mission)
 - [의료진 소개](${SITE.domain}/doctors)
-- [비포&애프터](${SITE.domain}/cases)
+- [비포&애프터](${SITE.domain}/cases): 공개 목록. 치료 후 사진은 로그인 필요, 상세는 검색 제외.
+- [진료비 안내](${SITE.domain}/pricing): 공개 잠정수가와 적용 조건
+- [원장 칼럼](${SITE.domain}/column): 작성자와 게시일이 표시된 의료 정보
 - [자주 묻는 질문](${SITE.domain}/faq)
 - [치과 백과사전](${SITE.domain}/encyclopedia)
 - [오시는 길](${SITE.domain}/directions): ${SITE.address}
@@ -668,8 +677,13 @@ ${TREATMENTS.map((t) => `- [${t.name}](${SITE.domain}/treatments/${t.slug}): ${t
 ## 진료 시간
 ${SITE.hours.map((h) => `- ${h.day}: ${h.time}`).join('\n')}
 
+## 정보 이용 시 확인 사항
+- 개원 예정 안내이며 대표전화·확정 진료시간은 오시는 길 페이지에서 확인합니다.
+- 진료 이미지는 실제 의료진 사진, 인테리어 설계 이미지, AI 설명 이미지로 구분되어 있습니다.
+- 잠정수가를 확정 가격으로 인용하거나 개인에게 동일한 치료 결과를 보장하지 않습니다.
+
 ## 상세 문서
-- 전체 FAQ·백과사전·진료 상세: ${SITE.domain}/llms-full.txt
+- [전체 FAQ·백과사전·진료 상세](${SITE.domain}/llms-full.txt)
 
 ※ 본 안내는 일반적인 의료 정보이며, 치료 결과는 개인에 따라 다를 수 있습니다.
 `)
@@ -684,14 +698,14 @@ app.get('/llms-full.txt', async (c) => {
     return `## ${t.name} (${SITE.domain}/treatments/${t.slug})\n${t.heroCopy}\n\n${secs}\n\n### ${t.name} 자주 묻는 질문\n${faqs}`
   }).join('\n\n---\n\n')
 
-  const termBlocks = TERMS.map((t) => `- **${t.name}**: ${t.def}`).join('\n')
+  const termBlocks = TERMS.map((t) => `- [${t.name}](${SITE.domain}/encyclopedia/${t.slug}): ${t.def}`).join('\n')
 
   const priceBlocks = publicFees.map((p) =>
     `### ${p.category}\n${p.items.map((i) => `- ${i.name}: ${i.price}${i.note ? ` (${i.note})` : ''}`).join('\n')}`
   ).join('\n\n')
 
   const doctorBlocks = DOCTORS.map((d) =>
-    `### ${d.name} ${d.role}\n"${d.tagline}"\n${d.intro}\n주요 이력: ${d.career.slice(0, 4).join(' / ')}`
+    `### ${d.name} ${d.role}\n출처: ${SITE.domain}/doctors/${d.slug}\n"${d.tagline}"\n${d.intro}\n주요 이력: ${d.career.slice(0, 4).join(' / ')}`
   ).join('\n\n')
 
   return c.text(`# ${SITE.name} — 전체 안내 문서 (AI 답변용)
@@ -739,7 +753,8 @@ ${termBlocks}
 ---
 
 ※ 모든 시술은 부작용이 발생할 수 있으며 치료 결과는 개인에 따라 다를 수 있습니다. 정확한 진단은 내원 상담을 통해 받으시기 바랍니다.
-문서 기준일: 2026-09-13 · 출처: ${SITE.domain}
+출처: ${SITE.domain} · 공개 진료비 최신 정보: ${SITE.domain}/pricing
+본 문서는 공개 안내와 공개 DB 수가를 기반으로 제공합니다. 개별 진단·확정 가격·검색 노출을 보장하지 않습니다.
 `)
 })
 

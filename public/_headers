@@ -9,9 +9,8 @@
   X-Robots-Tag: noindex, nofollow, noarchive
   Cache-Control: no-store
 
-/api/*
-  X-Robots-Tag: noindex
-  Cache-Control: no-store
+# 동적 API 헤더는 Worker에서 설정합니다.
+# 공개 /api/uploads/ 이미지는 색인 허용, 나머지 API는 noindex/no-store.
 
 # AEO 문서: 자주 갱신되므로 짧은 캐시
 /llms.txt

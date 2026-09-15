@@ -45,6 +45,19 @@
 - 생성 모델 GPT Image 2. 최종 원본 파일 ID: 임플란트 K5c7mU8G, 교정 YQlxUycw, 심미 CbS9l3uk. 원본/검수용 파일은 비공개 작업 폴더 `.reference/`(Git 제외)에 보존.
 - 원격 최신 `2d86049`와 일치한 상태에서 이미지 작업 시작. 이미지 작업 당시 미배포였으며, 2026-09-15 통합 운영 배포에서 반영 완료.
 
+## 2026-09-15 모바일 · SEO · AEO 기본 구조 정비
+- 전체 로컬 사이트맵 146개 URL 감사: H1은 모두 1개, H 단계 건너뜀은 127페이지에서 0페이지로 개선. 헤딩 수준을 변경해도 기존 디자인을 유지하도록 CSS 선택자 동기화.
+- canonical/OG URL을 운영 도메인의 정규 경로로 통일하고 query·fragment·끝 슬래시 제외. 공개 GET/HEAD의 끝 슬래시는 301로 통합(쿼리 보존), 관리자/API 쓰기 경로는 리다이렉트 대상 제외.
+- 모든 공개 문서에 고유 `#webpage` 노드, WebSite·Dentist·BreadcrumbList 연결. 의료진 Person/ProfilePage, 용어 DefinedTerm/MedicalWebPage, 칼럼 BlogPosting 및 실제 DB 작성·수정 일시/작성자/이미지 메타 적용.
+- 모든 시술을 NoninvasiveProcedure로 분류하던 오류, 확인되지 않은 reviewedBy/lastReviewed·학교 이력 자동 추정·중복 병원 엔터티·미확인 좌표 및 미래 설립일 제거. 개원 예정 문구 자체는 유지.
+- 진료 상세에 화면에도 보이는 핵심 답변·담당 의료진·수가 링크·의료정보 주의사항·목차 추가. 의료진 기본 아이콘을 실제 사진으로 교체. 대표 이미지는 반응형 img/srcset/fetchpriority 사용하며 AI/설계 이미지 표기 유지.
+- FAQ 스키마는 실제 표시되는 전체 질문과 일치. llms 문서에 진료·의료진·용어·공개 수가 원문 링크와 잠정/회원열람/진단 한계 명시. llms 파일은 보조 안내이지 AI 노출 보장 수단이 아님.
+- 사례 상세·검색 결과 noindex를 HTML/HTTP에 일치시키고 사례 상세는 사이트맵 제외. 공개 업로드 이미지의 잘못된 noindex를 해제하되 인증 API·미존재 이미지·비공개 사례는 보호 유지.
+- 320px 지도 iframe 넘침 수정, 모바일 의료진/관련 진료 카드 1열, 메뉴 동적 화면 높이·safe-area, 본문 표/이미지 리플로우, 목차/용어 링크 터치 영역, 앵커 헤더 가림 보완.
+- 회귀 검사: sitemap의 200/H1/헤딩/canonical/OG/title/description/연결 스키마 전체 확인, JavaScript 없이 주요 상세 화면·FAQ 본문 일치 확인. 최종 점수나 실제 검색 노출 보장은 아님.
+- 기준 문서: [Google AI 기능 가이드](https://developers.google.com/search/docs/appearance/ai-features), [구조화 데이터 정책](https://developers.google.com/search/docs/appearance/structured-data/sd-policies), [Article 가이드](https://developers.google.com/search/docs/appearance/structured-data/article).
+- 운영 DB·수가·인증 secrets 및 사진 원본은 변경하지 않음. Search Console/네이버 실제 색인·운영 Core Web Vitals는 별도 모니터링 필요.
+
 ## 납품 최적화 결과
 ### 병합 이전 측정 (로컬 Lighthouse, 모바일 시뮬레이션, 동일 명령)
 아래 수치는 `aa66946` 기준입니다. GitHub의 분석 스크립트 복원 후 운영 성능은 다시 측정해야 합니다.
@@ -99,7 +112,7 @@
 | `/doctors`, `/doctors/:slug` | 의료진 소개·약력·진료·사례 |
 | `/doctors/cho-wonik#doctor-life` | 농구·운동·일상 사진 7장 |
 | `/treatments`, `/treatments/:slug` | 진료 7분야 및 FAQ |
-| `/cases`, `/cases/:id` | 전후 비교, 치료 후 사진은 유효 회원/관리자 인증 |
+| `/cases`, `/cases/:id` | 전후 비교, 치료 후 사진은 유효 회원/관리자 인증. 상세는 noindex·사이트맵 제외 |
 | `/column`, `/column/:slug` | 원장 칼럼, 정화된 HTML |
 | `/encyclopedia`, `/encyclopedia/:slug` | 용어 사전, `?q=` 검색 |
 | `/notice`, `/notice/:id` | 공지사항 |
@@ -178,7 +191,7 @@ npm audit
 ```
 - 기존 서버 재시작 전 3000 포트 정리, build 후 PM2 사용. 실제 실행은 `ecosystem.config.cjs` 참고.
 - 최초 브라우저 준비: `npx playwright install --with-deps chromium`.
-- 최종 검증: **단위 13개, 로컬 D1/R2 통합 2개, 브라우저 12개 모두 통과**, npm audit 알려진 취약점 0개.
+- 최종 검증: **단위 17개, 로컬 D1/R2 통합 2개, 브라우저 14개 모두 통과**, npm audit 알려진 취약점 0개.
 - 브라우저: 16개 사진/삭제 섹션, 회원가입·예약·관리자 CRUD, 모바일/키보드, no-JS, 장애 응답 복구, SEO/캐시.
 - axe WCAG 2A/2AA/2.1AA: 공개/로그인 9경로(390px), 인증된 관리자 7경로(수가 편집 포함, 390/1440px) 위반 0. 자동 검사 범위 내 결과이며 전체 접근성 인증을 의미하지 않음.
 - 측정 파일 `.test-artifacts/lighthouse-before.json`, `lighthouse-after.json`, `axe-after.json`, `axe-admin-after.json`은 로컬 작업 산출물(Git 제외).

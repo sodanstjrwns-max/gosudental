@@ -3,27 +3,10 @@ import { Layout, breadcrumbSchema, faqSchema } from '../layout'
 import { SITE, TREATMENTS, PRICING, PRICING_NOTICE } from '../data/site'
 
 export function directionsPage() {
-  const lbSchema = {
-    '@context': 'https://schema.org',
-    '@type': 'LocalBusiness',
-    '@id': `${SITE.domain}/#localbusiness`,
-    name: SITE.name,
-    address: {
-      '@type': 'PostalAddress',
-      streetAddress: '삽교읍 예학로 93, 5층',
-      addressLocality: '예산군',
-      addressRegion: '충청남도',
-      addressCountry: 'KR',
-    },
-    geo: { '@type': 'GeoCoordinates', latitude: 36.6547, longitude: 126.6716 },
-    url: SITE.domain,
-    image: `${SITE.domain}/static/img/og-image.jpg`,
-  }
-
   const content = html`
 <section class="page-hero" id="directions-hero">
   <div class="section-inner">
-    <nav class="breadcrumb"><a href="/">홈</a> / <span>오시는 길</span></nav>
+    <nav class="breadcrumb" aria-label="현재 위치"><a href="/">홈</a> / <span>오시는 길</span></nav>
     <p class="eyebrow">Directions</p>
     <h1 class="h-display">오시는 길 · <em>진료시간</em></h1>
     <p class="lead">${SITE.address} <br>${SITE.addressShort}</p>
@@ -51,9 +34,9 @@ export function directionsPage() {
       </div>
       <div class="reveal reveal-d1">
         <h2 style="font-size:24px;font-weight:800;color:var(--brand-dark);margin-bottom:22px"><i class="fas fa-clock" style="color:var(--brand);margin-right:10px"></i>진료시간</h2>
-        <table class="price-table">
+        <table class="price-table"><caption class="sr-only">고수치과 진료시간 안내</caption>
           <tbody>
-            ${SITE.hours.map((h) => html`<tr><td style="font-weight:700;color:var(--brand-dark);width:40%">${h.day}</td><td>${h.time}</td></tr>`)}
+            ${SITE.hours.map((h) => html`<tr><th scope="row" style="width:40%">${h.day}</th><td>${h.time}</td></tr>`)}
           </tbody>
         </table>
         <div class="alert info">${SITE.openDate}입니다. 진료시간은 확정되는 대로 이 페이지와 네이버 플레이스에서 안내드리겠습니다.</div>
@@ -68,7 +51,8 @@ export function directionsPage() {
       description:
         '고수치과 오시는 길: 충청남도 예산군 삽교읍 예학로 93, 5층 (내포신도시 주키즈소아청소년과 건물, 중흥S클래스더시티 앞). 주차 가능. 진료시간 안내.',
       path: '/directions',
-      schema: [lbSchema, breadcrumbSchema([{ name: '홈', path: '/' }, { name: '오시는 길', path: '/directions' }])],
+      pageType: 'ContactPage',
+      schema: [breadcrumbSchema([{ name: '홈', path: '/' }, { name: '오시는 길', path: '/directions' }])],
     },
     content
   )
@@ -90,7 +74,7 @@ export function tourPage() {
   const content = html`
 <section class="page-hero dark" id="tour-hero">
   <div class="section-inner">
-    <nav class="breadcrumb"><a href="/">홈</a> / <span>공간 둘러보기</span></nav>
+    <nav class="breadcrumb" aria-label="현재 위치"><a href="/">홈</a> / <span>공간 둘러보기</span></nav>
     <p class="eyebrow" style="color:var(--brand-accent)">Space Tour</p>
     <h1 class="h-display">치과 같지 않은 치과, <br><em style="color:var(--brand-soft)">고수치과의 공간</em></h1>
     <p class="lead">두려움은 공간에서부터 시작됩니다. 그래서 고수치과는 첫인상부터 다르게 설계했습니다. 환자분이 편안하게 머무를 수 있는 공간을 준비하고 있습니다.</p>
@@ -127,7 +111,7 @@ export function pricingPage(groups?: { category: string; items: { name: string; 
   const content = html`
 <section class="page-hero" id="pricing-hero">
   <div class="section-inner">
-    <nav class="breadcrumb"><a href="/">홈</a> / <span>비용 안내</span></nav>
+    <nav class="breadcrumb" aria-label="현재 위치"><a href="/">홈</a> / <span>비용 안내</span></nav>
     <p class="eyebrow">Pricing</p>
     <h1 class="h-display">비급여 진료비 <em>안내</em></h1>
     <p class="lead">주요 진료비용을 안내드립니다. 현재 개원 준비 중인 잠정 수가이며, 진단 후 치료 계획과 함께 최종 비용을 설명드립니다.</p>
@@ -169,7 +153,7 @@ export function faqTotalPage() {
   const content = html`
 <section class="page-hero" id="faq-hero">
   <div class="section-inner">
-    <nav class="breadcrumb"><a href="/">홈</a> / <span>자주 묻는 질문</span></nav>
+    <nav class="breadcrumb" aria-label="현재 위치"><a href="/">홈</a> / <span>자주 묻는 질문</span></nav>
     <p class="eyebrow">FAQ</p>
     <h1 class="h-display">자주 묻는 질문 <br><em>${allFaqs.length}가지</em></h1>
     <p class="lead">진료별로 환자분들이 가장 많이 궁금해하시는 질문을 모았습니다. 원하는 진료를 선택해 확인해 보세요.</p>
@@ -178,9 +162,9 @@ export function faqTotalPage() {
 
 <section class="section" id="faq-list-section" style="padding-top:30px">
   <div class="section-narrow">
-    <div class="case-filter">
-      <button class="active" data-cat="all">전체</button>
-      ${TREATMENTS.map((t) => html`<button data-cat="${t.slug}">${t.name}</button>`)}
+    <div class="case-filter" role="group" aria-label="진료별 질문 필터">
+      <button class="active" aria-pressed="true" data-cat="all">전체</button>
+      ${TREATMENTS.map((t) => html`<button aria-pressed="false" data-cat="${t.slug}">${t.name}</button>`)}
     </div>
     <div class="faq-list case-grid" style="display:block">
       ${allFaqs.map((f) => html`
@@ -209,7 +193,7 @@ document.addEventListener('DOMContentLoaded', () => {
       description: '임플란트·치아교정·라미네이트·신경치료·턱관절 — 고수치과 진료에 대해 환자분들이 가장 많이 묻는 질문과 답변을 한곳에 모았습니다.',
       path: '/faq',
       schema: [
-        faqSchema(allFaqs.slice(0, 40)),
+        faqSchema(allFaqs),
         breadcrumbSchema([{ name: '홈', path: '/' }, { name: '자주 묻는 질문', path: '/faq' }]),
       ],
     },
@@ -221,7 +205,7 @@ export function reservationPage() {
   const content = html`
 <section class="page-hero" id="reservation-hero">
   <div class="section-inner">
-    <nav class="breadcrumb"><a href="/">홈</a> / <span>상담 예약</span></nav>
+    <nav class="breadcrumb" aria-label="현재 위치"><a href="/">홈</a> / <span>상담 예약</span></nav>
     <p class="eyebrow">Reservation</p>
     <h1 class="h-display">상담 <em>예약</em></h1>
     <p class="lead">어려운 예약은 고수치과와 어울리지 않습니다. 아래 양식을 남겨주시면 확인 후 순차적으로 연락드리겠습니다. 신청만으로 예약이 확정되지는 않습니다.</p>
