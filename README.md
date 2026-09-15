@@ -12,7 +12,8 @@
 - 개발 미리보기: https://3000-ibwcewnougzmi7rx3gacu-d0b9e1e2.sandbox.novita.ai
 - **2026-09-15 사용자 승인 후 사진·수가표·보안·CMS·최적화·AI 진료 카드를 실제 운영 배포하고 검증 완료.** 미리보기는 임시 실행 환경입니다.
 - 사용자 Cloudflare 계정(BYOK), Pages 프로젝트 `gosudental`, production branch `main`.
-- 최신 배포: https://f215e00f.gosudental.pages.dev · 배포 코드 커밋 `d5c8799` (농구 에디토리얼).
+- 최신 배포: https://960d1a45.gosudental.pages.dev · 배포 코드 커밋 `88fd8f7` (모바일·SEO·AEO 기본 구조).
+- 농구 에디토리얼 배포 기록: https://f215e00f.gosudental.pages.dev · 코드 `d5c8799`.
 - 사진·보안 통합 배포 기록: https://8b218d77.gosudental.pages.dev · 코드 `ec4f1c0`.
 - Pages의 Git Provider는 연결되어 있지 않습니다. **GitHub push만으로 운영은 갱신되지 않습니다.** `npm run build` 후 `npx wrangler pages deploy dist --project-name gosudental --branch main`을 별도 실행하고 운영 URL을 검증해야 합니다.
 - 운영 D1 백업 후 3개 미적용 마이그레이션(0002_request_protection, 0003_delivery_indexes, 0004_merge_supplied_fees) 적용. 예전 미수정 기본수가 11행을 제공자료 106행으로 전환. 기존 칼럼 2개·공지 1개 보존, R2 데이터 변경 없음.
@@ -57,6 +58,8 @@
 - 회귀 검사: sitemap의 200/H1/헤딩/canonical/OG/title/description/연결 스키마 전체 확인, JavaScript 없이 주요 상세 화면·FAQ 본문 일치 확인. 최종 점수나 실제 검색 노출 보장은 아님.
 - 기준 문서: [Google AI 기능 가이드](https://developers.google.com/search/docs/appearance/ai-features), [구조화 데이터 정책](https://developers.google.com/search/docs/appearance/structured-data/sd-policies), [Article 가이드](https://developers.google.com/search/docs/appearance/structured-data/article).
 - 운영 DB·수가·인증 secrets 및 사진 원본은 변경하지 않음. Search Console/네이버 실제 색인·운영 Core Web Vitals는 별도 모니터링 필요.
+- 운영 배포 후 실제 사이트맵 149개 URL 전체(기존 칼럼 2개·공지 1개 포함)를 검증: HTTP 200, H1 1개, 헤딩 건너뜀 0, canonical/OG 일치, 메타 누락 0, 연결 스키마 오류 0, 중복 title 0. 자체 구조 검사 결과이며 Google 리치 결과 승인이나 노출을 뜻하지 않음.
+- 운영 320/390/768px 진료 상세·지도·FAQ 화면 넘침 없음, 대표 이미지 디코딩·핵심 안내 표시 확인, 브라우저 스크립트 오류 0. 보고서 `.test-artifacts/seo-production.json` (Git 제외).
 
 ## 납품 최적화 결과
 ### 병합 이전 측정 (로컬 Lighthouse, 모바일 시뮬레이션, 동일 명령)
