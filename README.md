@@ -114,6 +114,13 @@
 | `/admin/cases`, `/admin/posts`, `/admin/notices` | 등록·조회·수정·삭제 |
 | `/admin/users`, `/admin/reservations` | 회원 삭제·예약 상태 변경 |
 
+## 2026-09-15 농구 에디토리얼 리디자인
+- 메인 `/#director-life-preview`를 단순 3열 사진 모음에서 먹색 배경의 농구 매거진 레이아웃으로 변경.
+- 큰 경기 사진, 하늘색 제목, 폴라로이드형 인물 사진, 작은 경기 기록과 일상 연결 CTA. 원본 사진 3·5·10 및 전체 16개 사진 사용 유지.
+- PC 2열 / 모바일 1열, 320·390·768·1024·1440px 화면과 3장 확대보기·방향키·Escape·포커스 복귀 회귀 테스트 추가.
+- 새로운 이미지·외부 폰트·JavaScript 의존성 없음. 공통 CSS는 기존 빌드에서 압축 및 인라인 처리. DB·운영 secrets 변경 없음.
+- 개인 농구 기록은 진료 성과·의료 수상으로 표현하지 않음. 삭제된 `#doctor-portraits`는 복구하지 않음.
+
 ## 사진 출처와 배치
 - 공유폴더: https://drive.google.com/drive/folders/1j2nk8xt5qYxZVLfBwDEhFy273T1lniJV
 - 김경환 1개, 이민우 1개, 단체 2개, 조원익 폴더 13개 = 17개 파일. SHA-256이 같은 단체사진 1개 제외 후 **16개 고유 이미지 모두 사용**.
@@ -169,7 +176,7 @@ npm audit
 ```
 - 기존 서버 재시작 전 3000 포트 정리, build 후 PM2 사용. 실제 실행은 `ecosystem.config.cjs` 참고.
 - 최초 브라우저 준비: `npx playwright install --with-deps chromium`.
-- 최종 검증: **단위 13개, 로컬 D1/R2 통합 2개, 브라우저 11개 모두 통과**, npm audit 알려진 취약점 0개.
+- 최종 검증: **단위 13개, 로컬 D1/R2 통합 2개, 브라우저 12개 모두 통과**, npm audit 알려진 취약점 0개.
 - 브라우저: 16개 사진/삭제 섹션, 회원가입·예약·관리자 CRUD, 모바일/키보드, no-JS, 장애 응답 복구, SEO/캐시.
 - axe WCAG 2A/2AA/2.1AA: 공개/로그인 9경로(390px), 인증된 관리자 7경로(수가 편집 포함, 390/1440px) 위반 0. 자동 검사 범위 내 결과이며 전체 접근성 인증을 의미하지 않음.
 - 측정 파일 `.test-artifacts/lighthouse-before.json`, `lighthouse-after.json`, `axe-after.json`, `axe-admin-after.json`은 로컬 작업 산출물(Git 제외).

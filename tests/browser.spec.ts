@@ -156,6 +156,36 @@ test('admin browser creates, reloads and edits all content types', async ({ page
   expect(errors).toEqual([])
 })
 
+test('basketball editorial is responsive and retains the three-photo lightbox', async ({ page }) => {
+  await page.goto(base)
+  const section = page.locator('#director-life-preview')
+  await expect(section.locator('h2')).toContainText('코트 위에서')
+  await expect(section.locator('[data-photo-group="home-life"]')).toHaveCount(3)
+  await expect(section.locator('.photo-gallery')).toHaveCount(0)
+  for (const width of [320, 390, 768, 1024, 1440]) {
+    await page.setViewportSize({ width, height: 1000 })
+    for (const image of await section.locator('img').all()) {
+      await image.scrollIntoViewIfNeeded()
+      await expect.poll(() => image.evaluate((el: any) => el.complete && el.naturalWidth > 0)).toBeTruthy()
+    }
+    expect(await page.evaluate(() => (globalThis as any).document.documentElement.scrollWidth <= (globalThis as any).innerWidth)).toBeTruthy()
+    const title = await section.locator('h2').boundingBox()
+    const photo = await section.locator('.court-feature').boundingBox()
+    if (width > 640) expect(photo!.x).toBeGreaterThan(title!.x + title!.width)
+    else expect(photo!.y).toBeGreaterThan(title!.y + title!.height)
+  }
+  const opener = section.locator('.court-action .photo-open')
+  await opener.click()
+  const modal = page.getByRole('dialog', { name: '사진 크게 보기' })
+  await expect(modal).toBeVisible()
+  await expect(modal.locator('.lightbox-counter')).toHaveText('1 / 3')
+  await page.keyboard.press('ArrowRight')
+  await expect(modal.locator('.lightbox-counter')).toHaveText('2 / 3')
+  await page.keyboard.press('Escape')
+  await expect(opener).toBeFocused()
+  await expect(section.locator('.court-story-link')).toHaveAttribute('href', '/doctors/cho-wonik#doctor-life')
+})
+
 test('treatment cards use responsive AI illustrations with visible disclosure', async ({ page }) => {
   for (const path of ['/', '/treatments']) {
     await page.goto(base + path)

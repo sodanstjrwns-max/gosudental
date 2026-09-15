@@ -1,7 +1,7 @@
 import { html } from 'hono/html'
 import { Layout } from '../layout'
 import { PHOTOS } from '../data/photos'
-import { photoFigure, photoGallery } from '../photo-gallery'
+import { photoFigure } from '../photo-gallery'
 import { SITE, TREATMENTS, DOCTORS, EQUIPMENT } from '../data/site'
 
 export function homePage() {
@@ -154,13 +154,40 @@ export function homePage() {
   </div>
 </section>
 
-<section class="section photo-story-band" id="director-life-preview">
-  <div class="section-inner">
-    <p class="eyebrow">Another Side of Wonik</p>
-    <h2 class="h-display">가운을 벗고,<br><em>코트 위에서</em></h2>
-    <p class="lead">농구를 즐기는 조원익 원장의 또 다른 모습. 진료실 밖의 이야기도 함께 나눕니다.</p>
-    ${photoGallery([PHOTOS[3], PHOTOS[5], PHOTOS[10]], 'home-life')}
-    <a href="/doctors/cho-wonik#doctor-life" class="treat-more">일상 사진 더 보기 <i class="fas fa-arrow-right" aria-hidden="true"></i></a>
+<section class="court-story" id="director-life-preview" aria-labelledby="court-story-title">
+  <div class="court-inner">
+    <header class="court-masthead">
+      <p><span class="court-marker" aria-hidden="true"></span> GOSU PEOPLE <span class="court-divider">/</span> 조원익의 또 다른 모습</p>
+      <span class="court-edition" aria-hidden="true">OFF THE CLOCK — 01</span>
+    </header>
+    <div class="court-editorial">
+      <div class="court-intro">
+        <p class="court-kicker">ANOTHER SIDE OF WONIK</p>
+        <h2 id="court-story-title">가운을 벗고,<br><em>코트 위에서.</em></h2>
+        <p class="court-description">진료실 밖, 조금 다른 조원익.<br>농구를 좋아하는 한 사람의 이야기를 만나보세요.</p>
+      </div>
+      <div class="court-feature">
+        <span class="court-vertical" aria-hidden="true">BASKETBALL / PERSONAL ARCHIVE</span>
+        ${photoFigure(PHOTOS[5], 'home-life', 'court-action')}
+        <span class="court-frame-label" aria-hidden="true">IN THE MOMENT</span>
+      </div>
+      <div class="court-offcourt">
+        ${photoFigure(PHOTOS[3], 'home-life', 'court-portrait')}
+        <div class="court-side-note">
+          <span class="court-note-number" aria-hidden="true">01 —</span>
+          <h3>좋아하는 일에<br>몰입하는 시간.</h3>
+          <p>코트에서 뛰고,<br>동료들과 호흡을 맞추고.<br>일상 속 또 하나의 즐거움.</p>
+          <span class="court-handnote" aria-hidden="true">Beyond the clinic.</span>
+        </div>
+      </div>
+    </div>
+    <footer class="court-footer">
+      <div class="court-archive">
+        ${photoFigure(PHOTOS[10], 'home-life', 'court-contact-sheet')}
+        <p><span>THE PERSONAL SIDE</span>승부의 순간도, 평범한 일상도.<br>조원익 원장의 코트 밖 이야기까지.</p>
+      </div>
+      <a href="/doctors/cho-wonik#doctor-life" class="court-story-link"><span>조원익의 일상 더 보기<small>EXPLORE THE STORY</small></span><span class="court-link-arrow" aria-hidden="true">↗</span></a>
+    </footer>
   </div>
 </section>
 

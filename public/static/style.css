@@ -1215,6 +1215,83 @@ p, .lead, .hero-sub { text-wrap: pretty; }
 
 /* Photo stories — preserve full composition, including group shots and sports photos. */
 .photo-story-band { background:var(--sky-mist); }
+
+/* A personal basketball editorial, deliberately separate from clinical content. */
+.court-story { position:relative; isolation:isolate; overflow:hidden; padding:56px 40px 48px; background:#111c20; color:#f5f3e9; }
+.court-story::before { content:''; position:absolute; z-index:-1; width:880px; height:880px; border:1px solid #ffffff0c; border-radius:50%; left:-480px; top:160px; box-shadow:0 0 0 120px #ffffff03,0 0 0 121px #ffffff06; pointer-events:none; }
+.court-inner { max-width:1200px; margin:auto; }
+.court-masthead { display:flex; align-items:center; justify-content:space-between; gap:20px; padding-bottom:23px; border-bottom:1px solid #ffffff30; font:11px/1.6 var(--sans); letter-spacing:.12em; color:#cad4d6; }
+.court-masthead p { display:flex; align-items:center; gap:12px; }
+.court-marker { width:7px; height:7px; border-radius:50%; background:#d88866; flex-shrink:0; }
+.court-divider { color:#819397; padding:0 5px; }
+.court-edition { white-space:nowrap; }
+.court-editorial { display:grid; grid-template-columns:minmax(0,1.04fr) minmax(0,1fr); grid-template-rows:auto 1fr; column-gap:clamp(40px,7vw,100px); padding:52px 0 40px; }
+.court-intro { grid-area:1/1; padding:9px 0 42px; }
+.court-kicker { color:#b6dce8; font:10px/1.6 var(--sans); letter-spacing:.22em; margin-bottom:22px; }
+.court-intro h2 { color:#f5f3e9; font-family:var(--serif); font-size:clamp(38px,4.4vw,62px); font-weight:500; line-height:1.4; letter-spacing:-.065em; }
+.court-intro h2 em { color:#acd7e5; font-style:normal; }
+.court-description { margin-top:24px; color:#c5cfd0; font-size:14px; line-height:1.95; word-break:keep-all; }
+.court-feature { grid-area:1/2/3/3; position:relative; align-self:start; margin:8px 22px 0 0; padding:12px; border:1px solid #ffffff35; }
+.court-story .photo-open { border-radius:0; background:#18252a; }
+.court-story .photo-open:focus-visible { outline-color:#acd7e5; }
+.court-story .clinic-photo figcaption { color:#bfcccf; font-size:11px; margin-top:10px; letter-spacing:.025em; }
+.court-story .photo-expand { bottom:10px; right:10px; padding:7px 10px; border:1px solid #ffffff55; border-radius:0; background:#111c20db; font-size:10px; }
+.court-action img { aspect-ratio:2/3; }
+.court-action figcaption { padding:0 2px; }
+.court-vertical { position:absolute; left:calc(100% + 12px); top:0; writing-mode:vertical-rl; font:9px/1 var(--sans); letter-spacing:.2em; color:#bac9cb; }
+.court-frame-label { position:absolute; top:-10px; right:20px; background:#111c20; padding:0 10px; color:#dca283; font:10px/1.6 var(--sans); letter-spacing:.16em; }
+.court-offcourt { grid-area:2/1; display:grid; grid-template-columns:minmax(0,1.1fr) minmax(0,1fr); align-items:center; gap:26px; align-self:end; }
+.court-portrait { transform:rotate(-3deg); padding:8px 8px 10px; background:#ebe9de; box-shadow:0 18px 35px #0003; }
+.court-story .court-portrait figcaption { color:#424e51; font-size:10px; letter-spacing:0; }
+.court-portrait img { aspect-ratio:3/4; }
+.court-note-number { color:#dca283; font:11px/1 var(--sans); letter-spacing:.16em; }
+.court-side-note h3 { font-family:var(--serif); font-size:clamp(17px,1.6vw,23px); font-weight:500; line-height:1.65; margin:16px 0; color:#f5f3e9; word-break:keep-all; }
+.court-side-note p { font:12px/1.9 var(--sans); color:#bdcacc; }
+.court-handnote { display:block; margin-top:25px; color:#acd7e5; font:italic 17px/1.5 Georgia,serif; transform:rotate(-6deg); }
+.court-footer { display:flex; align-items:center; justify-content:space-between; gap:32px; border-top:1px solid #ffffff30; padding-top:25px; }
+.court-archive { display:flex; gap:22px; align-items:center; }
+.court-contact-sheet { width:66px; flex-shrink:0; }
+.court-contact-sheet img { aspect-ratio:2/3; }
+.court-contact-sheet figcaption,.court-contact-sheet .photo-expand { display:none; }
+.court-archive p { color:#c5cfd0; font:12px/1.85 var(--sans); }
+.court-archive p > span { display:block; font-size:9px; letter-spacing:.18em; color:#dca283; margin-bottom:7px; }
+.court-story-link { display:flex; gap:36px; align-items:center; font-family:var(--sans); font-size:15px; color:#f5f3e9; min-height:60px; }
+.court-story-link small { display:block; font-size:9px; letter-spacing:.18em; color:#b8c8cc; margin-top:7px; }
+.court-link-arrow { display:grid; place-items:center; width:54px; height:54px; border:1px solid #acd7e580; border-radius:50%; color:#acd7e5; font:27px/1 var(--sans); transition:background .25s,color .25s; }
+.court-story-link:hover .court-link-arrow { background:#acd7e5; color:#111c20; }
+.court-story-link:focus-visible { outline-color:#acd7e5; }
+@media(max-width:900px) {
+  .court-story { padding:40px 28px; }
+  .court-editorial { column-gap:38px; padding-top:38px; }
+  .court-intro { padding-bottom:30px; }
+  .court-intro h2 { font-size:clamp(32px,4.4vw,40px); }
+  .court-description { font-size:12px; }
+  .court-offcourt { gap:18px; }
+  .court-side-note p { font-size:11px; }
+  .court-side-note h3 { font-size:16px; }
+  .court-handnote { font-size:14px; margin-top:16px; }
+}
+@media(max-width:640px) {
+  .court-story { padding:30px 24px 34px; }
+  .court-masthead { padding-bottom:18px; font-size:9px; letter-spacing:.06em; }
+  .court-masthead p { gap:8px; }
+  .court-edition { display:none; }
+  .court-editorial { grid-template-columns:minmax(0,1fr); grid-template-rows:auto; padding:30px 0; gap:30px; }
+  .court-intro,.court-feature,.court-offcourt { grid-area:auto; }
+  .court-intro { padding:0; }
+  .court-kicker { font-size:9px; margin-bottom:16px; }
+  .court-intro h2 { font-size:clamp(34px,9vw,52px); }
+  .court-description { margin-top:18px; font-size:13px; }
+  .court-feature { margin:0 17px 0 0; padding:8px; }
+  .court-offcourt { padding:10px 5px 7px; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:24px; }
+  .court-side-note h3 { font-size:18px; }
+  .court-side-note p { font-size:12px; }
+  .court-portrait { padding:6px; }
+  .court-footer { align-items:stretch; flex-direction:column; gap:22px; padding-top:22px; }
+  .court-archive { gap:18px; }
+  .court-contact-sheet { width:52px; }
+  .court-story-link { justify-content:space-between; padding-top:20px; border-top:1px solid #ffffff20; }
+}
 .photo-story-split, .home-team-story { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:clamp(28px,6vw,88px); align-items:center; }
 .photo-story-copy p:not(.eyebrow), .home-team-story article > p:not(.eyebrow) { color:var(--ink-soft); line-height:1.9; margin:22px 0; }
 .photo-story-copy .hero-btn { background:var(--ink-deep); color:#fff; margin-top:18px; }
