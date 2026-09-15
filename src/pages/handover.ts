@@ -60,6 +60,7 @@ export function handoverPage(c: Context<any>) {
         <tr><th scope="row">치과 용어사전</th><td><strong>${TERMS.length}개 용어 페이지</strong> — 어려운 용어를 쉬운 말로 설명하고 관련 진료로 연결합니다.</td></tr>
         <tr><th scope="row">지역 × 진료</th><td><strong>18개 안내 페이지</strong> — 내포신도시·예산·삽교·홍성 등 주변 지역과 진료를 연결하는 로컬 SEO 페이지입니다.</td></tr>
         <tr><th scope="row">진료 상세 안내</th><td><strong>${TREATMENTS.length}개 진료 페이지</strong> — 임플란트·치아교정·심미보철·라미네이트 등 증상–원인–치료–FAQ까지 담았습니다.</td></tr>
+        <tr><th scope="row">대표 이미지</th><td>임플란트·치아교정·심미보철 카드는 <strong>AI 생성 이미지</strong>로 제작해 표기했고, 의료진 실제 사진 16장과 인테리어 사진은 실사입니다. 개원 후 실제 진료 사진이 생기면 교체해 드립니다.</td></tr>
         <tr><th scope="row">의료진 소개</th><td><strong>${DOCTORS.length}명 개별 페이지</strong> — 조원익·김경환·이민우 원장 등 경력과 진료 철학을 소개합니다.</td></tr>
         <tr><th scope="row">치료사례·칼럼</th><td>관리자에서 공개 여부를 관리합니다. 치료사례 상세는 회원에게 제공하고, 공개 칼럼은 사이트맵에 반영합니다.</td></tr>
         <tr><th scope="row">진료비(수가) 관리</th><td>비급여 항목·금액·공개 여부를 관리자에서 직접 수정합니다(의료법 고지 의무 대응).</td></tr>
@@ -93,6 +94,8 @@ export function handoverPage(c: Context<any>) {
       <aside class="callout"><p class="title">치료사례 올리는 법</p><p><a href="/admin/cases">관리자 → 치료사례 → 새 사례 등록</a> → 제목·진료 종류·전후 사진을 넣고 저장합니다. 환자 동의를 받은 사례만 올리시고, 효과를 단정하는 문구는 피해 주세요.</p></aside>
       <aside class="callout"><p class="title">칼럼 쓰는 법</p><p><a href="/admin/posts">관리자 → 원장 칼럼 → 새 칼럼 작성</a> → 제목·본문과 함께 <strong>메타 설명(120~160자)</strong>를 꼭 채워 주세요. 검색 노출의 핵심입니다.</p></aside>
       <aside class="callout"><p class="title">진료비 수정하기</p><p><a href="/admin/fees">관리자 → 진료비(수가)</a>에서 금액을 수정하고 항목별 공개/비공개를 정하면 홈페이지 비용 안내에 바로 반영됩니다.</p></aside>
+      <aside class="warn"><p class="title">개원 전 꼭 알려주실 것</p><p>홈페이지에는 아직 <strong>대표 전화번호가 비어 있고 "2026년 11월 2일 개원 예정"</strong>으로 표시됩니다. 전화번호·진료시간·네이버 예약 주소·카카오톡 채널이 확정되면 알려주세요. 받는 즉시 전 페이지와 예약 버튼에 반영합니다.</p></aside>
+      <aside class="note"><p class="title">예약 신청 확인 방법</p><p>홈페이지 예약 신청은 <a href="/admin/reservations">관리자 → 예약 관리</a>에 쌓입니다. 자동 알림은 아직 연결하지 않았으니 <strong>하루 한 번 목록을 확인</strong>해 주세요. 원하시면 접수 즉시 지메일로 알림이 가도록 연결해 드립니다.</p></aside>
       <p class="note"><b>사진·저장 안내</b><br>JPG·PNG·WebP, 파일당 5MB를 지원합니다. HEIC는 변환해 주세요. 저장 완료 안내를 확인한 뒤 화면을 닫아 주세요.</p>
     </section>
 
