@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test'
 import AxeBuilder from '@axe-core/playwright'
+import { SITE } from '../src/data/site'
 import { readFileSync, writeFileSync } from 'node:fs'
 
 const base = 'http://localhost:3000'
@@ -38,8 +39,8 @@ test('delivery: SEO headers, malformed path and sitemap notice inclusion', async
   const xml = await (await request.get(base + '/sitemap.xml')).text()
   await page.goto(base + '/notice')
   const noticeLinks = await page.locator('.notice-row').evaluateAll(nodes => nodes.map(n => n.getAttribute('href')))
-  for (const link of noticeLinks) expect(xml).toContain('https://gosudental.pages.dev' + link)
-  const root = xml.match(/<url><loc>https:\/\/gosudental.pages.dev\/<\/loc>(.*?)<\/url>/s)?.[1]
+  for (const link of noticeLinks) expect(xml).toContain(SITE.domain + link)
+  const root = xml.split(`<url><loc>${SITE.domain}/</loc>`)[1]?.split('</url>')[0]
   expect(root).toBeDefined()
   expect(root).not.toContain('lastmod')
   const robots = await (await request.get(base + '/robots.txt')).text()

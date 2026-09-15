@@ -7,6 +7,21 @@ import { getUser, hashPassword, verifyPassword, signToken, verifyToken, secretOf
 import { consent, sanitizeContent, validateImage, safeJson } from '../src/security'
 
 const secret = 'a-strong-test-secret-with-at-least-32-characters'
+test('public handover never reveals credentials and retains restrictive headers', async () => {
+  const sentinel = 'PRIVATE-ADMIN-SENTINEL-NOT-FOR-HTML'
+  for (const origin of ['https://gosudc.kr', 'http://localhost', 'https://preview.example']) {
+    const response = await app.request(origin + '/handover', {}, { ADMIN_PASSWORD: sentinel, SESSION_SECRET: secret } as any)
+    assert.equal(response.status, 200)
+    const body = await response.text()
+    assert.ok(!body.includes(sentinel))
+    assert.ok(!body.includes(secret))
+    assert.ok(!body.includes('id="admin-password"'))
+    assert.match(response.headers.get('Cache-Control') || '', /no-store/)
+    assert.match(response.headers.get('Content-Security-Policy') || '', /default-src 'none'/)
+    assert.match(response.headers.get('X-Robots-Tag') || '', /noindex/)
+    assert.equal(response.headers.get('Referrer-Policy'), 'no-referrer')
+  }
+})
 test('strict consent: false-like values never become consent', () => {
   for (const value of [false, 'false', '0', 0, 1, {}, [], null, undefined]) assert.equal(consent(value), false)
   for (const value of [true, 'true', 'on']) assert.equal(consent(value), true)

@@ -78,12 +78,12 @@ app.use('*', async (c, next) => {
   await next()
   c.header('X-Content-Type-Options', 'nosniff')
   c.header('X-Frame-Options', 'SAMEORIGIN')
-  c.header('Referrer-Policy', 'strict-origin-when-cross-origin')
+  if (!c.res.headers.has('Referrer-Policy')) c.header('Referrer-Policy', 'strict-origin-when-cross-origin')
   c.header('Permissions-Policy', 'camera=(), microphone=(), geolocation=()')
-  c.header('Content-Security-Policy', "object-src 'none'; base-uri 'self'; frame-ancestors 'self'; form-action 'self'")
+  if (!c.res.headers.has('Content-Security-Policy')) c.header('Content-Security-Policy', "object-src 'none'; base-uri 'self'; frame-ancestors 'self'; form-action 'self'")
   if (new URL(c.req.url).protocol === 'https:') c.header('Strict-Transport-Security', 'max-age=31536000')
   const p = c.req.path
-  const privatePath = p.startsWith('/admin') || p.startsWith('/auth/') || p.startsWith('/cases') || p.startsWith('/api/')
+  const privatePath = p === '/handover' || p.startsWith('/admin') || p.startsWith('/auth/') || p.startsWith('/cases') || p.startsWith('/api/')
   if (c.res.status >= 400 || c.req.method !== 'GET' || privatePath || c.res.headers.has('Set-Cookie')) {
     c.header('Cache-Control', 'no-store')
   } else {
