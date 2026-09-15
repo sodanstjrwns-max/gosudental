@@ -80,3 +80,15 @@ test('logout clears only its own session cookie', async () => {
     assert.doesNotMatch(response.headers.get('Set-Cookie') || '', new RegExp(retained))
   }
 })
+
+test('merged stats pages fail closed without configured keys and preserve admin-session access', async () => {
+  for (const path of ['/api/local-stats', '/api/local-stats?key=invalid', '/admin/stats?key=invalid']) {
+    const response = await app.request('http://localhost' + path, {}, {} as any)
+    assert.equal(response.status, 404)
+  }
+  const token = await signToken({ t: 'admin' }, secret, 60)
+  const page = await app.request('http://localhost/admin/stats', { headers: { Cookie: `gosu_admin=${token}` } }, { SESSION_SECRET: secret, ADMIN_PASSWORD: 'long-test-admin-password' } as any)
+  assert.equal(page.status, 200)
+  assert.match(await page.text(), /통합 통계/)
+  assert.equal(page.headers.get('Cache-Control'), 'no-store')
+})

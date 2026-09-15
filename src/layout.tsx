@@ -70,6 +70,8 @@ export function Layout(meta: PageMeta, content: any) {
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
+<meta name="naver-site-verification" content="3dced265737138ff84d1265491e0110e1d417508" />
+<meta name="google-site-verification" content="vTQdyiFJBIlYhAgXmWvevyqeQDwJfqbIvK3bHGK5seY" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>${meta.title}</title>
 <meta name="description" content="${meta.description}">
@@ -102,6 +104,14 @@ ${!meta.ogImage ? html`<meta property="og:image:width" content="1200"><meta prop
 ${meta.path === '/' ? html`<link rel="preload" as="image" href="/static/img/interior-lobby-mobile.webp" media="(max-width:640px)" fetchpriority="high"><link rel="preload" as="image" href="/static/img/interior-lobby.webp" media="(min-width:641px)" fetchpriority="high">` : ''}
 <noscript><style>.reveal{opacity:1!important;transform:none!important}.mobile-menu{display:block!important;position:static!important}.mobile-toggle{display:none!important}.quote-band{clip-path:none!important}.quote-band blockquote,.quote-band cite{opacity:1!important;transform:none!important}form[data-ajax] button[type=submit]{display:none!important}</style></noscript>
 ${raw(schemas.map((s) => `<script type="application/ld+json">${safeJson(s)}</script>`).join('\n'))}
+${!noindex && meta.path !== '/reservation' && !meta.path.startsWith('/cases') ? html`<script>
+if (['gosudental.pages.dev','gosudc.kr','www.gosudc.kr'].includes(location.hostname)) {
+window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','G-PEHGCMJSN9',{anonymize_ip:true,page_location:location.origin+location.pathname});
+const ga=document.createElement('script');ga.async=true;ga.src='https://www.googletagmanager.com/gtag/js?id=G-PEHGCMJSN9';document.head.append(ga);
+(function(c,l,a,r,i,t,y){c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};t=l.createElement(r);t.async=1;t.src='https://www.clarity.ms/tag/'+i;y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);})(window,document,'clarity','script','yenfpw6ija');
+const beacon=document.createElement('script');beacon.defer=true;beacon.src='https://pf-dashboard-2nt.pages.dev/beacon.js';document.head.append(beacon);
+}
+</script>` : ''}
 </head>
 <body class="${meta.bodyClass || ''}">
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">

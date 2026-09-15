@@ -29,8 +29,9 @@ import { loginPage, registerPage, mypagePage, privacyPage, termsPage, notFoundPa
 import { areaPage } from './pages/area'
 import {
   adminLoginPage, adminDashPage, adminUsersPage, adminReservationsPage,
-  adminCasesPage, adminPostsPage, adminNoticesPage,
+  adminCasesPage, adminPostsPage, adminNoticesPage, adminFeesPage, adminStatsPage,
 } from './pages/admin'
+import { AdminStats, fetchSiteStats } from './pages/stats'
 
 const app = new Hono<{ Bindings: Bindings }>()
 app.onError((error, c) => {
@@ -94,7 +95,7 @@ app.use('/api/*', async (c, next) => {
 app.use('/api/*', bodyLimit({ maxSize: 21 * 1024 * 1024, onError: c => c.json({ ok: false, error: '전체 업로드는 21MB 이하만 가능합니다.' }, 413) }))
 app.use('/api/*', async (c, next) => {
   if (c.req.header('content-type')?.includes('application/json')) {
-    const maxSize = c.req.path.startsWith('/api/admin/posts') ? 256 * 1024 : 16 * 1024
+    const maxSize = (c.req.path.startsWith('/api/admin/posts') || c.req.path === '/api/admin/fees') ? 256 * 1024 : 16 * 1024
     return bodyLimit({ maxSize, onError: c => c.json({ ok: false, error: '입력 내용이 너무 큽니다.' }, 413) })(c, next)
   }
   await next()
@@ -115,6 +116,44 @@ for (const [path, limit, seconds] of [
 // ── 유틸 ──────────────────────────────────────
 const ok = (data: object = {}) => ({ ok: true, ...data })
 const err = (message: string) => ({ ok: false, error: message })
+
+// ── 비급여 수가 로드 ─────────────────────────
+type FeeItem = { name: string; price: string; note: string; is_published?: number }
+type FeeGroup = { category: string; items: FeeItem[] }
+
+// Empty results are intentional (all private or deleted); DB failures must never reveal seed prices.
+async function loadFeeGroups(db: any, publishedOnly: boolean): Promise<FeeGroup[] | null> {
+  if (!db) throw new HTTPException(503, { message: '수가 DB를 사용할 수 없습니다.' })
+  try {
+    const where = publishedOnly ? 'WHERE is_published = 1' : ''
+    const { results } = await db.prepare(
+      `SELECT category, name, price, note, is_published, sort_group, sort_order
+       FROM fees ${where} ORDER BY sort_group ASC, sort_order ASC, id ASC`
+    ).all()
+    if (!results || !results.length) return []
+    const groups: FeeGroup[] = []
+    const byCat = new Map<string, FeeGroup>()
+    for (const r of results as any[]) {
+      let g = byCat.get(r.category)
+      if (!g) { g = { category: r.category, items: [] }; byCat.set(r.category, g); groups.push(g) }
+      g.items.push({ name: r.name, price: r.price, note: r.note || '', is_published: r.is_published })
+    }
+    // publishedOnly 로 비어버린 그룹은 숨김
+    return groups.filter((g) => g.items.length)
+  } catch (e) {
+    throw new HTTPException(503, { message: '수가를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.' })
+  }
+}
+
+// Administrator sees stored rows including private fees. An empty editor stays empty.
+async function loadFeeGroupsForAdmin(db: any): Promise<FeeGroup[]> {
+  const groups = await loadFeeGroups(db, false)
+  if (groups) return groups
+  return PRICING.map((cat) => ({
+    category: cat.category,
+    items: cat.items.map((it) => ({ name: it.name, price: it.price, note: it.note || '', is_published: 1 })),
+  }))
+}
 
 async function bumpViews(c: any, table: 'cases' | 'posts' | 'notices', id: number) {
   if (isBot(c.req.header('user-agent'))) return
@@ -242,7 +281,10 @@ app.get('/notice/:id', async (c) => {
 // 병원 안내
 app.get('/directions', (c) => c.html(directionsPage()))
 app.get('/tour', (c) => c.html(tourPage()))
-app.get('/pricing', (c) => c.html(pricingPage()))
+app.get('/pricing', async (c) => {
+  const groups = await loadFeeGroups(c.env.DB, true)
+  return c.html(pricingPage(groups || undefined))
+})
 app.get('/faq', (c) => c.html(faqTotalPage()))
 app.get('/reservation', (c) => c.html(reservationPage()))
 app.get('/privacy', (c) => c.html(privacyPage()))
@@ -332,6 +374,21 @@ app.post('/api/reservation', async (c) => {
   return c.json(ok({ message: '상담 예약이 접수되었습니다. 개원 준비 기간에는 순차적으로 연락드립니다.' }))
 })
 
+// 중앙 대시보드 실예약 집계 — 최근 28일 vs 직전 28일 (created_at 은 UTC CURRENT_TIMESTAMP)
+app.get('/api/local-stats', async (c) => {
+  const key = c.req.header('authorization')?.replace(/^Bearer\s+/i, '') || c.req.query('key') || ''
+  if (![c.env.STATS_TOKEN, c.env.MASTER_KEY].some((secret: string | undefined) => secret && key === secret)) return c.notFound()
+  try {
+    const row = await c.env.DB.prepare(
+      `SELECT
+         SUM(CASE WHEN created_at >= datetime('now','-28 days') THEN 1 ELSE 0 END) AS cur,
+         SUM(CASE WHEN created_at >= datetime('now','-56 days') AND created_at < datetime('now','-28 days') THEN 1 ELSE 0 END) AS prev
+       FROM reservations`
+    ).first<{ cur: number | null; prev: number | null }>()
+    const cur = Number(row?.cur ?? 0), prev = Number(row?.prev ?? 0)
+    return c.json({ supported: true, tables: [{ name: 'reservations', cur, prev }], total: { cur, prev } })
+  } catch { return c.json({ supported: false }) }
+})
 app.get('/api/regions', (c) => c.json(REGION_DB))
 
 // 케이스 사진 서빙 (R2) — after 사진은 로그인 회원 전용 (의료법)
@@ -405,10 +462,16 @@ app.post('/api/admin/logout', (c) => {
   return c.json(ok())
 })
 
+// 통합 통계 키 접근 (세션 없이 ?key= 로 열람 허용)
+const statsKeyOk = (c: any) => {
+  const key = c.req.header('authorization')?.replace(/^Bearer\s+/i, '') || c.req.query('key') || ''
+  return [c.env.STATS_TOKEN, c.env.MASTER_KEY].some((secret: string | undefined) => secret && key === secret)
+}
 // 관리자 페이지 가드 (login 제외 전체)
 app.use('/admin/*', async (c, next) => {
   const p = new URL(c.req.url).pathname
   if (p === '/admin/login') return next()
+  if (p === '/admin/stats') return next() // 통계는 라우트에서 자체 인증(미인증 시 404)
   if (!(await getAdmin(c))) return c.redirect('/admin/login')
   await next()
 })
@@ -459,9 +522,63 @@ app.get('/admin/notices', async (c) => {
   const r = await c.env.DB.prepare('SELECT id, title, pinned, views, created_at FROM notices ORDER BY pinned DESC, created_at DESC').all()
   return c.html(adminNoticesPage(r.results || []))
 })
+app.get('/admin/fees', async (c) => {
+  const groups = await loadFeeGroupsForAdmin(c.env.DB)
+  return c.html(adminFeesPage(groups))
+})
+// 통합 통계 — 관리자 세션 또는 ?key=(사이트 토큰/마스터키) 로만 열람, 그 외 404
+app.get('/admin/stats', async (c) => {
+  if (!(await getAdmin(c)) && !statsKeyOk(c)) return c.notFound()
+  const data = await fetchSiteStats(c.env.STATS_TOKEN)
+  return c.html(adminStatsPage(AdminStats(data)))
+})
 
 // 관리자 인증 가드 다음에 CRUD를 등록합니다.
 registerAdminAPI(app)
+
+// 비급여 진료비 저장 — 전체 교체(delete-all + insert) 단일 배치
+app.post('/api/admin/fees', async (c) => {
+  if (!c.env.DB) return c.json(err('DB를 사용할 수 없습니다.'), 503)
+  let body: any
+  try { body = await c.req.json() } catch { return c.json(err('잘못된 요청'), 400) }
+  if (!Array.isArray(body?.groups) || body.groups.length > 30) bad('수가 분류 형식을 확인해주세요.')
+  const groups = body.groups
+  let count = 0
+  for (const group of groups) {
+    text(group?.category, '분류', 100, true)
+    if (!Array.isArray(group?.items)) bad('수가 항목 형식을 확인해주세요.')
+    count += group.items.length
+    if (count > 300) bad('수가는 300개 이하만 저장할 수 있습니다.')
+    for (const item of group.items) {
+      text(item?.name, '항목명', 200, true); text(item?.price, '비용', 200); text(item?.note, '비고', 1000)
+      if (item?.is_published !== undefined && ![0,1,false,true].includes(item.is_published)) bad('공개 상태를 확인해주세요.')
+    }
+  }
+  const ins = c.env.DB.prepare(
+    'INSERT INTO fees (category, name, price, note, is_published, sort_group, sort_order) VALUES (?,?,?,?,?,?,?)'
+  )
+  const stmts: any[] = [c.env.DB.prepare('DELETE FROM fees')]
+  groups.forEach((g: any, gi: number) => {
+    const category = String(g?.category ?? '').trim()
+    if (!category) return
+    const items = Array.isArray(g?.items) ? g.items : []
+    items.forEach((it: any, ii: number) => {
+      const name = String(it?.name ?? '').trim()
+      if (!name) return
+      const price = String(it?.price ?? '').trim()
+      const note = it?.note ? String(it.note).trim() : null
+      const pub = it?.is_published === 0 || it?.is_published === false ? 0 : 1
+      stmts.push(ins.bind(category, name, price, note, pub, gi + 1, ii))
+    })
+  })
+  try {
+    await c.env.DB.batch(stmts)
+    return c.json(ok({ count: stmts.length - 1 }))
+  } catch (e: any) {
+    console.error('save fees error', e)
+    return c.json(err('저장에 실패했습니다.'), 500)
+  }
+})
 
 // ═══════════════════════════════════════════════
 // SEO 파일: sitemap.xml / robots.txt / llms.txt
@@ -543,7 +660,8 @@ ${SITE.hours.map((h) => `- ${h.day}: ${h.time}`).join('\n')}
 )
 
 // AEO 딥 문서 — AI 답변엔진이 인용할 수 있는 전문 (FAQ + 백과사전 + 진료 상세)
-app.get('/llms-full.txt', (c) => {
+app.get('/llms-full.txt', async (c) => {
+  const publicFees = await loadFeeGroups(c.env.DB, true) || []
   const treatBlocks = TREATMENTS.map((t) => {
     const secs = t.sections.map((s) => `### ${s.h}\n${s.body.replace(/\n{2,}/g, '\n')}`).join('\n\n')
     const faqs = t.faqs.map((f) => `Q. ${f.q}\nA. ${f.a}`).join('\n\n')
@@ -552,7 +670,7 @@ app.get('/llms-full.txt', (c) => {
 
   const termBlocks = TERMS.map((t) => `- **${t.name}**: ${t.def}`).join('\n')
 
-  const priceBlocks = PRICING.map((p) =>
+  const priceBlocks = publicFees.map((p) =>
     `### ${p.category}\n${p.items.map((i) => `- ${i.name}: ${i.price}${i.note ? ` (${i.note})` : ''}`).join('\n')}`
   ).join('\n\n')
 

@@ -13,10 +13,25 @@
 - **2026-09-13 사진·수가표·보안·CMS·납품 최적화는 미리보기 반영, 프로덕션 미배포.** 미리보기는 임시 실행 환경입니다.
 - 기존 운영 기록: 사용자 Cloudflare 계정(BYOK), Pages 프로젝트 `gosudental`, production branch `main`.
 - 이번 작업은 원격 DB, 운영 secrets, 운영 사이트를 변경하지 않았습니다.
-- 운영 배포 경로를 사용자와 확인한 뒤 `0002_request_protection.sql`, `0003_delivery_indexes.sql`을 포함한 미적용 마이그레이션과 secrets를 점검해야 합니다.
+- 운영 배포 경로를 사용자와 확인한 뒤 `0002_fees.sql`, `0002_request_protection.sql`, `0003_delivery_indexes.sql`, `0004_merge_supplied_fees.sql`을 포함한 미적용 마이그레이션과 secrets를 점검해야 합니다.
+
+## Git 통합 및 재발 방지
+- 기준 GitHub: https://github.com/sodanstjrwns-max/gosudental (`origin/main`). Genspark 자동백업(`genspark/main`)과 별개 저장소입니다.
+- 공통 조상 `58a5dfe`에서 로컬 4커밋(`aa66946`), GitHub 6커밋(`36178e1`)으로 갈라진 이력을 merge로 통합. rebase/force push/reset 사용하지 않음.
+- 복구 브랜치: `backup/local-before-sync-aa66946`, `backup/remote-before-sync-36178e1`, `backup/origin-before-fetch-58a5dfe`.
+- 사진 16장·106행 수가·보안·CMS·최적화와 원격의 수가 편집기·통합 통계·GA4·Clarity·beacon·Google/Naver 인증 메타를 함께 유지.
+- `/admin/fees`에서 분류·항목·금액·비고·공개 여부 편집, `POST /api/admin/fees`로 전체 저장. 256KB/30분류/300항목 제한과 선검증 적용. 모든 수가 비공개/삭제 시 `/pricing`, `/llms-full.txt`에서 기본 수가로 되돌아가지 않음.
+- 기존 `0002_fees.sql`은 원격 적용 이력 보존을 위해 이름/내용을 유지. 번호가 겹치는 `0002_request_protection.sql`과 서로 다른 파일이며 둘 다 필요.
+- `0004_merge_supplied_fees.sql`은 fees가 수정되지 않은 옛 11행 시드와 정확히 같을 때만 106행 잠정수가로 전환. 편집/비공개/삭제된 DB 수가는 변경하지 않음. 해당 4가지 조건 검증 완료. 운영 DB에는 이번 작업에서 적용하지 않음.
+- `/admin/stats`: 관리자 세션 또는 기존 키 인증을 유지. `/api/local-stats`: 최근/직전 28일 실예약 집계. `Authorization: Bearer ...` 권장, 기존 `?key=` 호환도 유지.
+- **배포 전 필수:** `STATS_TOKEN`, `MASTER_KEY`를 운영 secrets에 설정해야 키 기반 통계 연동이 동작합니다. 코드에 있던 키는 제거하고 로컬 `.dev.vars`(Git 제외)로 이전. 이전 Git 이력에 남아 있으므로 운영 키 교체를 권장하며 중앙 대시보드와 함께 갱신해야 합니다. 키를 로그/문서/프런트엔드에 적지 말 것.
+- 분석 스크립트는 운영 호스트(gosudental.pages.dev, gosudc.kr, www.gosudc.kr)의 공개 콘텐츠에서 동작. 로컬 QA·미리보기·로그인·예약·사례 화면은 분석 대상 제외. 운영 개인정보 정책과 분석 설정 확인 필요.
+- `git fetch origin` 후 `git log --left-right HEAD...origin/main`으로 시작점 확인 → 변경 보존·병합 → 테스트 → 일반 `git push origin main` → `git ls-remote`로 실제 원격 해시 확인. 자동백업을 GitHub push로 간주하지 말 것.
+- 다른 작업창에서도 변경을 커밋/보존한 뒤 `git fetch origin && git merge origin/main`으로 통합본 반영. 미커밋 변경을 `reset --hard`로 버리지 말 것.
 
 ## 납품 최적화 결과
-### 측정 (로컬 Lighthouse, 모바일 시뮬레이션, 동일 명령)
+### 병합 이전 측정 (로컬 Lighthouse, 모바일 시뮬레이션, 동일 명령)
+아래 수치는 `aa66946` 기준입니다. GitHub의 분석 스크립트 복원 후 운영 성능은 다시 측정해야 합니다.
 | 항목 | 이전 | 최종 |
 |---|---:|---:|
 | 성능 | 55 | 65 |
@@ -100,7 +115,7 @@
 - 빈 금액 확인 후 안내/보험수가 적용. 부가세 및 교정장치 추가비용 문구 보존.
 
 ## 데이터와 보안
-- D1 `gosudental-production`, binding `DB`: users, cases, posts, notices, reservations, rate_limits.
+- D1 `gosudental-production`, binding `DB`: users, cases, posts, notices, reservations, rate_limits, fees.
 - R2 `gosudental-bucket`, binding `R2`: 인증 기반 사례 이미지 `cases/`, 공개 칼럼·공지 이미지 `uploads/`.
 - 정적 의료 콘텐츠·수가 `src/data/site.ts`.
 - PBKDF2-SHA256, 무작위 salt, 100,000회. HMAC 서명 HttpOnly/Secure/SameSite=Lax 쿠키: 회원 30일, 관리자 24시간.
@@ -137,9 +152,9 @@ npm audit
 ```
 - 기존 서버 재시작 전 3000 포트 정리, build 후 PM2 사용. 실제 실행은 `ecosystem.config.cjs` 참고.
 - 최초 브라우저 준비: `npx playwright install --with-deps chromium`.
-- 최종 검증: **단위 11개, 로컬 D1/R2 통합 1개, 브라우저 10개 모두 통과**, npm audit 알려진 취약점 0개.
+- 최종 검증: **단위 12개, 로컬 D1/R2 통합 2개, 브라우저 10개 모두 통과**, npm audit 알려진 취약점 0개.
 - 브라우저: 16개 사진/삭제 섹션, 회원가입·예약·관리자 CRUD, 모바일/키보드, no-JS, 장애 응답 복구, SEO/캐시.
-- axe WCAG 2A/2AA/2.1AA: 공개/로그인 9경로(390px), 인증된 관리자 6경로(390/1440px) 위반 0. 자동 검사 범위 내 결과이며 전체 접근성 인증을 의미하지 않음.
+- axe WCAG 2A/2AA/2.1AA: 공개/로그인 9경로(390px), 인증된 관리자 7경로(수가 편집 포함, 390/1440px) 위반 0. 자동 검사 범위 내 결과이며 전체 접근성 인증을 의미하지 않음.
 - 측정 파일 `.test-artifacts/lighthouse-before.json`, `lighthouse-after.json`, `axe-after.json`, `axe-admin-after.json`은 로컬 작업 산출물(Git 제외).
 - 쓰기 테스트는 localhost 전용. 테스트 자료만 생성·삭제하며 API 테스트는 로컬 rate_limits 초기화. 운영 URL로 실행 금지.
 - `.dev.vars` 및 `.env*`는 Git 제외. 운영 secrets는 별도 설정.
@@ -154,7 +169,7 @@ npm audit
 6. 고객에게 관리자 접근정보를 안전한 별도 채널로 전달. 세션 전체 폐기 필요 시 SESSION_SECRET 교체. 이 저장소에 비밀번호를 적지 말 것.
 
 ## 미구현·권장 후속 작업
-- 비밀번호 재설정, 이메일/휴대폰 본인확인, 회원 셀프 탈퇴, 예약 가능 시간표, 카카오/네이버예약·접수 알림, 전환 분석.
+- 비밀번호 재설정, 이메일/휴대폰 본인확인, 회원 셀프 탈퇴, 예약 가능 시간표, 카카오/네이버예약·접수 알림. GA4·Clarity·중앙 통계 연결 코드는 병합으로 복원됨.
 - 목록 서버 페이지네이션·검색은 미구현. 콘텐츠/회원이 늘어나면 우선 도입.
 - 관리자 역할 세분화·감사 로그·R2 고아 파일 정리, 정기 백업/복구 훈련, uptime 모니터링 권장.
 - 더 작은 첫 화면 전용 서체·스타일 분할 등 모바일 성능 후속 최적화 및 운영 필드 데이터 점검.

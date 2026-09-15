@@ -114,3 +114,55 @@ test('local D1/R2: registration, reservation, full content CRUD, session revocat
     execFileSync('npx', ['wrangler', 'd1', 'execute', 'gosudental-production', '--local', '--command', `DELETE FROM reservations WHERE name='${unique}'; DELETE FROM rate_limits;`], { stdio: 'pipe' })
   }
 })
+
+test('merged remote features: fee editor, hidden fees, large payload and statistics authorization', async () => {
+  const login = await call('/api/admin/login', 'POST', { password: env.ADMIN_PASSWORD }, '', '192.0.2.99')
+  await good(login)
+  const cookie = login.headers.get('set-cookie')!.split(';')[0]
+  const editor = await (await call('/admin/fees', 'GET', undefined, cookie)).text()
+  const match = editor.match(/var FEES = (.*?);\n/)
+  assert.ok(match, 'Fee editor JSON must be present')
+  const original = JSON.parse(match[1])
+  assert.equal(original.flatMap((g: any) => g.items).length, 106)
+  try {
+    assert.equal((await call('/api/admin/fees', 'POST', { groups: [] })).status, 401)
+    assert.equal((await call('/api/admin/fees', 'POST', {}, cookie)).status, 400)
+    const hidden = [{ category: '통합테스트', items: [{ name: '숨김항목-merge-test', price: '912345원', note: '</script><script>bad()</script>', is_published: 0 }] }]
+    await good(await call('/api/admin/fees', 'POST', { groups: hidden }, cookie))
+    for (const path of ['/pricing', '/llms-full.txt']) {
+      const response = await call(path)
+      assert.equal(response.status, 200)
+      const text = await response.text()
+      assert.doesNotMatch(text, /숨김항목-merge-test|912345원|89만원/)
+    }
+    const privateEditor = await (await call('/admin/fees', 'GET', undefined, cookie)).text()
+    assert.ok(privateEditor.includes('숨김항목-merge-test'))
+    assert.doesNotMatch(privateEditor, /<script>bad\(\)<\/script>/)
+    hidden[0].items[0].is_published = 1
+    await good(await call('/api/admin/fees', 'POST', { groups: hidden }, cookie))
+    assert.match(await (await call('/pricing')).text(), /숨김항목-merge-test/)
+    assert.match(await (await call('/llms-full.txt')).text(), /숨김항목-merge-test/)
+    await good(await call('/api/admin/fees', 'POST', { groups: [] }, cookie))
+    assert.doesNotMatch(await (await call('/pricing')).text(), /89만원|숨김항목-merge-test/)
+    // Long notes in a 106-row edit must not hit the general 16KB JSON limit.
+    const large = structuredClone(original)
+    large.forEach((group: any) => group.items.forEach((item: any) => { item.note = '가'.repeat(100) }))
+    assert.ok(Buffer.byteLength(JSON.stringify({ groups: large }), 'utf8') > 16000)
+    await good(await call('/api/admin/fees', 'POST', { groups: large }, cookie))
+    await good(await call('/api/admin/fees', 'POST', { groups: original }, cookie))
+    assert.equal((await call('/admin/stats?key=invalid')).status, 404)
+    assert.equal((await call('/api/local-stats')).status, 404)
+    assert.equal((await call('/api/local-stats?key=invalid')).status, 404)
+    assert.ok(env.STATS_TOKEN, 'Local integration secret required for test')
+    const stats = await fetch(base + '/api/local-stats', { headers: { Authorization: 'Bearer ' + env.STATS_TOKEN } })
+    assert.equal(stats.status, 200)
+    const data: any = await stats.json()
+    assert.equal(data.supported, true)
+    assert.equal(typeof data.total.cur, 'number')
+    assert.equal(stats.headers.get('cache-control'), 'no-store')
+    const home = await (await call('/')).text()
+    for (const marker of ['naver-site-verification','google-site-verification','G-PEHGCMJSN9','yenfpw6ija','pf-dashboard-2nt.pages.dev/beacon.js']) assert.ok(home.includes(marker), marker)
+  } finally {
+    await good(await call('/api/admin/fees', 'POST', { groups: original }, cookie))
+  }
+})

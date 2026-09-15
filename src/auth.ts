@@ -6,6 +6,8 @@ import { getCookie, setCookie, deleteCookie } from 'hono/cookie'
 export type Bindings = {
   DB: D1Database
   R2: R2Bucket
+  STATS_TOKEN?: string
+  MASTER_KEY?: string
   ADMIN_PASSWORD?: string
   SESSION_SECRET?: string
 }

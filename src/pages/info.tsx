@@ -121,7 +121,9 @@ export function tourPage() {
   )
 }
 
-export function pricingPage() {
+// groups: 관리자 편집기 저장 시 DB(공개 항목만)에서 로드해 전달. 없으면 하드코딩 PRICING 시드로 폴백.
+export function pricingPage(groups?: { category: string; items: { name: string; price: string; note: string }[] }[]) {
+  const list = groups ?? PRICING
   const content = html`
 <section class="page-hero" id="pricing-hero">
   <div class="section-inner">
@@ -135,7 +137,8 @@ export function pricingPage() {
 <section class="section" id="pricing-table-section" style="padding-top:30px">
   <div class="section-narrow">
     <div class="alert info" id="pricing-status">${PRICING_NOTICE}</div>
-    ${PRICING.map((cat) => html`
+    ${list.length === 0 ? html`<p class="alert info">현재 공개된 수가가 없습니다. 진료비는 상담 시 안내드립니다.</p>` : ''}
+    ${list.map((cat) => html`
     <div class="reveal">
       <h2 style="font-size:22px;font-weight:800;color:var(--brand-dark);margin:36px 0 6px">${cat.category}</h2>
       <table class="price-table"><caption class="sr-only">${cat.category} 진료비용</caption>

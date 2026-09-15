@@ -105,7 +105,7 @@ test('delivery: authenticated admin screens meet automated accessibility checks'
   await page.getByRole('button', { name: '로그인', exact: true }).click()
   await expect(page).toHaveURL(base + '/admin')
   const reports: object[] = []
-  for (const path of ['/admin', '/admin/cases', '/admin/posts', '/admin/notices', '/admin/users', '/admin/reservations']) {
+  for (const path of ['/admin', '/admin/cases', '/admin/posts', '/admin/notices', '/admin/users', '/admin/reservations', '/admin/fees']) {
     await page.goto(base + path)
     for (const width of [390, 1440]) {
       await page.setViewportSize({ width, height: 900 })
