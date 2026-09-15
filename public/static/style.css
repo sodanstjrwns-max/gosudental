@@ -174,7 +174,8 @@ ul { list-style: none; }
   position: absolute; right: clamp(16px, 6vw, 110px); top: 50%;
   transform: translateY(-50%);
   font-family: var(--brush); font-weight: 700;
-  font-size: clamp(110px, 17vw, 260px); line-height: 1.06;
+  font-size: min(clamp(110px, 17vw, 260px), 19svh); line-height: 1.06; /* 2026-09-15: 4자 세로 워터마크가 히어로 높이(100svh)를 넘지 않게 — 좁은 창에서 固·手 잘림 수정 */
+  max-height: 94svh; overflow: hidden;
   color: transparent;
   -webkit-text-stroke: 1px rgba(172, 215, 229, 0.2);
   writing-mode: vertical-rl; letter-spacing: 0.08em;
@@ -233,7 +234,11 @@ ul { list-style: none; }
   position: absolute; bottom: 36px; left: 50%; transform: translateX(-50%);
   display: flex; flex-direction: column; align-items: center; gap: 10px; z-index: 2;
   font-size: 10.5px; letter-spacing: 0.28em; color: rgba(255,255,255,0.5); text-transform: uppercase;
-  opacity: 0; animation: fadeUp 1s var(--ease) 1.3s forwards;
+  opacity: 0; animation: scrollHintIn 1s var(--ease) 1.3s forwards;
+}
+@keyframes scrollHintIn {
+  from { opacity: 0; transform: translate(-50%, 26px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
 }
 .hero-scroll::after {
   content: ''; width: 1px; height: 46px;
@@ -362,7 +367,9 @@ ul { list-style: none; }
 .treat-more i { transition: transform 0.3s var(--ease); font-size: 12px; color: var(--sky-deep); }
 .treat-card:hover .treat-more i { transform: translateX(5px); }
 .treat-sub-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 24px; }
+.equipment-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .treat-sub {
+  min-width: 0;
   padding: 26px 24px; border-radius: 2px; border: 1px solid var(--line); background: #fff;
   transition: all 0.4s var(--ease); display: block;
 }
@@ -816,7 +823,7 @@ textarea.form-control { min-height: 110px; resize: vertical; }
   pointer-events: none; mix-blend-mode: screen;
   filter: url(#ink-bleed);
 }
-.hero .hero-inner, .hero .hero-scroll { position: relative; }
+.hero .hero-inner { position: relative; }
 
 /* click ink drop */
 .ink-drop {

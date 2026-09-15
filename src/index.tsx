@@ -9,6 +9,7 @@ import { bodyLimit } from 'hono/body-limit'
 import { HTTPException } from 'hono/http-exception'
 import { registerAdminAPI } from './admin-api'
 import { bad, text, passwordValue, emailValue, phoneValue, consent, jsonObject, rateLimit, clientIP } from './security'
+import { handoverPage } from './pages/handover'
 import { serveStatic } from 'hono/cloudflare-workers'
 import {
   type Bindings, getUser, getAdmin, setUserSession, setAdminSession,
@@ -46,6 +47,19 @@ app.onError((error, c) => {
   return c.json({ ok: false, error: message }, status)
 })
 
+// 공개 주소는 운영 도메인으로 통일하고 관리자·API의 세션은 해당 origin에 유지한다.
+app.use('*', async (c, next) => {
+  const url = new URL(c.req.url)
+  if (['GET', 'HEAD'].includes(c.req.method) &&
+      ['gosudental.pages.dev', 'www.gosudc.kr'].includes(url.hostname) &&
+      !/^\/(admin|api)(\/|$)/.test(url.pathname)) {
+    url.protocol = 'https:'
+    url.host = 'gosudc.kr'
+    return c.redirect(url.toString(), 301)
+  }
+  await next()
+})
+
 // 진료 slug → 케이스 카테고리 매핑
 const TREAT_CASE_CAT: Record<string, string> = {
   implant: '임플란트',
@@ -67,6 +81,7 @@ app.use('*', async (c, next) => {
   c.header('Referrer-Policy', 'strict-origin-when-cross-origin')
   c.header('Permissions-Policy', 'camera=(), microphone=(), geolocation=()')
   c.header('Content-Security-Policy', "object-src 'none'; base-uri 'self'; frame-ancestors 'self'; form-action 'self'")
+  if (new URL(c.req.url).protocol === 'https:') c.header('Strict-Transport-Security', 'max-age=31536000')
   const p = c.req.path
   const privatePath = p.startsWith('/admin') || p.startsWith('/auth/') || p.startsWith('/cases') || p.startsWith('/api/')
   if (c.res.status >= 400 || c.req.method !== 'GET' || privatePath || c.res.headers.has('Set-Cookie')) {
@@ -165,6 +180,7 @@ async function bumpViews(c: any, table: 'cases' | 'posts' | 'notices', id: numbe
 // ═══════════════════════════════════════════════
 // 공개 페이지
 // ═══════════════════════════════════════════════
+app.get('/handover', (c) => handoverPage(c)) // 납품 안내서 (noindex, 분석 제외)
 app.get('/', (c) => c.html(homePage()))
 app.get('/mission', (c) => c.html(missionPage()))
 

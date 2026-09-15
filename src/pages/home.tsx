@@ -188,7 +188,7 @@ export function homePage() {
     <p class="eyebrow reveal">Technology</p>
     <h2 class="h-display reveal reveal-d1">환자의 불편을 줄이는 <br><em>디지털 장비</em></h2>
     <p class="lead reveal reveal-d2">장비를 위한 장비가 아니라, 새로운 기술이 실제로 환자분의 불편을 줄이고 더 좋은 결과를 만드는지 먼저 고민해서 선택했습니다.</p>
-    <div class="treat-sub-grid" style="grid-template-columns:repeat(3,1fr);margin-top:50px">
+    <div class="treat-sub-grid equipment-grid" style="margin-top:50px">
       ${EQUIPMENT.map((e, i) => html`
       <div class="treat-sub reveal reveal-d${(i % 3) + 1}">
         <h3>${e.name}</h3>

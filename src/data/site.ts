@@ -12,7 +12,7 @@ export const SITE = {
   addressShort: '내포신도시 주키즈소아청소년과 건물 5층',
   tel: '', // 개원 준비 중 — 확정 시 업데이트
   openDate: '2026년 11월 2일 개원 예정',
-  domain: 'https://gosudental.pages.dev',
+  domain: 'https://gosudc.kr',
   blog: 'https://blog.naver.com/vkdlxld0101',
   instagram: 'https://www.instagram.com/gosudental',
   landmark: '주키즈소아청소년과 건물 5층 · 내포신도시중흥S클래스더시티 앞 · 보성초 도보 5분',
