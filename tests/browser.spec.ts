@@ -155,3 +155,25 @@ test('admin browser creates, reloads and edits all content types', async ({ page
   }
   expect(errors).toEqual([])
 })
+
+test('treatment cards use responsive AI illustrations with visible disclosure', async ({ page }) => {
+  for (const path of ['/', '/treatments']) {
+    await page.goto(base + path)
+    const grid = page.locator('.treat-grid').first()
+    await expect(grid.locator('img[src*="treatment-"][src*="-ai-20260915"]')).toHaveCount(3)
+    await expect(grid.locator('.ai-image-label')).toHaveCount(3)
+    await expect(page.locator('.treatment-image-notice')).toContainText('실제 환자·진료 결과 사진이 아닙니다')
+    for (const width of [390, 1440]) {
+      await page.setViewportSize({ width, height: 1000 })
+      for (const image of await grid.locator('img').all()) {
+        await image.scrollIntoViewIfNeeded()
+        await expect.poll(() => image.evaluate((el: any) => el.complete && el.naturalWidth > 0)).toBeTruthy()
+        await expect(image).toHaveAttribute('srcset', /640w, .*1200w/)
+        await expect(image).toHaveAttribute('loading', 'lazy')
+      }
+      expect(await page.evaluate(() => (globalThis as any).document.documentElement.scrollWidth <= (globalThis as any).innerWidth)).toBeTruthy()
+    }
+    await page.mouse.move(0, 0)
+    await grid.screenshot({ path: '.test-artifacts/ai-treatment-cards-' + (path === '/' ? 'home' : 'treatments') + '.png' })
+  }
+})

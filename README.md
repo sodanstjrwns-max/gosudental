@@ -29,6 +29,15 @@
 - `git fetch origin` 후 `git log --left-right HEAD...origin/main`으로 시작점 확인 → 변경 보존·병합 → 테스트 → 일반 `git push origin main` → `git ls-remote`로 실제 원격 해시 확인. 자동백업을 GitHub push로 간주하지 말 것.
 - 다른 작업창에서도 변경을 커밋/보존한 뒤 `git fetch origin && git merge origin/main`으로 통합본 반영. 미커밋 변경을 `reset --hard`로 버리지 말 것.
 
+## 2026-09-15 진료 카드 AI 이미지
+- 사용자 요청 및 생성 승인 후 메인 `/`와 진료안내 `/treatments`의 핵심 진료 카드 3장 교체.
+- 임플란트: 투명 치아 모형과 임플란트를 설명하는 장면. 치아교정: 투명교정 장치를 맞추는 장면. 심미보철·라미네이트: 자연스러운 치아와 미소 클로즈업.
+- 심미보철은 색상표/손잡이 이미지의 부자연스러운 형태를 검수에서 제외하고, 기구 없는 미소 이미지로 최종 선정. 실제 환자/시술 결과를 재현한 사진이 아님.
+- 각 카드의 ‘AI 생성 이미지’ 표기와 카드 아래 설명을 유지. 기존 의료진 실제 사진 16장과 인테리어 투어 사진은 변경하지 않음.
+- `public/static/img/treatment-{implant|ortho|aesthetic}-ai-20260915.webp`: 1200×800. `-640.webp`: 640×427. 총 6파일 약 241KiB, srcset·지연 로딩·명시적 크기 적용.
+- 생성 모델 GPT Image 2. 최종 원본 파일 ID: 임플란트 K5c7mU8G, 교정 YQlxUycw, 심미 CbS9l3uk. 원본/검수용 파일은 비공개 작업 폴더 `.reference/`(Git 제외)에 보존.
+- 원격 최신 `2d86049`와 일치한 상태에서 작업 시작. 별도 운영 배포는 실행하지 않음.
+
 ## 납품 최적화 결과
 ### 병합 이전 측정 (로컬 Lighthouse, 모바일 시뮬레이션, 동일 명령)
 아래 수치는 `aa66946` 기준입니다. GitHub의 분석 스크립트 복원 후 운영 성능은 다시 측정해야 합니다.
@@ -152,7 +161,7 @@ npm audit
 ```
 - 기존 서버 재시작 전 3000 포트 정리, build 후 PM2 사용. 실제 실행은 `ecosystem.config.cjs` 참고.
 - 최초 브라우저 준비: `npx playwright install --with-deps chromium`.
-- 최종 검증: **단위 12개, 로컬 D1/R2 통합 2개, 브라우저 10개 모두 통과**, npm audit 알려진 취약점 0개.
+- 최종 검증: **단위 12개, 로컬 D1/R2 통합 2개, 브라우저 11개 모두 통과**, npm audit 알려진 취약점 0개.
 - 브라우저: 16개 사진/삭제 섹션, 회원가입·예약·관리자 CRUD, 모바일/키보드, no-JS, 장애 응답 복구, SEO/캐시.
 - axe WCAG 2A/2AA/2.1AA: 공개/로그인 9경로(390px), 인증된 관리자 7경로(수가 편집 포함, 390/1440px) 위반 0. 자동 검사 범위 내 결과이며 전체 접근성 인증을 의미하지 않음.
 - 측정 파일 `.test-artifacts/lighthouse-before.json`, `lighthouse-after.json`, `axe-after.json`, `axe-admin-after.json`은 로컬 작업 산출물(Git 제외).
@@ -174,4 +183,4 @@ npm audit
 - 관리자 역할 세분화·감사 로그·R2 고아 파일 정리, 정기 백업/복구 훈련, uptime 모니터링 권장.
 - 더 작은 첫 화면 전용 서체·스타일 분할 등 모바일 성능 후속 최적화 및 운영 필드 데이터 점검.
 
-Last updated: 2026-09-13
+Last updated: 2026-09-15

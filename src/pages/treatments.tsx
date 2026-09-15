@@ -6,9 +6,9 @@ export function treatmentsListPage() {
   const core = TREATMENTS.filter((t) => t.core)
   const others = TREATMENTS.filter((t) => !t.core)
   const coreImgs: Record<string, string> = {
-    implant: '/static/img/interior-03.webp',
-    ortho: '/static/img/interior-07.webp',
-    aesthetic: '/static/img/interior-01.webp',
+    implant: '/static/img/treatment-implant-ai-20260915.webp',
+    ortho: '/static/img/treatment-ortho-ai-20260915.webp',
+    aesthetic: '/static/img/treatment-aesthetic-ai-20260915.webp',
   }
 
   const content = html`
@@ -28,7 +28,7 @@ export function treatmentsListPage() {
     <div class="treat-grid">
       ${core.map((t, i) => html`
       <a href="/treatments/${t.slug}" class="treat-card reveal reveal-d${i + 1}">
-        <div class="treat-card-img"><img src="${coreImgs[t.slug]}" alt="${t.name}" loading="lazy"></div>
+        <div class="treat-card-img"><img src="${coreImgs[t.slug]}" srcset="${coreImgs[t.slug].replace('.webp', '-640.webp')} 640w, ${coreImgs[t.slug]} 1200w" sizes="(max-width:720px) 92vw, (max-width:1024px) 45vw, 420px" alt="${t.name} 이해를 위한 AI 생성 이미지" width="1200" height="800" loading="lazy" decoding="async"><span class="ai-image-label">AI 생성 이미지</span></div>
         <div class="treat-card-body">
           <span class="treat-tag">Signature</span>
           <h3>${t.name}</h3>
@@ -37,6 +37,7 @@ export function treatmentsListPage() {
         </div>
       </a>`)}
     </div>
+    <p class="treatment-image-notice">진료 이해를 돕기 위한 AI 생성 이미지이며, 실제 환자·진료 결과 사진이 아닙니다.</p>
     <p class="eyebrow reveal" style="margin-top:80px">All Treatments</p>
     <h2 class="h-display reveal reveal-d1">전체 진료</h2>
     <div class="treat-sub-grid">
@@ -101,9 +102,9 @@ export function treatmentDetailPage(slug: string, relatedCases: any[]) {
   }
 
   const heroImgs: Record<string, string> = {
-    implant: '/static/img/interior-03.webp',
-    ortho: '/static/img/interior-07.webp',
-    aesthetic: '/static/img/interior-01.webp',
+    implant: '/static/img/treatment-implant-ai-20260915.webp',
+    ortho: '/static/img/treatment-ortho-ai-20260915.webp',
+    aesthetic: '/static/img/treatment-aesthetic-ai-20260915.webp',
     preservation: '/static/img/interior-02.webp',
     prosthetics: '/static/img/interior-04.webp',
     tmj: '/static/img/interior-09.webp',
