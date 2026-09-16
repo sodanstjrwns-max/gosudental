@@ -1394,3 +1394,14 @@ button:disabled { opacity: .65; cursor: wait; }
   .hero-hanja,.h-display em::after,.seal-stamp,.site-footer::before,.philosophy::before,.stats-band::before,.cta-band::before,.hero-seal { filter:none; }
   body::before { display:none; }
 }
+/* 2026-09-16 상단 메뉴 호버 드롭다운이 히어로 뒤로 숨던 문제: 헤더/메가메뉴 z-index 보강 */
+.site-header { z-index: 1000; }
+.gnb-list > li.has-mega:hover, .gnb-list > li.has-mega:focus-within { z-index: 1001; }
+.mega { z-index: 1002; }
+
+/* 진료 안내 본문 확장 마크업 */
+.tx-list, .tx-steps { margin: 6px 0 16px 4px; padding-left: 22px; }
+.tx-list li, .tx-steps li { margin: 0 0 7px; line-height: 1.75; }
+.tx-list li::marker { color: var(--sky-deep); }
+.tx-steps li::marker { color: var(--sky-deep); font-weight: 700; font-family: var(--sans); }
+.tx-note { margin: 12px 0 18px; padding: 14px 18px; border-left: 3px solid var(--seal); background: var(--sky-mist); color: var(--ink-2); font-size: 15px; line-height: 1.7; }

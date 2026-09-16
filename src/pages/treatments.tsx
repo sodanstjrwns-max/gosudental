@@ -2,6 +2,20 @@ import { html, raw } from 'hono/html'
 import { Layout, breadcrumbSchema, faqSchema } from '../layout'
 import { SITE, TREATMENTS, DOCTORS, TERMS } from '../data/site'
 
+
+// 섹션 본문 마크업: 빈 줄=문단, "- "=불릿, "1. "=번호 목록, "> "=강조 메모. (기존 단일 문단 본문도 그대로 동작)
+function renderBody(body: string): string {
+  const blocks = body.replace(/\r/g, '').split(/\n\s*\n/)
+  return blocks.map((blk) => {
+    const lines = blk.split('\n').map((l) => l.trim()).filter(Boolean)
+    if (!lines.length) return ''
+    if (lines.every((l) => /^- /.test(l))) return `<ul class="tx-list">${lines.map((l) => `<li>${autoLink(l.slice(2))}</li>`).join('')}</ul>`
+    if (lines.every((l) => /^\d+\. /.test(l))) return `<ol class="tx-steps">${lines.map((l) => `<li>${autoLink(l.replace(/^\d+\. /, ''))}</li>`).join('')}</ol>`
+    if (lines.every((l) => /^> /.test(l))) return `<aside class="tx-note">${lines.map((l) => autoLink(l.slice(2))).join('<br>')}</aside>`
+    return `<p>${lines.map((l) => autoLink(l)).join(' <br>')}</p>`
+  }).join('')
+}
+
 export function treatmentsListPage() {
   const core = TREATMENTS.filter((t) => t.core)
   const others = TREATMENTS.filter((t) => !t.core)
@@ -37,7 +51,6 @@ export function treatmentsListPage() {
         </div>
       </a>`)}
     </div>
-    <p class="treatment-image-notice">진료 이해를 돕기 위한 AI 생성 이미지이며, 실제 환자·진료 결과 사진이 아닙니다.</p>
     <p class="eyebrow reveal" style="margin-top:80px">All Treatments</p>
     <h2 class="h-display reveal reveal-d1">전체 진료</h2>
     <div class="treat-sub-grid">
@@ -121,7 +134,6 @@ export function treatmentDetailPage(slug: string, relatedCases: any[]) {
       <span class="line"><span>${t.name}</span></span>
     </h1>
     <p class="hero-sub">${t.heroCopy}</p>
-    <p class="hero-image-note">${t.core ? '진료 이해를 돕는 AI 생성 이미지입니다. 실제 환자·진료 결과 사진이 아닙니다.' : '인테리어 설계 이미지이며 실제 완공 모습과 차이가 있을 수 있습니다.'}</p>
   </div>
 </section>
 
@@ -139,7 +151,7 @@ export function treatmentDetailPage(slug: string, relatedCases: any[]) {
     ${t.sections.map((s, i) => html`
     <div class="reveal" id="section-${i}">
       <h2>${s.h}</h2>
-      <p>${raw(autoLink(s.body).replace(/\n/g, ' <br>'))}</p>
+      ${raw(renderBody(s.body))}
     </div>`)}
   </div>
 </section>

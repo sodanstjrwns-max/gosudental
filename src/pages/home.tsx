@@ -98,7 +98,6 @@ export function homePage() {
         </div>
       </a>`)}
     </div>
-    <p class="treatment-image-notice">진료 이해를 돕기 위한 AI 생성 이미지이며, 실제 환자·진료 결과 사진이 아닙니다.</p>
     <div class="treat-sub-grid">
       ${others.map((t) => html`
       <a href="/treatments/${t.slug}" class="treat-sub reveal">
