@@ -63,7 +63,7 @@ export function handoverPage(c: Context<any>) {
         <tr><th scope="row">전체 공개 안내</th><td><strong>공개 안내 사이트맵</strong> — 병원·의료진·진료·용어사전·지역 안내를 연결하는 구조입니다.</td></tr>
         <tr><th scope="row">치과 용어사전</th><td><strong>${TERMS.length}개 용어 페이지</strong> — 어려운 용어를 쉬운 말로 설명하고 관련 진료로 연결합니다.</td></tr>
         <tr><th scope="row">지역 × 진료</th><td><strong>18개 안내 페이지</strong> — 내포신도시·예산·삽교·홍성 등 주변 지역과 진료를 연결하는 로컬 SEO 페이지입니다.</td></tr>
-        <tr><th scope="row">진료 상세 안내</th><td><strong>${TREATMENTS.length}개 진료 페이지</strong> — 임플란트·치아교정·심미보철·라미네이트 등 증상–원인–치료–FAQ까지 담았습니다.</td></tr>
+        <tr><th scope="row">진료 상세 안내</th><td><strong>${TREATMENTS.length}개 진료 페이지</strong> — 진료마다 증상·진단·치료 옵션 비교·단계별 과정·통증 관리·기간·관리법·비용 구조·부작용 안내까지 15개 안팎의 섹션과 20개 이상의 FAQ로 깊게 안내합니다. 임플란트·치아교정·심미보철·라미네이트·충치·신경치료·보철·턱관절·안티에이징.</td></tr>
         <tr><th scope="row">대표 이미지</th><td>임플란트·치아교정·심미보철 카드 이미지는 진료 이해를 돕기 위해 제작한 연출 이미지이며 실제 환자·결과 사진이 아닙니다(화면에 별도 표기는 하지 않습니다). 의료진 사진 16장과 인테리어 사진은 실사입니다. 개원 후 실제 진료 사진이 생기면 교체해 드립니다.</td></tr>
         <tr><th scope="row">의료진 소개</th><td><strong>${DOCTORS.length}명 개별 페이지</strong> — 조원익·김경환·이민우 원장 등 경력과 진료 철학을 소개합니다.</td></tr>
         <tr><th scope="row">치료사례·칼럼</th><td>관리자에서 공개 여부를 관리합니다. 치료사례 상세는 회원에게 제공하고, 공개 칼럼은 사이트맵에 반영합니다.</td></tr>

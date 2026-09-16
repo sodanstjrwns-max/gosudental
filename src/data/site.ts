@@ -399,7 +399,7 @@ export const TREATMENTS: Treatment[] = [
       { q: '턱에서 소리가 나는데 치료해야 하나요?', a: '통증이나 개구 제한이 없는 단순 관절음은 관찰하는 경우도 많습니다. 다만 통증이 동반되면 검진을 권장합니다.' },
       { q: '턱관절 치료는 어떻게 진행되나요?', a: '행동요법·물리치료·교합안정장치 등 보존적 치료를 우선하며, 증상에 따라 단계적으로 진행합니다.' },
       { q: '스플린트는 하루 종일 껴야 하나요?', a: '일반적으로 야간 착용을 기본으로 하며, 증상에 따라 착용 시간을 조정합니다.' },
-      { q: '턱관절장애는 완치가 되나요?', a: '만성 질환의 성격이 있어 증상 조절과 관리가 목표인 경우가 많습니다. 생활 습관 개선이 함께 중요합니다.' },
+      { q: '턱관절장애는 완전히 낫나요?', a: '만성 질환의 성격이 있어 증상 조절과 관리가 목표인 경우가 많습니다. 생활 습관 개선이 함께 중요합니다.' },
       { q: '이갈이가 심한데 어떻게 하나요?', a: '나이트가드 착용으로 치아와 관절을 보호할 수 있습니다. 마모·균열이 진행되기 전에 검진을 받아보세요.' },
       { q: '턱관절 치료에 보험이 되나요?', a: '진단·물리치료·장치 치료 일부에 건강보험이 적용될 수 있습니다. 항목별 적용 여부는 진단 후 안내드립니다.' },
     ],
@@ -442,6 +442,17 @@ export const TREATMENTS: Treatment[] = [
     relatedTerms: ['슈링크', '리쥬란', 'HIFU', '폴리뉴클레오티드', '안면스캐너'],
   },
 ]
+
+// ── 확장 원고 병합: 기존 섹션·FAQ 뒤에 확장본을 이어 붙인다 (질문 중복은 정규화 비교로 제거) ──
+import { EXTENDED } from './treatments-extended'
+const _normQ = (q: string) => q.replace(/\s+/g, '').replace(/[?？.!,·'"()]/g, '')
+for (const t of TREATMENTS) {
+  const ext = EXTENDED[t.slug]
+  if (!ext) continue
+  t.sections = [...t.sections, ...ext.sections]
+  const seen = new Set(t.faqs.map((f) => _normQ(f.q)))
+  for (const f of ext.faqs) { const k = _normQ(f.q); if (!seen.has(k)) { seen.add(k); t.faqs.push(f) } }
+}
 
 // ── 지역 SEO ──
 export interface Area {
