@@ -1,6 +1,6 @@
 # 고수치과의원 홈페이지 (GOSU DENTAL)
 
-## 2026-09-16 백과사전 상세 원고 확장 — 운영 미배포
+## 2026-09-16 백과사전 상세 원고 확장 — 운영 배포 완료
 - 기존 103개 용어 전부 확장. 기존 뜻풀이 중간값 33자에서, 새 요약·본문·FAQ·상담 질문 합산 최소 1,555자 / 중간값 1,850자 / 최대 2,166자로 확대(제목·공통 안내문 제외). 총 190,121자.
 - 용어마다 본문 5절·10문단, FAQ 4개, 진료실 상담 질문 4개, 실존 관련 용어 및 참고자료 제공. 전체 본문 515절, FAQ 412개. 동일 문단의 정확한 복사 반복 검사 통과.
 - `/encyclopedia`: 새 요약 검색, 영문 대소문자 무관 검색. `/encyclopedia/:slug`: 기존 주소를 보존하며 목차·읽기 시간·네이티브 FAQ·참고자료 추가. 모바일과 JavaScript 비활성화 환경 지원.
@@ -9,10 +9,11 @@
 - 초안 자동 교차 검토와 일부 의학 표현 수동 교정을 수행했으나 **의료진의 임상 감수 완료를 의미하지 않습니다.** 게시 전 담당 의료진 검토 권장. 효과 보증이나 임의의 reviewedBy/lastReviewed는 추가하지 않음.
 - 개발 보조 `scripts/expand-encyclopedia.py`는 일반 빌드에서 실행하지 않음. 생성 cache/참고 원문은 `.reference/`에만 보관하고 Git 제외. 기존 관리 원고 덮어쓰기는 명시적 `--overwrite` 필요.
 - 검증: build/typecheck 성공, `npm run test:encyclopedia` 2개 테스트에서 데이터 및 SSR 103개 전수 통과, 전용 Playwright 1개 통과(320/390/768/1440px, 4개 용어, no-JS FAQ·목차·검색), API 2개 통과. 이전 단계 표본 axe 6조합 위반 0, PC/모바일 스크린샷 확인.
-- **현재 전체 보안 테스트는 16/17 통과:** 최신 원격 `20c0f00`에서 공개 `/handover`의 관리자 비밀번호 출력이 복구되어 비노출 테스트가 실패함. 이번 백과사전 작업에서 해당 기능이나 테스트를 임의 변경하지 않았으며, 운영 배포 전 처리 방향 확정 필요.
+- **현재 전체 보안 테스트는 16/17 통과:** 최신 원격 `20c0f00`에서 공개 `/handover`의 관리자 비밀번호 출력이 복구되어 비노출 테스트가 실패함. 사용자가 비밀번호 표시 유지 및 배포를 명시적으로 요청하여 해당 기능과 테스트를 변경하지 않고 배포함. 알려진 보안 위험과 테스트 실패는 해결된 것으로 간주하지 않음.
 - 전체 브라우저 suite는 이번 작업에서 실행하지 않음. 기존 AI 라벨 기대 테스트와 최신 원격의 라벨 제거 요구가 불일치함. 아래 과거 배포·테스트·AI 표기 유지 기록은 당시 상태이며 현재 소스의 보증이 아님.
-- 소스와 로컬 미리보기 구현 완료. **이번 확장 버전은 운영에 배포하지 않았습니다.** 아래 최신 배포 URL은 마지막으로 검증한 이전 배포 기록입니다. Git push만으로 운영 반영되지 않음.
-- 다음 단계: 공개 안내서 자격증명 노출 처리 → 의료진 원고 검토 → 관련 회귀 검사 → 승인 후 기존 BYOK Pages `gosudental` 배포 및 운영 검증.
+- 사용자 승인 후 기존 BYOK Pages `gosudental`의 `main`에 배포 완료: https://4cc11302.gosudental.pages.dev · 배포 코드 `d8f8806`. D1/R2 데이터·secrets·안내서 코드는 변경하지 않음.
+- 운영 https://gosudc.kr 에서 103개 상세 전수 HTTP 200/H1 1개/본문 5절/FAQ 4개/canonical/FAQ 스키마 일치 확인. `/llms-full.txt`의 전체 103개 요약·본문·FAQ·상담 질문·출처가 관리 원고와 일치함을 검증. 실제 운영 임플란트 상세 320/390/768/1440px FAQ 펼침·가로 넘침 없음 확인.
+- 다음 단계: 의료진 원고 검토 및 운영 색인 모니터링. 공개 안내서의 비밀번호 노출은 사용자 유지 요청에 따른 알려진 위험으로 남아 있음.
 
 ## 프로젝트 개요
 - 내포신도시 고수치과 홈페이지: 병원·의료진·진료 소개, 회원 전용 사례, 상담 접수, 관리자 CMS.
@@ -26,7 +27,8 @@
 - 개발 미리보기: https://3000-ibwcewnougzmi7rx3gacu-d0b9e1e2.sandbox.novita.ai
 - **2026-09-15 사용자 승인 후 사진·수가표·보안·CMS·최적화·AI 진료 카드를 실제 운영 배포하고 검증 완료.** 미리보기는 임시 실행 환경입니다.
 - 사용자 Cloudflare 계정(BYOK), Pages 프로젝트 `gosudental`, production branch `main`.
-- 최신 배포: https://960d1a45.gosudental.pages.dev · 배포 코드 커밋 `88fd8f7` (모바일·SEO·AEO 기본 구조).
+- 최신 배포: https://4cc11302.gosudental.pages.dev · 배포 코드 커밋 `d8f8806` (103개 백과사전 상세 확장).
+- 모바일·SEO·AEO 기본 구조 배포 기록: https://960d1a45.gosudental.pages.dev · 코드 `88fd8f7`.
 - 농구 에디토리얼 배포 기록: https://f215e00f.gosudental.pages.dev · 코드 `d5c8799`.
 - 사진·보안 통합 배포 기록: https://8b218d77.gosudental.pages.dev · 코드 `ec4f1c0`.
 - Pages의 Git Provider는 연결되어 있지 않습니다. **GitHub push만으로 운영은 갱신되지 않습니다.** `npm run build` 후 `npx wrangler pages deploy dist --project-name gosudental --branch main`을 별도 실행하고 운영 URL을 검증해야 합니다.
@@ -34,7 +36,7 @@
 - 운영 `ADMIN_PASSWORD`·`SESSION_SECRET` 유지. `STATS_TOKEN`·`MASTER_KEY`는 stdin으로 운영 secrets 등록, 키 기반 API 200 확인.
 - 백업: 비공개 `.reference/production-before-deploy-20260915.sql` (권한 600, Git 제외, SQLite 복원 검증 완료). SHA-256 `db0d4710331cde8942b4cb4ad6d4f2c4d0d3539217e106604391c679e3337c2a`.
 - 이전 배포 복구 참조: `f5baef4c-8e9a-4bc5-be8c-d1b98d2d402d` / 코드 `36178e1`. DB 복원은 신규 접수 데이터 손실 가능성을 검토한 후 별도 수행해야 합니다.
-- `/handover`의 공개 관리자 비밀번호 출력을 배포 전에 제거. 비밀번호는 별도 전달하며 no-store/noindex/no-referrer 및 제한 CSP 유지. 실제 로그인 및 `/admin`, `/admin/fees`, `/admin/reservations` 200 확인.
+- 2026-09-15 당시 `/handover`의 공개 관리자 비밀번호 출력을 제거하고 로그인 및 `/admin`, `/admin/fees`, `/admin/reservations` 200 확인. 이후 원격에서 비밀번호 출력이 복구되었으며 2026-09-16 사용자의 명시적 유지 요청에 따라 현재 배포에서는 출력 기능을 유지함. 과거 제거 기록을 현재 상태로 해석하지 말 것.
 - 운영 검증: 공개 12경로 200, 의료진 사진 및 AI 3종 포함 정적 자산 21개 SHA-256 일치, PC/모바일 사진 디코딩 성공·가로 넘침 없음·브라우저 오류 없음. 테스트 회원/예약은 운영에 생성하지 않음.
 
 ## Git 통합 및 재발 방지
