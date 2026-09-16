@@ -1344,10 +1344,6 @@ main [id] { scroll-margin-top:100px; }
 .answer-summary dt { font-weight:700; color:var(--ink); }
 .answer-summary a { text-decoration:underline; text-underline-offset:4px; color:#285c72; display:inline-block; padding:4px 0; }
 .answer-summary .answer-caution { color:var(--ink-soft); font:13px/1.8 var(--sans); }
-.article-toc { padding:20px 24px; margin:0 0 40px; border:1px solid var(--line); font-family:var(--sans); }
-.article-toc > p { font-weight:700; color:var(--ink); margin-bottom:10px; }
-.article-toc ol { padding-left:22px; }
-.article-toc a { display:inline-block; padding:9px 0; color:var(--sky-deep); text-decoration:underline; text-underline-offset:4px; line-height:1.6; }
 @media(max-width:768px) {
   .mobile-menu { max-height:calc(100dvh - 78px - env(safe-area-inset-bottom)); padding-bottom:calc(20px + env(safe-area-inset-bottom)); }
   main .doctor-grid[style],#term-related-section .treat-sub-grid[style],#area-doctors .treat-sub-grid[style] { grid-template-columns:minmax(0,1fr)!important; }
@@ -1355,7 +1351,6 @@ main [id] { scroll-margin-top:100px; }
   .answer-summary h2 { font-size:21px; }
   .answer-summary dl { grid-template-columns:1fr; gap:4px; }
   .answer-summary dd { margin-bottom:8px; }
-  .article-toc { padding:18px; }
   .article-toc a,.pill,.dict-links a { min-height:44px; }
   .prose table { display:block; width:100%; max-width:100%; overflow-x:auto; }
   .prose img { max-width:100%; height:auto; }
@@ -1405,3 +1400,21 @@ button:disabled { opacity: .65; cursor: wait; }
 .tx-list li::marker { color: var(--sky-deep); }
 .tx-steps li::marker { color: var(--sky-deep); font-weight: 700; font-family: var(--sans); }
 .tx-note { margin: 12px 0 18px; padding: 14px 18px; border-left: 3px solid var(--seal); background: var(--sky-mist); color: var(--ink-2); font-size: 15px; line-height: 1.7; }
+/* ── 진료 안내 차례(目次) — 2026-09-16 재설계: 먹선 + 번호 그리드 ── */
+.article-toc { position:relative; margin:0 0 48px; padding:22px 26px 18px; background:var(--paper); border:1px solid var(--ink); box-shadow:8px 8px 0 var(--sky-mist); font-family:var(--sans); }
+.toc-head { display:flex; align-items:baseline; gap:12px; padding-bottom:12px; margin-bottom:6px; border-bottom:1px solid var(--ink); }
+.toc-kicker { font-size:11px; font-weight:700; letter-spacing:.22em; text-transform:uppercase; color:var(--sky-deep); }
+.toc-kicker::before { content:''; display:inline-block; width:8px; height:8px; margin-right:8px; background:var(--seal); border-radius:1px 3px 2px 3px; vertical-align:1px; }
+.toc-title { font-family:var(--serif); font-weight:900; font-size:19px; color:var(--ink); letter-spacing:-.01em; }
+.toc-count { margin-left:auto; font-size:12px; color:var(--ink-mute); }
+.toc-grid { list-style:none; margin:0; padding:0; display:grid; grid-template-columns:1fr 1fr; column-gap:28px; }
+.toc-grid li { border-bottom:1px dashed var(--line); }
+.toc-grid li:nth-last-child(-n+2) { border-bottom:0; }
+.toc-grid a { display:flex; align-items:baseline; gap:12px; padding:10px 4px; color:var(--ink-2); text-decoration:none; font-size:14.5px; line-height:1.45; transition:color .2s var(--ease), padding-left .25s var(--ease); }
+.toc-no { flex:none; width:24px; font-size:11.5px; font-weight:700; letter-spacing:.04em; color:var(--sky-deep); font-variant-numeric:tabular-nums; }
+.toc-label { position:relative; }
+.toc-grid a:hover, .toc-grid a:focus-visible { color:var(--ink); padding-left:10px; }
+.toc-grid a:hover .toc-no, .toc-grid a:focus-visible .toc-no { color:var(--seal); }
+.toc-grid a:hover .toc-label::after { content:''; position:absolute; left:0; right:0; bottom:-3px; height:2px; background:var(--sky); }
+.toc-grid a:focus-visible { outline:2px solid var(--seal); outline-offset:2px; }
+@media (max-width:760px) { .article-toc { padding:18px 16px 12px; box-shadow:none; } .toc-grid { grid-template-columns:1fr; } .toc-grid li:nth-last-child(2) { border-bottom:1px dashed var(--line); } .toc-grid a { padding:11px 2px; min-height:44px; } }

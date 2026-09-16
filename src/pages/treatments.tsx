@@ -145,7 +145,10 @@ export function treatmentDetailPage(slug: string, relatedCases: any[]) {
       <dl><dt>담당 의료진</dt><dd>${docs.map(d => html`<a href="/doctors/${d.slug}">${d.name} 원장</a> `)}</dd><dt>진료비 확인</dt><dd><a href="/pricing">공개 잠정수가 및 적용 조건 보기</a></dd></dl>
       <p class="answer-caution">일반적인 진료 안내입니다. 치료 방법·기간·비용은 검사와 진단 후 결정되며, 결과와 부작용은 개인에 따라 다릅니다.</p>
     </aside>
-    <nav class="article-toc" aria-label="이 진료 안내의 목차"><p>이 페이지에서 확인할 내용</p><ol>${t.sections.map((s,i) => html`<li><a href="#section-${i}">${s.h}</a></li>`)}<li><a href="#treatment-faq-section">자주 묻는 질문</a></li></ol></nav>
+    <nav class="article-toc" aria-label="이 진료 안내의 목차">
+      <div class="toc-head"><span class="toc-kicker">Contents</span><span class="toc-title">차례</span><span class="toc-count">${t.sections.length + 1}개 항목</span></div>
+      <ol class="toc-grid">${t.sections.map((s, i) => html`<li><a href="#section-${i}"><span class="toc-no">${String(i + 1).padStart(2, '0')}</span><span class="toc-label">${s.h}</span></a></li>`)}<li><a href="#treatment-faq"><span class="toc-no">${String(t.sections.length + 1).padStart(2, '0')}</span><span class="toc-label">자주 묻는 질문</span></a></li></ol>
+    </nav>
   </div>
   <div class="section-narrow prose">
     ${t.sections.map((s, i) => html`
