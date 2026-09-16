@@ -186,6 +186,31 @@ test('basketball editorial is responsive and retains the three-photo lightbox', 
   await expect(section.locator('.court-story-link')).toHaveAttribute('href', '/doctors/cho-wonik#doctor-life')
 })
 
+test('expanded glossary: long guides, native FAQ and references work on mobile without JavaScript', async ({ browser }) => {
+  const context = await browser.newContext({ javaScriptEnabled: false })
+  const page = await context.newPage()
+  for (const width of [320, 390, 768, 1440]) {
+    await page.setViewportSize({ width, height: 1000 })
+    for (const name of ['임플란트', '근관치료', 'CBCT', '폴리뉴클레오티드']) {
+      const response = await page.goto(base + '/encyclopedia/' + encodeURIComponent(name))
+      expect(response!.status()).toBe(200)
+      await expect(page.locator('h1')).toHaveText(name)
+      await expect(page.locator('.term-chapter')).toHaveCount(5)
+      await expect(page.locator('.term-chapter > p:not(.term-chapter-number)')).toHaveCount(10)
+      await expect(page.locator('#term-faq .faq-item')).toHaveCount(4)
+      expect(await page.locator('.term-reference a').count()).toBeGreaterThan(0)
+      await page.locator('#term-faq summary').first().click()
+      await expect(page.locator('#term-faq .faq-a').first()).toBeVisible()
+      await page.locator('.term-toc a').first().click()
+      await expect(page).toHaveURL(/#term-chapter-1$/)
+      expect(await page.evaluate(() => (globalThis as any).document.documentElement.scrollWidth <= (globalThis as any).innerWidth)).toBeTruthy()
+    }
+  }
+  await page.goto(base + '/encyclopedia?q=mta')
+  await expect(page.locator('.dict-card')).toContainText('MTA')
+  await context.close()
+})
+
 test('treatment cards use responsive AI illustrations with visible disclosure', async ({ page }) => {
   for (const path of ['/', '/treatments']) {
     await page.goto(base + path)

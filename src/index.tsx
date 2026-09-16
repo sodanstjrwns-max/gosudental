@@ -16,6 +16,7 @@ import {
   clearSessions, hashPassword, verifyPassword, isBot, secretOf, constantTimePasswordMatch,
 } from './auth'
 import { SITE, DOCTORS, TREATMENTS, AREAS, REGION_DB, TERMS, PRICING, PRICING_NOTICE, EQUIPMENT } from './data/site'
+import { TERM_ARTICLES, TERM_REFERENCES } from './data/encyclopedia-content'
 import { homePage } from './pages/home'
 import { missionPage } from './pages/mission'
 import { doctorsListPage, doctorDetailPage } from './pages/doctors'
@@ -698,7 +699,14 @@ app.get('/llms-full.txt', async (c) => {
     return `## ${t.name} (${SITE.domain}/treatments/${t.slug})\n${t.heroCopy}\n\n${secs}\n\n### ${t.name} 자주 묻는 질문\n${faqs}`
   }).join('\n\n---\n\n')
 
-  const termBlocks = TERMS.map((t) => `- [${t.name}](${SITE.domain}/encyclopedia/${t.slug}): ${t.def}`).join('\n')
+  const termBlocks = TERMS.map((t) => {
+    const article = TERM_ARTICLES[t.name]
+    if (!article) return `### ${t.name}\n출처: ${SITE.domain}/encyclopedia/${t.slug}\n${t.def}`
+    const sections = article.sections.map(s => `#### ${s.heading}\n${s.paragraphs.join('\n\n')}`).join('\n\n')
+    const questions = article.faqs.map(f => `Q. ${f.q}\nA. ${f.a}`).join('\n\n')
+    const references = article.referenceIds.map(id => TERM_REFERENCES[id]).filter(Boolean).map(source => `- ${source.title}: ${source.url}`).join('\n')
+    return `### ${t.name}\n출처: ${SITE.domain}/encyclopedia/${t.slug}\n${article.summary}\n\n${sections}\n\n#### 진료실에서 확인할 질문\n${article.checklist.map(q => '- ' + q).join('\n')}\n\n#### 자주 묻는 질문\n${questions}\n\n#### 함께 읽을 참고자료\n${references}\n\n일반적인 의료정보이며 개별 진단·처방을 대신하지 않습니다.`
+  }).join('\n\n---\n\n')
 
   const priceBlocks = publicFees.map((p) =>
     `### ${p.category}\n${p.items.map((i) => `- ${i.name}: ${i.price}${i.note ? ` (${i.note})` : ''}`).join('\n')}`

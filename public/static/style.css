@@ -1360,6 +1360,50 @@ main [id] { scroll-margin-top:100px; }
   #directions-map-section .price-table th,#directions-map-section .price-table td { min-width:0; overflow-wrap:anywhere; }
 }
 
+/* Expanded glossary: readable long-form patient guides without client rendering. */
+.term-read-link { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:14px 0 8px; color:var(--sky-deep); font:600 12px/1.6 var(--sans); }
+.term-reading-meta { margin-top:24px; padding-top:18px; border-top:1px solid var(--line); color:var(--ink-mute); font:12px/1.8 var(--sans); }
+.term-reading-meta span { padding:0 9px; color:var(--sky-deep); }
+.term-guide-section { padding-top:12px; padding-bottom:40px; }
+.term-toc { padding:26px 28px; margin:0 0 58px; background:var(--sky-mist); border-top:2px solid var(--ink); }
+.term-toc h2 { font:700 18px/1.6 var(--serif); color:var(--ink); margin-bottom:18px; }
+.term-toc ol { list-style:none; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:0 28px; }
+.term-toc li { border-top:1px solid var(--sky-line); }
+.term-toc a { display:flex; align-items:baseline; gap:12px; padding:13px 0; min-height:48px; font:14px/1.6 var(--sans); }
+.term-toc a > span { flex-shrink:0; width:28px; color:var(--sky-deep); font-size:11px; font-weight:700; }
+.term-toc a:hover { text-decoration:underline; text-underline-offset:4px; }
+.term-chapter { margin:0 0 46px; padding:0 0 30px; border-bottom:1px solid var(--line); }
+.term-chapter.prose .term-chapter-number { margin:0 0 12px; color:var(--sky-deep); font:700 10px/1.5 var(--sans); letter-spacing:.16em; }
+.term-chapter.prose h2 { margin:0 0 20px; font-size:26px; line-height:1.6; }
+.term-chapter.prose p { line-height:2; }
+.term-chapter.prose p:last-child { margin-bottom:0; }
+.term-consultation { padding:28px 30px; border-left:3px solid var(--sky-deep); background:var(--sky-mist); margin:0 0 54px; }
+.term-consultation h2,.term-faq h2 { font:700 25px/1.6 var(--serif); color:var(--ink); margin-bottom:20px; }
+.term-consultation ul { list-style:disc; padding-left:20px; }
+.term-consultation li { padding:7px 0 7px 5px; font-size:15px; line-height:1.85; }
+.term-consultation li::marker { color:var(--sky-deep); }
+.term-faq { margin-bottom:52px; }
+.term-faq .faq-a { line-height:1.95; }
+.term-reference { padding:24px 0; border-top:1px solid var(--line); font-family:var(--sans); }
+.term-reference h2 { font-size:16px; margin-bottom:14px; color:var(--ink); }
+.term-reference a { display:inline-block; padding:7px 0; font-size:13px; color:var(--sky-deep); text-decoration:underline; text-underline-offset:3px; overflow-wrap:anywhere; }
+.term-reference p,.term-medical-note { font:13px/1.9 var(--sans); color:var(--ink-mute); margin-top:18px; }
+.term-medical-note { padding:20px 24px; background:#f3f6f7; }
+@media(max-width:640px) {
+  .term-guide-section { padding-top:0; }
+  .term-toc { padding:22px 18px; margin-bottom:38px; }
+  .term-toc ol { grid-template-columns:minmax(0,1fr); }
+  .term-toc a { padding:12px 0; }
+  .term-chapter { margin-bottom:32px; padding-bottom:22px; }
+  .term-chapter.prose h2 { font-size:22px; line-height:1.65; }
+  .term-chapter.prose p { font-size:16px; }
+  .term-consultation { padding:24px 20px; }
+  .term-consultation h2,.term-faq h2 { font-size:22px; }
+  .term-reading-meta { font-size:11px; }
+  .term-reading-meta span { padding:0 4px; }
+  .term-reference a,.term-read-link { min-height:44px; }
+}
+
 /* Delivery: progressive enhancement, focus visibility and narrow screens. */
 :focus-visible { outline: 3px solid #337a99; outline-offset: 4px; }
 .reveal { opacity: 1; transform: none; }

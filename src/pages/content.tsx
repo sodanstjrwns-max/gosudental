@@ -1,6 +1,7 @@
 import { sanitizeContent } from '../security'
 import { html, raw } from 'hono/html'
-import { Layout, breadcrumbSchema, schemaDate } from '../layout'
+import { Layout, breadcrumbSchema, schemaDate, faqSchema } from '../layout'
+import { TERM_ARTICLES, TERM_REFERENCES } from '../data/encyclopedia-content'
 import { SITE, TERMS, TREATMENTS, DOCTORS } from '../data/site'
 
 // ── 원장 칼럼 ──
@@ -129,7 +130,8 @@ export function columnDetailPage(post: any) {
 // ── 백과사전 ──
 export function encyclopediaPage(q?: string) {
   q = q?.trim()
-  const filtered = q ? TERMS.filter((t) => t.name.includes(q) || t.def.includes(q)) : TERMS
+  const query = q?.toLocaleLowerCase('ko-KR')
+  const filtered = query ? TERMS.filter((t) => [t.name, t.def, TERM_ARTICLES[t.name]?.summary || ''].join(' ').toLocaleLowerCase('ko-KR').includes(query)) : TERMS
   const content = html`
 <section class="page-hero" id="dict-hero">
   <div class="section-inner">
@@ -153,7 +155,8 @@ export function encyclopediaPage(q?: string) {
         return html`
         <article class="dict-card" id="${t.name}">
           <h2><a href="/encyclopedia/${t.slug}">${t.name}</a></h2>
-          <p>${t.def}</p>
+          <p>${TERM_ARTICLES[t.name]?.summary || t.def}</p>
+          <a class="term-read-link" href="/encyclopedia/${t.slug}">상세 설명 · 주의사항 · FAQ <span aria-hidden="true">→</span></a>
           <div class="dict-links">
             ${rel.map((tr) => html`<a href="/treatments/${tr.slug}">${tr.name}</a>`)}
           </div>
@@ -181,15 +184,20 @@ export function termDetailPage(slug: string) {
   try { decoded = decodeURIComponent(slug) } catch { return null }
   const term = TERMS.find((t) => t.slug === slug || t.name === decoded)
   if (!term) return null
+  const article = TERM_ARTICLES[term.name]
   const rel = TREATMENTS.filter((tr) => term.related.includes(tr.slug))
-  const relTerms = TERMS.filter((t) => t.slug !== term.slug && t.related.some((r) => term.related.includes(r))).slice(0, 8)
+  const suggested = (article?.relatedNames || []).map(name => TERMS.find(t => t.name === name)).filter((t): t is typeof term => Boolean(t))
+  const relTerms = [...suggested, ...TERMS.filter((t) => t.slug !== term.slug && !suggested.some(s => s.slug === t.slug) && t.related.some((r) => term.related.includes(r)))].slice(0, 8)
+  const references = (article?.referenceIds || []).map(id => TERM_REFERENCES[id]).filter(Boolean)
+  const bodyCharacters = article ? article.sections.reduce((n, s) => n + s.paragraphs.join('').length, 0) + article.faqs.reduce((n, f) => n + f.q.length + f.a.length, 0) : term.def.length
+  const readingMinutes = Math.max(1, Math.ceil(bodyCharacters / 500))
 
   const defSchema = {
     '@context': 'https://schema.org',
     '@type': 'DefinedTerm',
     '@id': `${SITE.domain}/encyclopedia/${term.slug}#term`,
     name: term.name,
-    description: term.def,
+    description: article?.summary || term.def,
     url: `${SITE.domain}/encyclopedia/${term.slug}`,
     inDefinedTermSet: { '@type': 'DefinedTermSet', '@id': `${SITE.domain}/encyclopedia#terms`, name: '고수치과 치과 백과사전', url: `${SITE.domain}/encyclopedia` },
   }
@@ -200,9 +208,44 @@ export function termDetailPage(slug: string) {
     <nav class="breadcrumb" aria-label="현재 위치"><a href="/">홈</a> / <a href="/encyclopedia">백과사전</a> / <span>${term.name}</span></nav>
     <p class="eyebrow">Dental Term</p>
     <h1 class="h-display">${term.name}</h1>
-    <p class="lead" style="font-size:19px">${term.def}</p>
+    <p class="lead" style="font-size:19px">${article?.summary || term.def}</p>
+    ${article ? html`<p class="term-reading-meta">${rel.map(t => t.name).join(' · ')} <span aria-hidden="true">/</span> 약 ${readingMinutes}분 읽기 <span aria-hidden="true">/</span> 자주 묻는 질문 ${article.faqs.length}가지</p>` : ''}
   </div>
 </section>
+
+${article ? html`
+<section class="section term-guide-section" id="term-guide-section">
+  <div class="section-narrow">
+    <nav class="term-toc" aria-labelledby="term-toc-heading">
+      <h2 id="term-toc-heading">이 용어, 차근차근 알아보기</h2>
+      <ol>${article.sections.map((section, i) => html`<li><a href="#term-chapter-${i + 1}"><span aria-hidden="true">${String(i + 1).padStart(2, '0')}</span>${section.heading}</a></li>`)}<li><a href="#term-faq"><span aria-hidden="true">Q&A</span>자주 묻는 질문</a></li></ol>
+    </nav>
+    <article class="term-guide" aria-label="${term.name} 상세 설명">
+      ${article.sections.map((section, i) => html`
+      <section class="term-chapter prose" id="term-chapter-${i + 1}" aria-labelledby="term-chapter-title-${i + 1}">
+        <p class="term-chapter-number" aria-hidden="true">${String(i + 1).padStart(2, '0')} / GUIDE</p>
+        <h2 id="term-chapter-title-${i + 1}">${section.heading}</h2>
+        ${section.paragraphs.map(p => html`<p>${p}</p>`)}
+      </section>`)}
+    </article>
+    <aside class="term-consultation" aria-labelledby="term-consultation-heading">
+      <p class="eyebrow">Before your visit</p>
+      <h2 id="term-consultation-heading">진료실에서 확인하면 좋은 질문</h2>
+      <ul>${article.checklist.map(item => html`<li>${item}</li>`)}</ul>
+    </aside>
+    <section id="term-faq" class="term-faq" aria-labelledby="term-faq-heading">
+      <p class="eyebrow">Questions & Answers</p>
+      <h2 id="term-faq-heading">${term.name}, 자주 묻는 질문</h2>
+      <div class="faq-list">${article.faqs.map((faq, i) => html`<details class="faq-item" id="term-question-${i + 1}"><summary>${faq.q}</summary><div class="faq-a">${faq.a}</div></details>`)}</div>
+    </section>
+    <aside class="term-reference" aria-labelledby="term-reference-heading">
+      <h2 id="term-reference-heading">함께 읽을 참고자료</h2>
+      <ul>${references.map(source => html`<li><a href="${source.url}" target="_blank" rel="noopener noreferrer">${source.title}<span class="sr-only"> (새 창, 영문 자료)</span><span aria-hidden="true"> ↗</span></a></li>`)}</ul>
+      <p>참고자료는 관련 주제의 일반 정보입니다. 해외 자료의 허가·보험·진료 체계는 국내와 다를 수 있으며, 개별 제품이나 고수치과의 진료 결과를 보증하지 않습니다.</p>
+    </aside>
+    <p class="term-medical-note">이 글은 용어 이해를 돕기 위한 일반적인 의료정보이며 개인별 진단이나 치료 처방을 대신하지 않습니다. 적용 여부와 주의사항은 구강 상태·건강 상태·복용 약물에 따라 달라지므로 담당 의료진과 확인해 주세요.</p>
+  </div>
+</section>` : ''}
 
 <section class="section" id="term-related-section" style="padding-top:20px">
   <div class="section-narrow">
@@ -226,11 +269,12 @@ export function termDetailPage(slug: string) {
   return Layout(
     {
       title: `${term.name}이란? — 치과 백과사전 | 고수치과의원`,
-      description: `${term.name}: ${term.def}`,
+      description: article?.summary || `${term.name}: ${term.def}`,
       path: `/encyclopedia/${term.slug}`,
       pageType: 'MedicalWebPage',
       schema: [
         defSchema,
+        ...(article ? [faqSchema(article.faqs), { '@context': 'https://schema.org', '@type': 'MedicalWebPage', about: { '@id': `${SITE.domain}/encyclopedia/${term.slug}#term` }, citation: references.map(source => ({ '@type': 'CreativeWork', name: source.title, url: source.url })) }] : []),
         breadcrumbSchema([
           { name: '홈', path: '/' },
           { name: '백과사전', path: '/encyclopedia' },

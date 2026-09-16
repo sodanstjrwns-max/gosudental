@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit",
     "test": "tsx --test tests/security.test.ts",
     "test:api": "tsx --test tests/local-api.test.ts",
+    "test:encyclopedia": "tsx --test tests/encyclopedia.test.ts",
     "test:browser": "playwright test tests/*.spec.ts --workers=1 --reporter=line --output=.test-artifacts/playwright",
     "db:migrate:local": "wrangler d1 migrations apply gosudental-production --local"
   },
