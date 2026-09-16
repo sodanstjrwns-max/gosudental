@@ -89,7 +89,7 @@ export function homePage() {
     <div class="treat-grid">
       ${core.map((t, i) => html`
       <a href="/treatments/${t.slug}" class="treat-card reveal reveal-d${i + 1}">
-        <div class="treat-card-img"><img src="${coreImgs[t.slug]}" srcset="${coreImgs[t.slug].replace('.webp', '-640.webp')} 640w, ${coreImgs[t.slug]} 1200w" sizes="(max-width:720px) 92vw, (max-width:1024px) 45vw, 420px" alt="${t.name} 이해를 위한 AI 생성 이미지" width="1200" height="800" loading="lazy" decoding="async"></div>
+        <div class="treat-card-img"><img src="${coreImgs[t.slug]}" srcset="${coreImgs[t.slug].replace('.webp', '-640.webp')} 640w, ${coreImgs[t.slug]} 1200w" sizes="(max-width:720px) 92vw, (max-width:1024px) 45vw, 420px" alt="${t.name} 진료 안내 이미지" width="1200" height="800" loading="lazy" decoding="async"></div>
         <div class="treat-card-body">
           <span class="treat-tag">Signature</span>
           <h3>${t.name}</h3>
