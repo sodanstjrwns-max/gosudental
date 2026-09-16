@@ -64,7 +64,7 @@ export function handoverPage(c: Context<any>) {
         <tr><th scope="row">치과 용어사전</th><td><strong>${TERMS.length}개 용어 페이지</strong> — 어려운 용어를 쉬운 말로 설명하고 관련 진료로 연결합니다.</td></tr>
         <tr><th scope="row">지역 × 진료</th><td><strong>18개 안내 페이지</strong> — 내포신도시·예산·삽교·홍성 등 주변 지역과 진료를 연결하는 로컬 SEO 페이지입니다.</td></tr>
         <tr><th scope="row">진료 상세 안내</th><td><strong>${TREATMENTS.length}개 진료 페이지</strong> — 임플란트·치아교정·심미보철·라미네이트 등 증상–원인–치료–FAQ까지 담았습니다.</td></tr>
-        <tr><th scope="row">대표 이미지</th><td>임플란트·치아교정·심미보철 카드는 <strong>AI 생성 이미지</strong>로 제작해 표기했고, 의료진 실제 사진 16장과 인테리어 사진은 실사입니다. 개원 후 실제 진료 사진이 생기면 교체해 드립니다.</td></tr>
+        <tr><th scope="row">대표 이미지</th><td>임플란트·치아교정·심미보철 카드 이미지는 진료 이해를 돕기 위해 제작한 연출 이미지이며 실제 환자·결과 사진이 아닙니다(화면에 별도 표기는 하지 않습니다). 의료진 사진 16장과 인테리어 사진은 실사입니다. 개원 후 실제 진료 사진이 생기면 교체해 드립니다.</td></tr>
         <tr><th scope="row">의료진 소개</th><td><strong>${DOCTORS.length}명 개별 페이지</strong> — 조원익·김경환·이민우 원장 등 경력과 진료 철학을 소개합니다.</td></tr>
         <tr><th scope="row">치료사례·칼럼</th><td>관리자에서 공개 여부를 관리합니다. 치료사례 상세는 회원에게 제공하고, 공개 칼럼은 사이트맵에 반영합니다.</td></tr>
         <tr><th scope="row">진료비(수가) 관리</th><td>비급여 항목·금액·공개 여부를 관리자에서 직접 수정합니다(의료법 고지 의무 대응).</td></tr>
@@ -73,6 +73,16 @@ export function handoverPage(c: Context<any>) {
         <tr><th scope="row">모바일·속도</th><td>모바일 하단 고정 버튼(예약·길찾기), WebP 이미지·지연 로딩.</td></tr>
         <tr><th scope="row">운영 기반</th><td>Cloudflare 엣지, D1 데이터베이스, R2 이미지 저장소. 관리 화면은 비로그인 접근 차단·검색 제외.</td></tr>
       </tbody></table>
+      <h3>상단 메뉴 구성</h3>
+      <p>상단 메뉴에 마우스를 올리면 하위 메뉴가 펼쳐집니다. 모바일에서는 오른쪽 위 메뉴 버튼에서 같은 항목을 볼 수 있습니다.</p>
+      <ul>
+        <li><strong>병원미션</strong> — 고수치과의 진료 철학과 약속</li>
+        <li><strong>의료진</strong> — 의료진 전체보기, 원장별 소개 페이지</li>
+        <li><strong>진료안내</strong> — 핵심 진료(임플란트·치아교정·심미보철) + 전체 진료(충치·신경치료, 보철, 턱관절, 피부미용·안티에이징)</li>
+        <li><strong>콘텐츠</strong> — 비포 &amp; 애프터, 원장 칼럼, 치과 백과사전</li>
+        <li><strong>병원안내</strong> — 오시는 길·진료시간, 공간 둘러보기, 비용 안내, 자주 묻는 질문, 공지사항</li>
+        <li><strong>상담 예약</strong> 버튼 — 홈페이지 예약 신청 (확정 후 네이버 예약·카카오톡 채널 연결 예정)</li>
+      </ul>
     </section>
 
     <section id="delivery-operations">
