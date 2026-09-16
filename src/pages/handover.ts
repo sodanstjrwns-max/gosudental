@@ -4,6 +4,10 @@ import { DOCTORS, TREATMENTS, TERMS } from '../data/site'
 
 // 공개 납품 안내서에는 인증 비밀값을 절대 포함하지 않는다.
 export function handoverPage(c: Context<any>) {
+  // 원장 요청: 안내서에 관리자 비밀번호 표시 (도담과 동일). 운영 도메인(gosudc.kr)에서만 env 값을 렌더, 소스·로그에는 남기지 않음.
+  const _u = new URL(c.req.url)
+  const deliveryOrigin = _u.origin === 'https://gosudc.kr' || ['localhost', '127.0.0.1'].includes(_u.hostname)
+  const adminPassword = deliveryOrigin ? String(c.env?.ADMIN_PASSWORD || '') : ''
   c.header('Cache-Control', 'private, no-store, max-age=0, no-transform')
   c.header('Content-Security-Policy', "default-src 'none'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'self'")
   c.header('X-Robots-Tag', 'noindex, nofollow, noarchive, nosnippet')
@@ -79,7 +83,7 @@ export function handoverPage(c: Context<any>) {
         <h3 id="admin-access-title">관리자 로그인 정보</h3>
         <p class="credential-label">접속 주소</p><p class="credential-url"><a href="https://gosudc.kr/admin/login">https://gosudc.kr/admin/login</a></p>
         <p class="credential-label">관리자 비밀번호</p>
-        <p class="credential-unavailable">비밀번호는 카카오톡으로 별도 전달드립니다. 공개 안내서에는 표시하지 않습니다.</p>
+        ${adminPassword ? html`<p id="admin-password" class="credential-value" translate="no">${adminPassword}</p><button type="button" class="copy-button" data-copy-target="admin-password">관리자 비밀번호 복사</button>` : html`<p class="credential-unavailable">비밀번호는 카카오톡으로 별도 전달드립니다.</p>`}
       </section>
       <aside class="warn"><p class="title">관리자 비밀번호는 별도로 보관해 주세요.</p><p><strong>이 주소는 링크를 아는 사람이 열 수 있으므로</strong> 문서·링크를 외부에 공유하지 마세요. 비밀번호 변경이 필요하면 언제든 말씀해 주세요.</p></aside>
       <h3>관리자에서 할 수 있는 것</h3><ul>
