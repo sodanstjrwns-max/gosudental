@@ -268,7 +268,7 @@ const beacon=document.createElement('script');beacon.defer=true;beacon.src='http
 
 <script src="/static/app.js?v=20260913-delivery" defer></script>
 <script src="/static/gallery.js?v=20260913-photos" defer></script>
-<script src="/static/ink.js?v=20260913-delivery" defer></script>
+<script src="/static/ink.js?v=20260916" defer></script>
 </body>
 </html>`
 }

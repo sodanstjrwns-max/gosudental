@@ -244,7 +244,7 @@
     document.addEventListener('DOMContentLoaded', boot);
   } else { boot(); }
   function boot() {
-    initHeroInk();
+    /* initHeroInk(); — 2026-09-16 원장 요청: 마우스 따라다니는 파란 붓선 제거 */
     initInkDrop();
     initBrushDividers();
     initScrollUnroll();
