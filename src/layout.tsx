@@ -149,6 +149,25 @@ const ga=document.createElement('script');ga.async=true;ga.src='https://www.goog
 const beacon=document.createElement('script');beacon.defer=true;beacon.src='https://pf-dashboard-2nt.pages.dev/beacon.js';document.head.append(beacon);
 }
 </script>` : ''}
+${!meta.path.startsWith('/admin') ? html`<!-- Meta Pixel Code (고수치과 마케팅 요청 2026-09-28) -->
+<script>
+if (['gosudc.kr','www.gosudc.kr'].includes(location.hostname)) {
+!function(f,b,e,v,n,t,s)
+{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+n.queue=[];t=b.createElement(e);t.async=!0;
+t.src=v;s=b.getElementsByTagName(e)[0];
+s.parentNode.insertBefore(t,s)}(window, document,'script',
+'https://connect.facebook.net/en_US/fbevents.js');
+fbq('init', '1120020003707931');
+fbq('track', 'PageView');
+}
+</script>
+<noscript><img height="1" width="1" style="display:none"
+src="https://www.facebook.com/tr?id=1120020003707931&ev=PageView&noscript=1"
+/></noscript>
+<!-- End Meta Pixel Code -->` : ''}
 </head>
 <body class="${meta.bodyClass || ''}">
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
