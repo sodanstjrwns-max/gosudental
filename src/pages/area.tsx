@@ -1,26 +1,54 @@
-import { html } from 'hono/html'
+import { html, raw } from 'hono/html'
 import { Layout, breadcrumbSchema, faqSchema } from '../layout'
 import { SITE, AREAS, TREATMENTS, DOCTORS } from '../data/site'
+import { AREA_ENTRIES, AREA_REGION_LOCAL } from '../data/area-local'
+
+// 확장 원고 본문(\n\n 블록, '- ' 목록)을 앞부분만 간단히 렌더 (지역 페이지용 발췌)
+function renderExcerpt(body: string, minChars = 520): string {
+  const blocks = body.replace(/\r/g, '').split(/\n\s*\n/)
+  const out: string[] = []
+  let n = 0
+  for (const blk of blocks) {
+    const lines = blk.split('\n').map((l) => l.trim()).filter(Boolean)
+    if (!lines.length) continue
+    if (lines.every((l) => /^- /.test(l))) out.push(`<ul>${lines.map((l) => `<li>${l.slice(2)}</li>`).join('')}</ul>`)
+    else if (lines.every((l) => /^\d+\. /.test(l))) out.push(`<ol>${lines.map((l) => `<li>${l.replace(/^\d+\. /, '')}</li>`).join('')}</ol>`)
+    else out.push(`<p>${lines.join(' ')}</p>`)
+    n += lines.join(' ').length
+    if (n >= minChars) break
+  }
+  return out.join('')
+}
 
 export function areaPage(slug: string) {
   const area = AREAS.find((a) => a.slug === slug)
   if (!area) return null
   const t = TREATMENTS.find((x) => x.slug === area.treatmentSlug)!
+  const entry = AREA_ENTRIES[area.slug]
+  const regionSlug = area.slug.slice(0, area.slug.length - area.treatmentSlug.length - 1)
+  const local = AREA_REGION_LOCAL[regionSlug]
+  if (!entry || !local) return null
   const docs = DOCTORS.filter((d) => t.doctorSlugs.includes(d.slug))
-  const localFaqs = [
-    {
-      q: `${area.region}에서 ${area.treatment} 잘하는 치과는 어디인가요?`,
-      a: `${area.region}에서 ${area.treatment} 치과를 찾으신다면 의료진의 경력·연수 이력, 진단 장비, 치료 계획 설명의 충실함을 확인해 보세요. 고수치과는 ${t.doctorSlugs.includes('kim-kyunghwan') ? '보건복지부 인증 치과교정과 전문의가 상주하며' : '관련 연수 과정을 다수 이수한 의료진이'} 정밀 진단과 충분한 설명을 원칙으로 진료합니다.`,
-    },
-    {
-      q: `${area.region}에서 고수치과까지 얼마나 걸리나요?`,
-      a: `고수치과는 내포신도시 중심(주키즈소아청소년과 건물 5층, 중흥S클래스더시티 앞)에 위치해 ${area.region} 어디서든 접근이 편리합니다. 건물 내 여유로운 주차공간을 이용하실 수 있습니다.`,
-    },
-    {
-      q: `${area.treatment} 상담만 받아도 되나요?`,
-      a: `물론입니다. 고수치과는 불필요한 치료를 권하지 않는 것을 원칙으로 하며, 정확한 진단과 설명을 들으신 뒤 충분히 비교하고 결정하실 수 있습니다.`,
-    },
-  ]
+  // 지역×진료마다 다른 질문 세트 (src/data/area-local.ts). 화면 FAQ 와 FAQPage 스키마가 같은 배열을 쓴다.
+  const localFaqs = entry.faqs
+  const focus = t.sections.find((s) => s.h === entry.focus)
+
+  const secContext = html`
+    <h2>${entry.h}</h2>
+    <p>${entry.body}</p>`
+  const secAccess = html`
+    <h2>${local.access.h}</h2>
+    <p>${local.access.body}</p>
+    <p><a href="/directions">→ 오시는 길 · 진료시간 안내</a></p>`
+  const secFocus = focus ? html`
+    <h2>${focus.h}</h2>
+    ${raw(renderExcerpt(focus.body))}
+    <p><a href="/treatments/${t.slug}">→ ${t.name} 진료 전체 내용 보기</a></p>` : ''
+  const order = [
+    [secContext, secAccess, secFocus],
+    [secAccess, secContext, secFocus],
+    [secContext, secFocus, secAccess],
+  ][local.variant]
 
   const content = html`
 <section class="page-hero dark" id="area-hero">
@@ -28,18 +56,15 @@ export function areaPage(slug: string) {
     <nav class="breadcrumb" aria-label="현재 위치"><a href="/">홈</a> / <a href="/treatments/${t.slug}">${t.name}</a> / <span>${area.region} ${area.treatment}</span></nav>
     <p class="eyebrow" style="color:var(--brand-accent)">${area.region} · ${area.treatment}</p>
     <h1 class="h-display">${area.region} ${area.treatment}, <br><em style="color:var(--brand-soft)">고수치과</em>가 함께합니다</h1>
-    <p class="lead">${area.region}에서 ${area.treatment}를 고민하고 계신가요? 굳이 멀리 가지 않아도, 내포신도시 안에서 충분히 믿고 치료받을 수 있도록 — 고수치과가 준비했습니다.</p>
+    <p class="lead">${entry.lead}</p>
   </div>
 </section>
 
 <section class="section" id="area-content-section">
   <div class="section-narrow prose">
-    <h2>${area.region}에서 ${area.treatment}를 고민하신다면</h2>
-    <p>${t.heroCopy}</p>
-    <p>고수치과는 ${SITE.addressShort}에 위치해 ${area.region}을 비롯한 내포·예산·홍성 생활권 어디에서든 방문하기 편리합니다. ${area.region}에서 오시는 길은 <a href="/directions">오시는 길 안내</a>에서 확인하실 수 있습니다.</p>
-    <h2>고수치과 ${area.treatment}의 원칙</h2>
-    <p>${t.sections[1]?.body?.split('\n')[0] || t.short}</p>
-    <p><a href="/treatments/${t.slug}">→ ${t.name} 진료 자세히 보기</a></p>
+    <div class="alert info" id="quick-answer"><strong>핵심 답변</strong> — ${entry.answer}</div>
+    ${order}
+    <p style="font-size:14px;color:var(--ink-soft)">치료 방법·기간·결과에는 개인차가 있으며, 정밀 진단 후 개별적으로 안내드립니다.</p>
   </div>
 </section>
 
@@ -67,7 +92,11 @@ export function areaPage(slug: string) {
       </details>`)}
     </div>
     <div id="area-related-links" style="margin-top:48px">
-      <h3 style="font-size:18px;font-weight:800;color:var(--brand-dark);margin-bottom:12px">다른 지역 ${area.treatment} 안내</h3>
+      <h3 style="font-size:18px;font-weight:800;color:var(--brand-dark);margin-bottom:12px">함께 보면 좋은 안내</h3>
+      <div class="pill-row">
+        ${entry.links.map((l) => html`<a class="pill" href="${l.href}">${l.label}</a>`)}
+      </div>
+      <h3 style="font-size:18px;font-weight:800;color:var(--brand-dark);margin:24px 0 12px">다른 지역 ${area.treatment} 안내</h3>
       <div class="pill-row">
         ${AREAS.filter((a) => a.treatmentSlug === area.treatmentSlug && a.slug !== area.slug).map((a) => html`<a class="pill" href="/area/${a.slug}">${a.region} ${a.treatment}</a>`)}
       </div>
