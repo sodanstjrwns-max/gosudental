@@ -66,6 +66,16 @@ export function areaPage(slug: string) {
         <div class="faq-a">${f.a}</div>
       </details>`)}
     </div>
+    <div id="area-related-links" style="margin-top:48px">
+      <h3 style="font-size:18px;font-weight:800;color:var(--brand-dark);margin-bottom:12px">다른 지역 ${area.treatment} 안내</h3>
+      <div class="pill-row">
+        ${AREAS.filter((a) => a.treatmentSlug === area.treatmentSlug && a.slug !== area.slug).map((a) => html`<a class="pill" href="/area/${a.slug}">${a.region} ${a.treatment}</a>`)}
+      </div>
+      <h3 style="font-size:18px;font-weight:800;color:var(--brand-dark);margin:24px 0 12px">${area.region} 다른 진료 안내</h3>
+      <div class="pill-row">
+        ${AREAS.filter((a) => a.region === area.region && a.slug !== area.slug).map((a) => html`<a class="pill" href="/area/${a.slug}">${a.region} ${a.treatment}</a>`)}
+      </div>
+    </div>
     <div class="cta-band" style="margin-top:60px">
       <h2>${area.region}에서 오시는 <br>${area.treatment} 상담</h2>
       <p>정확한 진단과 충분한 설명부터 시작합니다.</p>

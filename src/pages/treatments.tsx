@@ -1,6 +1,6 @@
 import { html, raw } from 'hono/html'
 import { Layout, breadcrumbSchema, faqSchema } from '../layout'
-import { SITE, TREATMENTS, DOCTORS, TERMS } from '../data/site'
+import { SITE, TREATMENTS, DOCTORS, TERMS, AREAS } from '../data/site'
 
 
 // 섹션 본문 마크업: 빈 줄=문단, "- "=불릿, "1. "=번호 목록, "> "=강조 메모. (기존 단일 문단 본문도 그대로 동작)
@@ -60,12 +60,23 @@ export function treatmentsListPage() {
         <p>${t.short}</p>
       </a>`)}
     </div>
+    <p class="eyebrow reveal" style="margin-top:80px">By Area</p>
+    <h2 class="h-display reveal reveal-d1">지역별 진료 안내</h2>
+    <div class="treat-sub-grid" id="treatments-area-links">
+      ${areaRegions().map((r) => html`
+      <div class="treat-sub">
+        <h3>${r}</h3>
+        <div class="pill-row" style="margin-top:12px">
+          ${AREAS.filter((a) => a.region === r).map((a) => html`<a class="pill" href="/area/${a.slug}">${a.region} ${a.treatment}</a>`)}
+        </div>
+      </div>`)}
+    </div>
   </div>
 </section>`
 
   return Layout(
     {
-      title: '진료안내 — 임플란트·치아교정·심미보철 | 고수치과의원',
+      title: '내포신도시 치과 진료안내 — 임플란트·치아교정·심미보철 | 고수치과의원',
       description:
         '고수치과 진료안내. 임플란트, 교정과 전문의 치아교정, 라미네이트 심미보철을 핵심으로 충치·신경치료, 보철, 턱관절, 안티에이징까지 한곳에서 상담할 수 있는 올인원 진료.',
       path: '/treatments',
@@ -74,6 +85,11 @@ export function treatmentsListPage() {
     },
     content
   )
+}
+
+// 지역별 랜딩(/area/*) 링크용: 지역 목록(순서 유지)
+function areaRegions(): string[] {
+  return [...new Set(AREAS.map((a) => a.region))]
 }
 
 // 백과사전 용어 자동 인링크
@@ -222,6 +238,17 @@ ${relTerms.length ? html`
     <h2 class="h-display reveal reveal-d1" style="font-size:clamp(24px,3vw,36px)">관련 <em>치과 용어</em></h2>
     <div class="pill-row reveal reveal-d2">
       ${relTerms.map((term) => html`<a class="pill" href="/encyclopedia/${term.slug}">${term.name}</a>`)}
+    </div>
+  </div>
+</section>` : ''}
+
+${AREAS.some((a) => a.treatmentSlug === t.slug) ? html`
+<section class="section" id="treatment-area-section" style="padding-top:0">
+  <div class="section-narrow">
+    <p class="eyebrow reveal">By Area</p>
+    <h2 class="h-display reveal reveal-d1" style="font-size:clamp(24px,3vw,36px)">지역별 <em>${t.name}</em> 안내</h2>
+    <div class="pill-row reveal reveal-d2">
+      ${AREAS.filter((a) => a.treatmentSlug === t.slug).map((a) => html`<a class="pill" href="/area/${a.slug}">${a.region} ${a.treatment}</a>`)}
     </div>
   </div>
 </section>` : ''}
