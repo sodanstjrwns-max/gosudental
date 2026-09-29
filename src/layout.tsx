@@ -109,6 +109,8 @@ export function Layout(meta: PageMeta, content: any) {
 <meta charset="UTF-8">
 <meta name="naver-site-verification" content="3dced265737138ff84d1265491e0110e1d417508" />
 <meta name="google-site-verification" content="vTQdyiFJBIlYhAgXmWvevyqeQDwJfqbIvK3bHGK5seY" />
+<meta name="facebook-domain-verification" content="d3c8slvr3mjns1uuuh95ayqs2lzceg" />
+<meta name="msvalidate.01" content="F0A41F41597FD23E7834B273E8A179D7" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>${meta.title}</title>
 <meta name="description" content="${meta.description}">
