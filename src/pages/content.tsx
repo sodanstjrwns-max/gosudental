@@ -66,7 +66,7 @@ export function columnDetailPage(post: any) {
     datePublished: schemaDate(post.created_at),
     dateModified: schemaDate(post.updated_at || post.created_at),
     image: new URL(post.thumbnail || '/static/img/og-image.jpg', SITE.domain).href,
-    author: { '@type': 'Person', '@id': `${SITE.domain}/doctors/${author.slug}#person`, name: `${author.name} 원장`, url: `${SITE.domain}/doctors/${author.slug}` },
+    author: { '@type': ['Person', 'Physician'], '@id': `${SITE.domain}/doctors/${author.slug}#person`, name: author.name, jobTitle: author.role, url: `${SITE.domain}/doctors/${author.slug}` },
     publisher: { '@id': `${SITE.domain}/#organization` },
     mainEntityOfPage: { '@id': `${SITE.domain}/column/${post.slug}#webpage` },
   }

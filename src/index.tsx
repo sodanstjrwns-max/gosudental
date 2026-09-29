@@ -641,7 +641,24 @@ app.get('/sitemap.xml', async (c) => {
   )
 })
 
+// AI 답변엔진·검색 크롤러 명시 허용(PFWE-SPEC §10). 전용 그룹은 * 규칙을 상속하지 않으므로 같은 제외 경로를 반복한다.
+const ROBOTS_AI_AGENTS = [
+  'GPTBot', 'OAI-SearchBot', 'ChatGPT-User',
+  'ClaudeBot', 'Claude-SearchBot', 'Claude-User', 'Claude-Web', 'anthropic-ai',
+  'PerplexityBot', 'Perplexity-User',
+  'Google-Extended', 'Googlebot', 'Bingbot', 'Applebot', 'Applebot-Extended',
+  'Yeti', 'Daum', 'Daumoa',
+  'Meta-ExternalAgent', 'Amazonbot', 'DuckAssistBot', 'MistralAI-User', 'cohere-ai', 'CCBot', 'Bytespider',
+]
 app.get('/robots.txt', (c) => c.text(`User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /auth/
+Disallow: /api/
+Allow: /api/uploads/
+
+# AI 답변엔진·검색 크롤러 명시적 허용 (AEO)
+${ROBOTS_AI_AGENTS.map((ua) => `User-agent: ${ua}`).join('\n')}
 Allow: /
 Disallow: /admin
 Disallow: /auth/

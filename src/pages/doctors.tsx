@@ -65,9 +65,9 @@ export function doctorDetailPage(slug: string, cases: any[]) {
 
   const personSchema = {
     '@context': 'https://schema.org',
-    '@type': 'Person',
+    '@type': ['Person', 'Physician'],
     '@id': `${SITE.domain}/doctors/${d.slug}#person`,
-    name: `${d.name} 원장`,
+    name: d.name,
     jobTitle: d.role,
     image: d.photo ? `${SITE.domain}${d.photo}` : undefined,
     worksFor: { '@id': `${SITE.domain}/#organization` },

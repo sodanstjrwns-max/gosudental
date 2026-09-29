@@ -40,7 +40,7 @@ const ORG_SCHEMA = {
   hasMap: 'https://map.naver.com/p/search/충청남도%20예산군%20삽교읍%20예학로%2093',
   areaServed: ['내포신도시', '예산군', '홍성군', '삽교읍', '덕산면', '충청남도'],
   medicalSpecialty: 'Dentistry',
-  founder: { '@type': 'Person', '@id': `${SITE.domain}/doctors/cho-wonik#person`, name: '조원익', jobTitle: '대표원장' },
+  founder: { '@type': ['Person', 'Physician'], '@id': `${SITE.domain}/doctors/cho-wonik#person`, name: '조원익', jobTitle: '대표원장' },
   availableService: TREATMENTS.map((t) => ({
     '@type': 'MedicalProcedure',
     '@id': `${SITE.domain}/treatments/${t.slug}#procedure`,
@@ -85,7 +85,7 @@ export function Layout(meta: PageMeta, content: any) {
   const pageKinds = new Set(['WebPage', 'MedicalWebPage', 'FAQPage', 'CollectionPage', 'ProfilePage', 'AboutPage', 'ContactPage'])
   const pageExtras = supplied.filter(s => pageKinds.has(s['@type']))
   const entities = supplied.filter(s => !pageKinds.has(s['@type'])).map(s => s['@type'] === 'BreadcrumbList' ? { ...s, '@id': `${canonical}#breadcrumb` } : s)
-  const mainEntity = entities.find(s => ['Person', 'MedicalProcedure', 'DefinedTerm', 'BlogPosting'].includes(s['@type']))
+  const mainEntity = entities.find(s => ([] as string[]).concat(s['@type']).some(type => ['Person', 'MedicalProcedure', 'DefinedTerm', 'BlogPosting'].includes(type)))
   const kinds = [...new Set([meta.pageType || 'WebPage', ...pageExtras.map(s => s['@type'])])]
   const pageTypes = kinds.length > 1 ? kinds.filter(type => type !== 'WebPage') : kinds
   const webpage = {

@@ -106,6 +106,21 @@ function autoLink(text: string): string {
   return out
 }
 
+// 진료 안내 감수자(대표원장)와 최종 검토일 — 고정값(오늘 날짜 자동 채움 금지).
+// 날짜는 각 진료 본문(src/data/site.ts TREATMENTS + src/data/treatments-extended/*.ts)을
+// 마지막으로 수정한 커밋 날짜(37a9875, 2026-09-16). 본문을 고치면 함께 갱신합니다.
+const TX_REVIEWER_SLUG = 'cho-wonik'
+const TX_LAST_REVIEWED: Record<string, string> = {
+  implant: '2026-09-16',
+  ortho: '2026-09-16',
+  aesthetic: '2026-09-16',
+  preservation: '2026-09-16',
+  prosthetics: '2026-09-16',
+  tmj: '2026-09-16',
+  antiaging: '2026-09-16',
+}
+const txLastReviewed = (slug: string) => TX_LAST_REVIEWED[slug] || '2026-09-16'
+
 export function treatmentDetailPage(slug: string, relatedCases: any[]) {
   const t = TREATMENTS.find((x) => x.slug === slug)
   if (!t) return null
@@ -121,12 +136,23 @@ export function treatmentDetailPage(slug: string, relatedCases: any[]) {
     url: `${SITE.domain}/treatments/${t.slug}`,
     mainEntityOfPage: { '@id': `${SITE.domain}/treatments/${t.slug}#webpage` },
   }
+  const reviewer = DOCTORS.find((d) => d.slug === TX_REVIEWER_SLUG) || DOCTORS[0]
+  const reviewed = txLastReviewed(t.slug)
   const webPageSchema = {
     '@context': 'https://schema.org',
     '@type': 'MedicalWebPage',
     name: `${t.name} — ${SITE.name}`,
     url: `${SITE.domain}/treatments/${t.slug}`,
     about: { '@id': `${SITE.domain}/treatments/${t.slug}#procedure` },
+    lastReviewed: reviewed,
+    reviewedBy: {
+      '@type': ['Person', 'Physician'],
+      '@id': `${SITE.domain}/doctors/${reviewer.slug}#person`,
+      name: reviewer.name,
+      jobTitle: reviewer.role,
+      url: `${SITE.domain}/doctors/${reviewer.slug}`,
+    },
+    speakable: { '@type': 'SpeakableSpecification', cssSelector: ['h1', '#tx-answer'] },
   }
 
   const heroImgs: Record<string, string> = {
@@ -157,9 +183,10 @@ export function treatmentDetailPage(slug: string, relatedCases: any[]) {
   <div class="section-narrow">
     <aside class="answer-summary" aria-labelledby="treatment-summary-heading">
       <h2 id="treatment-summary-heading">${t.name}, 핵심 안내</h2>
-      <p>${t.short}</p>
+      <p id="tx-answer">${t.short}</p>
       <dl><dt>담당 의료진</dt><dd>${docs.map(d => html`<a href="/doctors/${d.slug}">${d.name} 원장</a> `)}</dd><dt>진료비 확인</dt><dd><a href="/pricing">공개 잠정수가 및 적용 조건 보기</a></dd></dl>
       <p class="answer-caution">일반적인 진료 안내입니다. 치료 방법·기간·비용은 검사와 진단 후 결정되며, 결과와 부작용은 개인에 따라 다릅니다.</p>
+      <p class="answer-reviewed" style="margin-top:10px;font-size:13.5px;color:var(--ink-mute)">감수: <a href="/doctors/${reviewer.slug}">${reviewer.name} ${reviewer.role}</a> · 최종 검토 <time datetime="${reviewed}">${reviewed}</time></p>
     </aside>
     <nav class="article-toc" aria-label="이 진료 안내의 목차">
       <div class="toc-head"><span class="toc-kicker">Contents</span><span class="toc-title">차례</span><span class="toc-count">${t.sections.length + 1}개 항목</span></div>
