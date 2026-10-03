@@ -4,6 +4,7 @@ import type { Bindings } from './auth'
 import { DOCTORS, TREATMENTS } from './data/site'
 import { CASE_CATEGORIES } from './pages/cases'
 import { bad, text, positiveId, jsonObject, consent, sanitizeContent, validateImage } from './security'
+import { pingIndexNow } from './article-seo'
 
 type App = Hono<{ Bindings: Bindings }>
 const fields = ['pano_before', 'pano_after', 'photo_before', 'photo_after'] as const
@@ -121,6 +122,11 @@ export function registerAdminAPI(app: App) {
       } else {
         const result = await c.env.DB.prepare('INSERT INTO posts (slug,title,content,thumbnail,author_slug,meta_description,category,published) VALUES (?,?,?,?,?,?,?,?)').bind(...values).run()
         savedId = Number(result.meta.last_row_id)
+      }
+      // 공개 칼럼은 응답 뒤 IndexNow 통보(Bing·Naver)
+      if (values[7] === 1) {
+        const tslug = TREATMENTS.find(t => t.name === category)?.slug
+        try { c.executionCtx.waitUntil(pingIndexNow([`/column/${slug}`, '/column', tslug ? `/treatments/${tslug}` : '', '/sitemap.xml'])) } catch { /* no ctx */ }
       }
       return c.json(ok({ id: savedId }))
     })

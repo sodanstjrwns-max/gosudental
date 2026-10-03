@@ -21,9 +21,10 @@ import { homePage } from './pages/home'
 import { missionPage } from './pages/mission'
 import { doctorsListPage, doctorDetailPage } from './pages/doctors'
 import { treatmentsListPage, treatmentDetailPage } from './pages/treatments'
-import { casesListPage, caseDetailPage } from './pages/cases'
+import { casesListPage, caseDetailPage, CASE_PER_PAGE, CASE_CATEGORIES } from './pages/cases'
+import { INDEXNOW_KEY } from './article-seo'
 import {
-  columnListPage, columnDetailPage, encyclopediaPage, termDetailPage,
+  columnListPage, columnDetailPage, COLUMN_PER_PAGE, encyclopediaPage, termDetailPage,
   noticeListPage, noticeDetailPage,
 } from './pages/content'
 import { directionsPage, tourPage, pricingPage, faqTotalPage, reservationPage } from './pages/info'
@@ -222,21 +223,32 @@ app.get('/treatments/:slug', async (c) => {
     ).bind(TREAT_CASE_CAT[slug] || t.name).all()
     cases = r.results || []
   } catch { /* noop */ }
-  const page = treatmentDetailPage(slug, cases)
+  // 진료 상세에 해당 진료 최신 칼럼 노출(칼럼 category = 진료명)
+  let columns: any[] = []
+  try {
+    columns = (await c.env.DB.prepare('SELECT slug, title, created_at FROM posts WHERE published = 1 AND category = ? ORDER BY created_at DESC LIMIT 5').bind(t.name).all()).results || []
+  } catch { /* noop */ }
+  const page = treatmentDetailPage(slug, cases, columns)
   return page ? c.html(page) : c.html(notFoundPage(), 404)
 })
 
 // 비포&애프터
 app.get('/cases', async (c) => {
   const user = await getUser(c)
+  const cat = c.req.query('cat') || undefined
+  if (cat && !CASE_CATEGORIES.includes(cat)) return c.html(notFoundPage(), 404)
   let cases: any[] = []
   try {
     const r = await c.env.DB.prepare(
-      'SELECT id, title, description, age_group, gender, category, region, doctor_slug, duration, photo_before, views, created_at FROM cases WHERE published = 1 ORDER BY created_at DESC'
-    ).all()
+      `SELECT id, title, description, age_group, gender, category, region, doctor_slug, duration, photo_before, views, created_at FROM cases WHERE published = 1${cat ? ' AND category = ?' : ''} ORDER BY created_at DESC`
+    ).bind(...(cat ? [cat] : [])).all()
     cases = r.results || []
   } catch { throw new HTTPException(503, { message: '콘텐츠를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.' }) }
-  return c.html(casesListPage(cases, !!user))
+  // 서버 페이지네이션(?page=N, a 링크)
+  const totalPages = Math.max(1, Math.ceil(cases.length / CASE_PER_PAGE))
+  const page = Math.max(1, parseInt(c.req.query('page') || '1', 10) || 1)
+  if (page > totalPages) return c.html(notFoundPage(), 404)
+  return c.html(casesListPage(cases.slice((page - 1) * CASE_PER_PAGE, page * CASE_PER_PAGE), !!user, { cat, page, totalPages }))
 })
 app.get('/cases/:id', async (c) => {
   const id = Number(c.req.param('id'))
@@ -248,7 +260,15 @@ app.get('/cases/:id', async (c) => {
   if (!cs) return c.html(notFoundPage(), 404)
   const user = await getUser(c)
   await bumpViews(c, 'cases', id)
-  return c.html(caseDetailPage(cs, !!user))
+  let relCols: any[] = [], relCases: any[] = []
+  try {
+    const treatment = TREATMENTS.find((t) => TREAT_CASE_CAT[t.slug] === cs.category)
+    ;[relCols, relCases] = await Promise.all([
+      c.env.DB.prepare('SELECT slug, title, created_at FROM posts WHERE published = 1 AND category = ? ORDER BY created_at DESC LIMIT 3').bind(treatment?.name || cs.category).all().then((r: any) => r.results || []),
+      c.env.DB.prepare('SELECT id, title, duration FROM cases WHERE published = 1 AND category = ? AND id != ? ORDER BY created_at DESC LIMIT 3').bind(cs.category, id).all().then((r: any) => r.results || []),
+    ])
+  } catch { /* noop */ }
+  return c.html(caseDetailPage(cs, !!user, relCols, relCases))
 })
 
 // 원장 칼럼
@@ -260,7 +280,11 @@ app.get('/column', async (c) => {
     ).all()
     posts = r.results || []
   } catch { throw new HTTPException(503, { message: '콘텐츠를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.' }) }
-  return c.html(columnListPage(posts))
+  // 서버 페이지네이션(?page=N, a 링크) — 2쪽부터 canonical 에 page 유지
+  const totalPages = Math.max(1, Math.ceil(posts.length / COLUMN_PER_PAGE))
+  const page = Math.max(1, parseInt(c.req.query('page') || '1', 10) || 1)
+  if (page > totalPages) return c.html(notFoundPage(), 404)
+  return c.html(columnListPage(posts.slice((page - 1) * COLUMN_PER_PAGE, page * COLUMN_PER_PAGE), page, totalPages, posts.length))
 })
 app.get('/column/:slug', async (c) => {
   const slug = c.req.param('slug')
@@ -270,7 +294,15 @@ app.get('/column/:slug', async (c) => {
   } catch { throw new HTTPException(503, { message: '콘텐츠를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.' }) }
   if (!post) return c.html(notFoundPage(), 404)
   await bumpViews(c, 'posts', post.id)
-  return c.html(columnDetailPage(post))
+  // 관련 칼럼(같은 진료 최신 3편, 없으면 최신 글) + 같은 진료 비포&애프터
+  let related: any[] = [], relCases: any[] = []
+  try {
+    related = (await c.env.DB.prepare(`SELECT slug, title, created_at FROM posts WHERE published = 1 AND id != ?${post.category ? ' AND category = ?' : ''} ORDER BY created_at DESC LIMIT 3`).bind(...(post.category ? [post.id, post.category] : [post.id])).all()).results || []
+    if (!related.length) related = (await c.env.DB.prepare('SELECT slug, title, created_at FROM posts WHERE published = 1 AND id != ? ORDER BY created_at DESC LIMIT 3').bind(post.id).all()).results || []
+    const tslug = TREATMENTS.find((t) => t.name === post.category)?.slug
+    if (tslug && TREAT_CASE_CAT[tslug]) relCases = (await c.env.DB.prepare('SELECT id, title, duration FROM cases WHERE published = 1 AND category = ? ORDER BY created_at DESC LIMIT 3').bind(TREAT_CASE_CAT[tslug]).all()).results || []
+  } catch { /* noop */ }
+  return c.html(columnDetailPage(post, related, relCases))
 })
 
 // 치과 백과사전
@@ -650,6 +682,9 @@ const ROBOTS_AI_AGENTS = [
   'Yeti', 'Daum', 'Daumoa',
   'Meta-ExternalAgent', 'Amazonbot', 'DuckAssistBot', 'MistralAI-User', 'cohere-ai', 'CCBot', 'Bytespider',
 ]
+// IndexNow 키 검증 파일
+app.get(`/${INDEXNOW_KEY}.txt`, (c) => c.text(INDEXNOW_KEY, 200, { 'Content-Type': 'text/plain; charset=utf-8' }))
+
 app.get('/robots.txt', (c) => c.text(`User-agent: *
 Allow: /
 Disallow: /admin
@@ -668,7 +703,17 @@ Allow: /api/uploads/
 Sitemap: ${SITE.domain}/sitemap.xml
 `))
 
-app.get('/llms.txt', (c) =>
+// llms(-full).txt 끝에 붙이는 공개 칼럼 목록 — DB 실패 시 생략
+async function llmsColumnList(c: any, full: boolean) {
+  try {
+    const rows = ((await c.env.DB.prepare('SELECT slug, title, meta_description FROM posts WHERE published = 1 ORDER BY created_at DESC').all()).results || []) as any[]
+    if (!rows.length) return ''
+    const one = (v: any) => String(v || '').replace(/\s+/g, ' ').trim()
+    return `\n## 원장 칼럼 (${rows.length}편)\n${rows.map((r) => `- [${one(r.title)}](${SITE.domain}/column/${r.slug})${full && one(r.meta_description) ? `: ${one(r.meta_description)}` : ''}`).join('\n')}\n`
+  } catch { return '' }
+}
+
+app.get('/llms.txt', async (c) =>
   c.text(`# ${SITE.name}
 > ${SITE.slogan}
 
@@ -704,7 +749,7 @@ ${SITE.hours.map((h) => `- ${h.day}: ${h.time}`).join('\n')}
 - [전체 FAQ·백과사전·진료 상세](${SITE.domain}/llms-full.txt)
 
 ※ 본 안내는 일반적인 의료 정보이며, 치료 결과는 개인에 따라 다를 수 있습니다.
-`)
+` + await llmsColumnList(c, false))
 )
 
 // AEO 딥 문서 — AI 답변엔진이 인용할 수 있는 전문 (FAQ + 백과사전 + 진료 상세)
@@ -780,7 +825,7 @@ ${termBlocks}
 ※ 모든 시술은 부작용이 발생할 수 있으며 치료 결과는 개인에 따라 다를 수 있습니다. 정확한 진단은 내원 상담을 통해 받으시기 바랍니다.
 출처: ${SITE.domain} · 공개 진료비 최신 정보: ${SITE.domain}/pricing
 본 문서는 공개 안내와 공개 DB 수가를 기반으로 제공합니다. 개별 진단·확정 가격·검색 노출을 보장하지 않습니다.
-`)
+` + await llmsColumnList(c, true))
 })
 
 // 404

@@ -121,7 +121,7 @@ const TX_LAST_REVIEWED: Record<string, string> = {
 }
 const txLastReviewed = (slug: string) => TX_LAST_REVIEWED[slug] || '2026-09-16'
 
-export function treatmentDetailPage(slug: string, relatedCases: any[]) {
+export function treatmentDetailPage(slug: string, relatedCases: any[], relatedColumns: any[] = []) {
   const t = TREATMENTS.find((x) => x.slug === slug)
   if (!t) return null
   const docs = DOCTORS.filter((d) => t.doctorSlugs.includes(d.slug))
@@ -232,7 +232,7 @@ ${relatedCases.length > 0 ? html`
       ${relatedCases.map((cs) => html`
       <a href="/cases/${cs.id}" class="case-card reveal">
         <div class="case-thumb">
-          ${cs.photo_before ? html`<img src="/api/case-image/${cs.id}/photo_before" alt="${cs.title} 치료 전" loading="lazy">` : html`<div style="display:flex;align-items:center;justify-content:center;height:100%"><i class="fas fa-tooth" style="font-size:36px;color:var(--brand-soft)"></i></div>`}
+          ${cs.photo_before ? html`<img src="/api/case-image/${cs.id}/photo_before" alt="${cs.category || t.name} 치료 전" width="480" height="360" loading="lazy" decoding="async">` : html`<div style="display:flex;align-items:center;justify-content:center;height:100%"><i class="fas fa-tooth" style="font-size:36px;color:var(--brand-soft)"></i></div>`}
         </div>
         <div class="case-body">
           <div class="case-meta"><span>${cs.category}</span>${cs.age_group ? html`<span>${cs.age_group}</span>` : ''}</div>
@@ -241,6 +241,18 @@ ${relatedCases.length > 0 ? html`
       </a>`)}
     </div>
     <p style="margin-top:32px" class="reveal"><a href="/cases" class="treat-more">전체 케이스 보기 <i class="fas fa-arrow-right"></i></a></p>
+  </div>
+</section>` : ''}
+
+${relatedColumns.length > 0 ? html`
+<section class="section" id="treatment-columns-section">
+  <div class="section-narrow">
+    <p class="eyebrow reveal">Column</p>
+    <h2 class="h-display reveal reveal-d1">${t.name} <em>원장 칼럼</em></h2>
+    <div class="col-related" style="border-top:0">
+      <ul>${relatedColumns.map((p) => html`<li><a href="/column/${p.slug}">${p.title}</a><time datetime="${String(p.created_at || '').slice(0, 10)}">${String(p.created_at || '').slice(0, 10)}</time></li>`)}</ul>
+    </div>
+    <p style="margin-top:24px"><a href="/column" class="treat-more">칼럼 전체 보기 <i class="fas fa-arrow-right"></i></a></p>
   </div>
 </section>` : ''}
 

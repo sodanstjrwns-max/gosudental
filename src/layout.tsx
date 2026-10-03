@@ -16,6 +16,8 @@ export interface PageMeta {
   modifiedTime?: string
   schema?: object[]
   bodyClass?: string
+  /** 목록 페이지네이션 등 내용이 달라지는 쿼리(예: '?page=2') — canonical 에 유지 */
+  canonicalSearch?: string
 }
 
 const ORG_SCHEMA = {
@@ -77,7 +79,7 @@ export function schemaDate(value?: string): string | undefined {
 }
 
 export function Layout(meta: PageMeta, content: any) {
-  const canonical = canonicalUrl(meta.path)
+  const canonical = canonicalUrl(meta.path) + (meta.canonicalSearch && /^\?[a-z0-9=&%-]+$/i.test(meta.canonicalSearch) ? meta.canonicalSearch : '')
   const og = new URL(meta.ogImage || '/static/img/og-image.jpg', SITE.domain).href
   const imageAlt = meta.ogImageAlt || (meta.ogImage ? meta.title : `${SITE.name} — ${SITE.slogan}`)
   const noindex = meta.noindex || meta.path.startsWith('/auth/') || meta.path.startsWith('/cases/') || meta.path === '/404' || meta.path === '/error'
