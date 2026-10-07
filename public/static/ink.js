@@ -111,7 +111,7 @@
     if (reduced) return;
     document.addEventListener('click', function (e) {
       // skip interactive elements — don't splash over intent
-      if (e.target.closest('a, button, input, select, textarea, label, summary')) return;
+      if (e.target.closest('a, button, input, select, textarea, label, summary, [data-ink-off]')) return;
       var drop = document.createElement('span');
       drop.className = 'ink-drop';
       // irregular blob shape per drop
@@ -300,7 +300,8 @@
         brush.classList.add('on');
       }
       var target = e.target && e.target.closest ? e.target : null;
-      var typing = target && target.closest('input, textarea, select, [contenteditable=""], [contenteditable="true"], iframe');
+      // 입력창·게임 캔버스(data-ink-off) 위에서는 붓을 숨겨 조작을 방해하지 않는다
+      var typing = target && target.closest('input, textarea, select, [contenteditable=""], [contenteditable="true"], iframe, [data-ink-off]');
       hidden = !!typing;
       brush.classList.toggle('off', hidden);
       targetScale = target && target.closest('a, button, summary, label, [role="button"], .treat-card, .case-card, .doctor-card') ? 1.28 : 1;

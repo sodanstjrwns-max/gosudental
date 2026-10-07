@@ -30,6 +30,7 @@ import {
 import { directionsPage, tourPage, pricingPage, faqTotalPage, reservationPage } from './pages/info'
 import { loginPage, registerPage, mypagePage, privacyPage, termsPage, notFoundPage } from './pages/auth'
 import { areaPage } from './pages/area'
+import { gameHubPage, gamePlayPage } from './pages/game'
 import {
   adminLoginPage, adminDashPage, adminUsersPage, adminReservationsPage,
   adminCasesPage, adminPostsPage, adminNoticesPage, adminFeesPage, adminStatsPage,
@@ -346,6 +347,12 @@ app.get('/faq', (c) => c.html(faqTotalPage()))
 app.get('/reservation', (c) => c.html(reservationPage()))
 app.get('/privacy', (c) => c.html(privacyPage()))
 app.get('/terms', (c) => c.html(termsPage()))
+// 고수 농구장 미니게임 (noindex, follow · 사이트맵·llms 제외)
+app.get('/game', (c) => c.html(gameHubPage()))
+app.get('/game/:slug', (c) => {
+  const page = gamePlayPage(c.req.param('slug'))
+  return page ? c.html(page) : c.html(notFoundPage(), 404)
+})
 
 // 지역 SEO 페이지 (지역 × 진료)
 app.get('/area/:slug', (c) => {

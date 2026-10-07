@@ -18,7 +18,14 @@ export interface PageMeta {
   bodyClass?: string
   /** 목록 페이지네이션 등 내용이 달라지는 쿼리(예: '?page=2') — canonical 에 유지 */
   canonicalSearch?: string
+  /** robots 메타 직접 지정(예: 게임 페이지 'noindex, follow') */
+  robots?: string
+  /** noindex 페이지에서도 GA4·Clarity 를 켤 때(게임 페이지) */
+  analytics?: boolean
 }
+
+// 메뉴 '고수 농구장' 아이콘 — 아이콘 폰트 서브셋에 농구공이 없어 인라인 SVG
+const BALL_ICON = '<svg class="nav-ball" viewBox="0 0 16 16" width="15" height="15" aria-hidden="true" focusable="false"><circle cx="8" cy="8" r="6.6" fill="#acd7e5" stroke="currentColor" stroke-width="1.4"/><path d="M1.4 8h13.2M8 1.4v13.2M3.3 3.4c1.9 1.5 1.9 7.7 0 9.2M12.7 3.4c-1.9 1.5-1.9 7.7 0 9.2" fill="none" stroke="currentColor" stroke-width="1.1"/></svg>'
 
 const ORG_SCHEMA = {
   '@context': 'https://schema.org',
@@ -117,7 +124,7 @@ export function Layout(meta: PageMeta, content: any) {
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>${meta.title}</title>
 <meta name="description" content="${meta.description}">
-<meta name="robots" content="${noindex ? 'noindex, nofollow' : 'index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1'}">
+<meta name="robots" content="${meta.robots || (noindex ? 'noindex, nofollow' : 'index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1')}">
 <meta name="author" content="고수치과의원">
 <meta name="geo.region" content="KR-44">
 <meta name="geo.placename" content="충청남도 예산군 삽교읍 (내포신도시)">
@@ -146,7 +153,7 @@ ${schemaDate(meta.modifiedTime) ? html`<meta property="article:modified_time" co
 ${meta.path === '/' ? html`<link rel="preload" as="image" href="/static/img/interior-lobby-mobile.webp" media="(max-width:640px)" fetchpriority="high"><link rel="preload" as="image" href="/static/img/interior-lobby.webp" media="(min-width:641px)" fetchpriority="high">` : ''}
 <noscript><style>.reveal{opacity:1!important;transform:none!important}.mobile-menu{display:block!important;position:static!important}.mobile-toggle{display:none!important}.quote-band{clip-path:none!important}.quote-band blockquote,.quote-band cite{opacity:1!important;transform:none!important}form[data-ajax] button[type=submit]{display:none!important}</style></noscript>
 ${raw(schemas.map((s) => `<script type="application/ld+json">${safeJson(s)}</script>`).join('\n'))}
-${!noindex && meta.path !== '/reservation' && !meta.path.startsWith('/cases') ? html`<script>
+${(!noindex || meta.analytics) && meta.path !== '/reservation' && !meta.path.startsWith('/cases') ? html`<script>
 if (['gosudental.pages.dev','gosudc.kr','www.gosudc.kr'].includes(location.hostname)) {
 window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','G-PEHGCMJSN9',{anonymize_ip:true,page_location:location.origin+location.pathname});
 const ga=document.createElement('script');ga.async=true;ga.src='https://www.googletagmanager.com/gtag/js?id=G-PEHGCMJSN9';document.head.append(ga);
@@ -229,6 +236,7 @@ src="https://www.facebook.com/tr?id=1120020003707931&ev=PageView&noscript=1"
             <a href="/notice">공지사항</a>
           </div></div>
         </li>
+        <li><a href="/game" class="gnb-game">${raw(BALL_ICON)}고수 농구장</a></li>
       </ul>
     </nav>
     <div class="header-cta">
@@ -253,6 +261,7 @@ src="https://www.facebook.com/tr?id=1120020003707931&ev=PageView&noscript=1"
     <a href="/pricing">비용 안내</a>
     <a href="/faq">FAQ</a>
     <a href="/notice">공지사항</a>
+    <a href="/game" class="mm-game">${raw(BALL_ICON)}고수 농구장</a>
     <a href="/auth/login">로그인</a>
     <a href="/reservation" class="mobile-cta">상담 예약</a>
   </div>
@@ -293,7 +302,7 @@ src="https://www.facebook.com/tr?id=1120020003707931&ev=PageView&noscript=1"
 
 <script src="/static/app.js?v=20260913-delivery" defer></script>
 <script src="/static/gallery.js?v=20260913-photos" defer></script>
-<script src="/static/ink.js?v=20261007-brush" defer></script>
+<script src="/static/ink.js?v=20261007-game" defer></script>
 </body>
 </html>`
 }
