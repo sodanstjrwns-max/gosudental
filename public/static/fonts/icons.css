@@ -51,3 +51,4 @@
 .fa-user:before{content:"\f007"}
 @font-face{font-family:'Gosu Icons brands';font-weight:400;font-display:block;src:url('./gosu-icons-brands.woff2') format('woff2')}.fab,.fa-brands{font-family:'Gosu Icons brands';font-weight:400}
 .fa-instagram:before{content:"\f16d"}
+.fa-youtube:before{content:"\f167"}

@@ -108,7 +108,7 @@ export function handoverPage(c: Context<any>) {
       <aside class="callout"><p class="title">치료사례 올리는 법</p><p><a href="/admin/cases">관리자 → 치료사례 → 새 사례 등록</a> → 제목·진료 종류·전후 사진을 넣고 저장합니다. 환자 동의를 받은 사례만 올리시고, 효과를 단정하는 문구는 피해 주세요.</p></aside>
       <aside class="callout"><p class="title">칼럼 쓰는 법</p><p><a href="/admin/posts">관리자 → 원장 칼럼 → 새 칼럼 작성</a> → 제목·본문과 함께 <strong>메타 설명(120~160자)</strong>를 꼭 채워 주세요. 검색 노출의 핵심입니다.</p></aside>
       <aside class="callout"><p class="title">진료비 수정하기</p><p><a href="/admin/fees">관리자 → 진료비(수가)</a>에서 금액을 수정하고 항목별 공개/비공개를 정하면 홈페이지 비용 안내에 바로 반영됩니다.</p></aside>
-      <aside class="warn"><p class="title">개원 전 꼭 알려주실 것</p><p>홈페이지에는 아직 <strong>대표 전화번호가 비어 있고 "2026년 11월 2일 개원 예정"</strong>으로 표시됩니다. 전화번호·진료시간·네이버 예약 주소·카카오톡 채널이 확정되면 알려주세요. 받는 즉시 전 페이지와 예약 버튼에 반영합니다.</p></aside>
+      <aside class="warn"><p class="title">개원 전 꼭 알려주실 것</p><p>대표전화 <strong>041-337-2888</strong>은 전 페이지(푸터·오시는 길·검색엔진 정보)에 반영했습니다. 홈페이지에는 아직 <strong>"2026년 11월 2일 개원 예정"</strong>으로 표시됩니다. 진료시간·네이버 예약 주소·카카오톡 채널이 확정되면 알려주세요. 받는 즉시 전 페이지와 예약 버튼에 반영합니다.</p></aside>
       <aside class="note"><p class="title">예약 신청 확인 방법</p><p>홈페이지 예약 신청은 <a href="/admin/reservations">관리자 → 예약 관리</a>에 쌓입니다. 자동 알림은 아직 연결하지 않았으니 <strong>하루 한 번 목록을 확인</strong>해 주세요. 원하시면 접수 즉시 지메일로 알림이 가도록 연결해 드립니다.</p></aside>
       <p class="note"><b>사진·저장 안내</b><br>JPG·PNG·WebP, 파일당 5MB를 지원합니다. HEIC는 변환해 주세요. 저장 완료 안내를 확인한 뒤 화면을 닫아 주세요.</p>
     </section>

@@ -1,5 +1,6 @@
 import { html } from 'hono/html'
 import { Layout } from '../layout'
+import { SITE } from '../data/site'
 
 export function loginPage(next?: string) {
   const content = html`
@@ -115,7 +116,7 @@ export function privacyPage() {
     <h2>4. 동의 거부 권리</h2>
     <p>이용자는 개인정보 수집·이용 동의를 거부할 수 있으며, 필수 항목 동의 거부 시 회원가입 및 예약 서비스 이용이 제한될 수 있습니다.</p>
     <h2>5. 개인정보 보호책임자</h2>
-    <p>대표원장 조원익 (문의: 대표전화 — 개원 시 안내)</p>
+    <p>대표원장 조원익 (문의: 대표전화 <a href="${SITE.telHref}">${SITE.tel}</a>)</p>
   </div>
 </section>`
   return Layout({ title: '개인정보 처리방침 | 고수치과의원', description: '고수치과 개인정보 처리방침', path: '/privacy' }, content)

@@ -10,11 +10,14 @@ export const SITE = {
   vision: '신뢰로 선택받고, 결과로 기억되는 치과',
   address: '충청남도 예산군 삽교읍 예학로 93, 5층',
   addressShort: '내포신도시 주키즈소아청소년과 건물 5층',
-  tel: '', // 개원 준비 중 — 확정 시 업데이트
+  tel: '041-337-2888',
+  telHref: 'tel:+82-41-337-2888',
+  telIntl: '+82-41-337-2888',
   openDate: '2026년 11월 2일 개원 예정',
   domain: 'https://gosudc.kr',
-  blog: 'https://blog.naver.com/vkdlxld0101',
+  blog: 'https://blog.naver.com/naepo_gosudental', // 병원 공식 블로그(2026-10-07 원장 요청으로 교체)
   instagram: 'https://www.instagram.com/gosudental',
+  youtube: 'https://www.youtube.com/channel/UCll6HJc-MktSNtDArs9_MZg',
   landmark: '주키즈소아청소년과 건물 5층 · 내포신도시중흥S클래스더시티 앞 · 보성초 도보 5분',
   hours: [
     { day: '평일', time: '진료시간 확정 시 안내드립니다' },

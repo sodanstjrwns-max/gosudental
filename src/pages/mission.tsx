@@ -124,9 +124,9 @@ export function missionPage() {
   <div class="section-inner">
     <div class="cta-band reveal">
       <h2>고수치과의 진료 이야기가 <br>더 궁금하시다면</h2>
-      <p>대표원장이 직접 기록하는 성장 로그를 만나보세요.</p>
+      <p>고수치과가 직접 전하는 진료 이야기와 소식을 블로그에서 만나보세요.</p>
       <div style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap;position:relative">
-        <a href="${SITE.blog}" target="_blank" rel="noopener" class="hero-btn primary">원장 블로그 방문하기</a>
+        <a href="${SITE.blog}" target="_blank" rel="noopener" class="hero-btn primary">병원 블로그 방문하기</a>
         <a href="/doctors" class="hero-btn outline">의료진 소개 보기</a>
       </div>
     </div>

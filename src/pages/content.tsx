@@ -27,7 +27,7 @@ export function columnListPage(posts: any[], page = 1, totalPages = 1, total = p
       ? html`<div class="empty-state">
           <i class="fas fa-pen-nib"></i>
           <p style="font-size:17px;font-weight:600;color:var(--ink-soft)">첫 칼럼을 준비하고 있습니다</p>
-          <p style="margin-top:8px">그동안 원장 블로그의 이야기를 만나보세요 — <a href="${SITE.blog}" target="_blank" rel="noopener" style="color:var(--brand);font-weight:700">행복한 치과의사의 성장로그</a></p>
+          <p style="margin-top:8px">그동안 고수치과 병원 블로그의 이야기를 만나보세요 — <a href="${SITE.blog}" target="_blank" rel="noopener" style="color:var(--brand);font-weight:700">고수치과 공식 블로그</a></p>
         </div>`
       : html`<div class="post-grid" style="margin-top:0">
         ${posts.map((p, i) => html`

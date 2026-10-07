@@ -26,6 +26,7 @@ export function directionsPage() {
         <div class="prose">
           <ul>
             <li><strong>내포신도시 주키즈소아청소년과 건물 5층</strong>에 위치하고 있습니다.</li>
+            <li>대표전화 <a href="${SITE.telHref}"><strong>${SITE.tel}</strong></a></li>
             <li>내포신도시중흥S클래스더시티 아파트 바로 앞 건물입니다.</li>
             <li>보성초등학교·덕산중학교·덕산고등학교에서 도보 5분 거리입니다.</li>
             <li>건물 내 여유로운 주차공간을 이용하실 수 있습니다.</li>
@@ -49,7 +50,7 @@ export function directionsPage() {
     {
       title: '오시는 길 · 진료시간 — 내포신도시 주키즈소아과 건물 5층 | 고수치과의원',
       description:
-        '고수치과 오시는 길: 충청남도 예산군 삽교읍 예학로 93, 5층 (내포신도시 주키즈소아청소년과 건물, 중흥S클래스더시티 앞). 주차 가능. 진료시간 안내.',
+        '고수치과 오시는 길: 충청남도 예산군 삽교읍 예학로 93, 5층 (내포신도시 주키즈소아청소년과 건물, 중흥S클래스더시티 앞). 주차 가능. 대표전화 041-337-2888. 진료시간 안내.',
       path: '/directions',
       pageType: 'ContactPage',
       schema: [breadcrumbSchema([{ name: '홈', path: '/' }, { name: '오시는 길', path: '/directions' }])],
@@ -208,7 +209,7 @@ export function reservationPage() {
     <nav class="breadcrumb" aria-label="현재 위치"><a href="/">홈</a> / <span>상담 예약</span></nav>
     <p class="eyebrow">Reservation</p>
     <h1 class="h-display">상담 <em>예약</em></h1>
-    <p class="lead">어려운 예약은 고수치과와 어울리지 않습니다. 아래 양식을 남겨주시면 확인 후 순차적으로 연락드리겠습니다. 신청만으로 예약이 확정되지는 않습니다.</p>
+    <p class="lead">어려운 예약은 고수치과와 어울리지 않습니다. 아래 양식을 남겨주시면 확인 후 순차적으로 연락드리겠습니다. 신청만으로 예약이 확정되지는 않습니다. 전화 문의는 대표전화 <a href="${SITE.telHref}" style="color:var(--brand);font-weight:700">${SITE.tel}</a>로 해 주세요.</p>
   </div>
 </section>
 

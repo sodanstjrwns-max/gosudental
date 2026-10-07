@@ -50,7 +50,8 @@ const ORG_SCHEMA = {
     url: `${SITE.domain}/treatments/${t.slug}`,
   })),
   knowsAbout: ['임플란트', '치아교정', '투명교정', '심미보철', '라미네이트', '충치치료', '신경치료', '턱관절치료', '자연치아 보존'],
-  sameAs: [SITE.blog, SITE.instagram],
+  telephone: SITE.telIntl,
+  sameAs: [SITE.blog, SITE.instagram, SITE.youtube],
 }
 
 const WEBSITE_SCHEMA = {
@@ -262,17 +263,18 @@ src="https://www.facebook.com/tr?id=1120020003707931&ev=PageView&noscript=1"
 <footer class="site-footer">
   <div class="footer-inner">
     <div class="footer-brand">
-      <img src="/static/img/logo-h.png" alt="고수치과 로고" width="180" height="84" loading="lazy">
+      <img src="/static/img/logo-footer-light.webp" alt="고수치과 로고" width="525" height="185" loading="lazy" decoding="async">
       <p class="footer-slogan">${SITE.slogan}</p>
       <div class="footer-sns">
         <a href="${SITE.blog}" target="_blank" rel="noopener" aria-label="네이버 블로그"><i class="fas fa-blog"></i></a>
         <a href="${SITE.instagram}" target="_blank" rel="noopener" aria-label="인스타그램"><i class="fab fa-instagram"></i></a>
+        <a href="${SITE.youtube}" target="_blank" rel="noopener" aria-label="유튜브"><i class="fab fa-youtube"></i></a>
       </div>
     </div>
     <div class="footer-info">
       <p><strong>${SITE.name}</strong> | 대표자: 조원익</p>
       <p>${SITE.address} (${SITE.addressShort})</p>
-      <p>${SITE.openDate} | 대표전화: ${SITE.tel || '개원 시 안내'}</p>
+      <p>${SITE.openDate} | 대표전화: <a href="${SITE.telHref}" class="footer-tel">${SITE.tel}</a></p>
       <p class="footer-links">
         <a href="/privacy">개인정보 처리방침</a> · <a href="/terms">이용약관</a> · <a href="/sitemap.xml">사이트맵</a>
       </p>
@@ -291,7 +293,7 @@ src="https://www.facebook.com/tr?id=1120020003707931&ev=PageView&noscript=1"
 
 <script src="/static/app.js?v=20260913-delivery" defer></script>
 <script src="/static/gallery.js?v=20260913-photos" defer></script>
-<script src="/static/ink.js?v=20260916" defer></script>
+<script src="/static/ink.js?v=20261007-brush" defer></script>
 </body>
 </html>`
 }

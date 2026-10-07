@@ -698,7 +698,11 @@ textarea.form-control { min-height: 110px; resize: vertical; }
   pointer-events: none;
 }
 .footer-inner { max-width: 1320px; margin: 0 auto; display: grid; grid-template-columns: 1.2fr 1.6fr; gap: 44px; position: relative; }
-.footer-brand img { width: 170px; filter: brightness(0) invert(1); opacity: 0.92; }
+/* 2026-10-07: 검정 로고에 brightness(0) invert(1)을 걸어 캐릭터·하늘색 원까지 흰 덩어리로 뭉개지던 문제 →
+   어두운 배경용 로고(logo-h-alt 기반, 여백 잘라낸 logo-footer-light)를 필터 없이 원색 그대로 쓴다. */
+.footer-brand img { width: 210px; height: auto; }
+.footer-info a.footer-tel { color: #fff; font-weight: 600; border-bottom: 1px solid rgba(172,215,229,0.4); }
+.footer-info a.footer-tel:hover { color: var(--sky); border-bottom-color: var(--sky); }
 .footer-slogan { font-family: var(--serif); font-size: 15.5px; color: var(--sky); margin: 18px 0 22px; font-weight: 600; }
 .footer-sns { display: flex; gap: 10px; }
 .footer-sns a {
@@ -866,8 +870,36 @@ textarea.form-control { min-height: 110px; resize: vertical; }
 }
 .philosophy::before, .stats-band::before, .cta-band::before { filter: url(#ink-bleed); }
 
+/* 붓 커서 — 네이티브 커서 옆을 따라오는 붓끝 + 옅은 먹 꼬리 (ink.js 6) */
+.brush-cursor, .brush-trail {
+  position: fixed; top: 0; left: 0; z-index: 9998; pointer-events: none;
+  will-change: transform, opacity; contain: layout style;
+}
+.brush-cursor {
+  width: 20px; height: 46px; opacity: 0;
+  transform-origin: 10px 46px;
+  transition: opacity 0.25s var(--ease);
+  filter: drop-shadow(0 0 1px rgba(252,253,254,0.85));
+}
+.brush-cursor.on { opacity: 0.92; }
+.brush-cursor.on.off { opacity: 0; }
+.brush-cursor svg { display: block; overflow: visible; }
+.brush-cursor .bc-handle { fill: var(--ink-2); }
+.brush-cursor .bc-knot { fill: var(--sky-deep); }
+.brush-cursor .bc-ferrule { fill: var(--sky); }
+.brush-cursor .bc-tuft { fill: var(--ink); }
+.brush-cursor .bc-wet { fill: var(--sky-deep); opacity: 0.55; }
+.brush-trail {
+  width: 18px; height: 18px; margin: -9px 0 0 -9px; opacity: 0;
+  /* 먹 중심 + 물빛(로고 하늘색) 번짐 테두리 — 흰 배경·어두운 히어로 양쪽에서 보이도록 */
+  background: radial-gradient(circle at 45% 40%, rgba(16,20,23,0.85), rgba(51,122,153,0.5) 52%, rgba(172,215,229,0.28) 64%, rgba(172,215,229,0) 76%);
+}
+@media not all and (hover: hover) and (pointer: fine) {
+  .brush-cursor, .brush-trail { display: none; }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .ink-canvas, .ink-drop { display: none; }
+  .ink-canvas, .ink-drop, .brush-cursor, .brush-trail { display: none; }
   .brush-divider .brush-path { stroke-dashoffset: 0 !important; transition: none; }
 }
 @media (max-width: 720px) {

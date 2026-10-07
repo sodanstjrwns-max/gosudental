@@ -720,6 +720,13 @@ app.get('/llms.txt', async (c) =>
 ${SITE.name}은 ${SITE.address}(${SITE.landmark})에 위치한 치과의원입니다. ${SITE.openDate}.
 미션: "${SITE.mission}"
 
+## 연락처·공식 채널
+- 대표전화: ${SITE.tel}
+- 주소: ${SITE.address}
+- 공식 블로그: ${SITE.blog}
+- 인스타그램: ${SITE.instagram}
+- 유튜브: ${SITE.youtube}
+
 ## 의료진
 ${DOCTORS.map((d) => `- ${d.name} ${d.role} (${d.career[0] || ''}) — 주요 분야: ${d.specialties.map((s) => TREATMENTS.find((t) => t.slug === s)?.name || s).join(', ')}`).join('\n')}
 
@@ -741,7 +748,7 @@ ${TREATMENTS.map((t) => `- [${t.name}](${SITE.domain}/treatments/${t.slug}): ${t
 ${SITE.hours.map((h) => `- ${h.day}: ${h.time}`).join('\n')}
 
 ## 정보 이용 시 확인 사항
-- 개원 예정 안내이며 대표전화·확정 진료시간은 오시는 길 페이지에서 확인합니다.
+- 개원 예정 안내이며 대표전화는 ${SITE.tel}입니다. 확정 진료시간은 오시는 길 페이지에서 확인합니다.
 - 진료 이미지는 실제 의료진 사진, 인테리어 설계 이미지, AI 설명 이미지로 구분되어 있습니다.
 - 잠정수가를 확정 가격으로 인용하거나 개인에게 동일한 치료 결과를 보장하지 않습니다.
 
@@ -786,12 +793,15 @@ app.get('/llms-full.txt', async (c) => {
 ## 기본 정보
 - 이름: ${SITE.name} (${SITE.nameEn})
 - 주소: ${SITE.address}
+- 대표전화: ${SITE.tel}
 - 위치 랜드마크: ${SITE.landmark}
 - 개원: ${SITE.openDate}
 - 대표원장: 조원익
 - 미션: ${SITE.mission}
 - 예약: ${SITE.domain}/reservation
-- 블로그: ${SITE.blog}
+- 공식 블로그: ${SITE.blog}
+- 인스타그램: ${SITE.instagram}
+- 유튜브: ${SITE.youtube}
 
 ## 핵심 차별점
 - 치과교정과 전문의(보건복지부 인증)가 교정 진료 담당
