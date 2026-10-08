@@ -4,7 +4,7 @@
 // ═══════════════════════════════════════════════
 import { Hono } from 'hono'
 import { html } from 'hono/html'
-import { Layout } from './layout'
+import { Layout, schemaDate } from './layout'
 import { bodyLimit } from 'hono/body-limit'
 import { HTTPException } from 'hono/http-exception'
 import { registerAdminAPI } from './admin-api'
@@ -30,6 +30,7 @@ import {
 import { directionsPage, tourPage, pricingPage, faqTotalPage, reservationPage } from './pages/info'
 import { loginPage, registerPage, mypagePage, privacyPage, termsPage, notFoundPage } from './pages/auth'
 import { areaPage } from './pages/area'
+import { naepoHubPage, NAEPO_HUB_PATH, NAEPO_HUB_MODIFIED } from './pages/naepo-hub'
 import { gameHubPage, gamePlayPage } from './pages/game'
 import {
   adminLoginPage, adminDashPage, adminUsersPage, adminReservationsPage,
@@ -354,6 +355,9 @@ app.get('/game/:slug', (c) => {
   return page ? c.html(page) : c.html(notFoundPage(), 404)
 })
 
+// '내포 치과' 지역 허브 (정확 일치, 2026-10-08)
+app.get(NAEPO_HUB_PATH, (c) => c.html(naepoHubPage()))
+
 // 지역 SEO 페이지 (지역 × 진료)
 app.get('/area/:slug', (c) => {
   const page = areaPage(c.req.param('slug'))
@@ -648,36 +652,84 @@ app.post('/api/admin/fees', async (c) => {
 // SEO 파일: sitemap.xml / robots.txt / llms.txt
 // ═══════════════════════════════════════════════
 app.get('/sitemap.xml', async (c) => {
-  const staticPaths = [
-    { p: '/', pr: '1.0' }, { p: '/mission', pr: '0.9' },
-    { p: '/doctors', pr: '0.9' }, { p: '/treatments', pr: '0.9' },
-    { p: '/cases', pr: '0.8' }, { p: '/column', pr: '0.8' },
-    { p: '/encyclopedia', pr: '0.7' }, { p: '/faq', pr: '0.8' },
-    { p: '/notice', pr: '0.6' }, { p: '/directions', pr: '0.8' },
-    { p: '/tour', pr: '0.7' }, { p: '/pricing', pr: '0.7' },
-    { p: '/reservation', pr: '0.8' }, { p: '/privacy', pr: '0.3' }, { p: '/terms', pr: '0.3' },
-  ]
+  // lastmod = 해당 페이지 내용(템플릿 함수·데이터 파일)을 실제로 고친 날짜(git 기록 기준 고정값, 2026-10-08 점검).
+  // 내용을 고치면 해당 값을 그날로 바꾼다. 게시판 글·수가는 DB 날짜를 쓴다. new Date()로 오늘을 지어내지 않는다.
+  const LM = {
+    home: '2026-10-08', mission: '2026-10-07', doctors: '2026-09-29', treatments: '2026-10-03',
+    cases: '2026-10-03', column: '2026-10-03', encyclopedia: '2026-09-16', faq: '2026-09-15',
+    notice: '2026-09-15', directions: '2026-10-07', tour: '2026-09-15', pricing: '2026-09-15',
+    reservation: '2026-10-07', privacy: '2026-10-07', terms: '2026-08-31', area: '2026-10-07',
+    naepoHub: NAEPO_HUB_MODIFIED,
+  }
+  const maxDate = (...ds: string[]) => ds.filter((d) => /^\d{4}-\d{2}-\d{2}$/.test(d)).sort().pop() || ''
   const xml = (value: string) => value.replace(/[<>&"']/g, ch => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;', "'": '&apos;' }[ch]!))
-  // Omit lastmod when actual edit time is unavailable (never fabricate today's date).
   const U = (loc: string, pr: string, cf = 'weekly', lm = '') =>
     `<url><loc>${xml(loc)}</loc>${/^\d{4}-\d{2}-\d{2}$/.test(lm) ? `<lastmod>${lm}</lastmod>` : ''}<changefreq>${cf}</changefreq><priority>${pr}</priority></url>`
-  const urls: string[] = staticPaths.map((s) => U(`${SITE.domain}${s.p}`, s.pr, s.p === '/' ? 'daily' : 'weekly'))
-  DOCTORS.forEach((d) => urls.push(U(`${SITE.domain}/doctors/${d.slug}`, '0.8', 'monthly')))
-  TREATMENTS.forEach((t) => urls.push(U(`${SITE.domain}/treatments/${t.slug}`, t.core ? '0.9' : '0.7', 'weekly')))
-  AREAS.forEach((a) => urls.push(U(`${SITE.domain}/area/${a.slug}`, '0.6', 'monthly')))
-  TERMS.forEach((t) => urls.push(U(`${SITE.domain}/encyclopedia/${t.slug}`, '0.4', 'monthly')))
+  let posts: any[] = [], notices: any[] = [], feesLm = ''
   try {
-    const posts = await c.env.DB.prepare('SELECT slug, updated_at FROM posts WHERE published = 1').all()
-    for (const p of (posts.results || []) as any[]) urls.push(U(`${SITE.domain}/column/${p.slug}`, '0.7', 'weekly', (p.updated_at || '').slice(0, 10)))
-    // Member-gated case detail pages are noindex; keep only the public cases listing.
-    const notices = await c.env.DB.prepare('SELECT id FROM notices').all()
-    for (const notice of (notices.results || []) as { id: number }[]) urls.push(U(`${SITE.domain}/notice/${notice.id}`, '0.6', 'weekly'))
+    posts = ((await c.env.DB.prepare('SELECT slug, created_at, updated_at FROM posts WHERE published = 1').all()).results || []) as any[]
+    notices = ((await c.env.DB.prepare('SELECT id, created_at FROM notices').all()).results || []) as any[]
+    const f = await c.env.DB.prepare('SELECT MAX(updated_at) AS m FROM fees').first<{ m: string | null }>()
+    feesLm = (f?.m || '').slice(0, 10)
   } catch { throw new HTTPException(503, { message: '사이트맵을 일시적으로 불러올 수 없습니다.' }) }
+  const postDay = (p: any) => (p.updated_at || p.created_at || '').slice(0, 10)
+  const staticPaths = [
+    { p: '/', pr: '1.0', lm: LM.home }, { p: '/mission', pr: '0.9', lm: LM.mission },
+    { p: NAEPO_HUB_PATH, pr: '0.9', lm: LM.naepoHub },
+    { p: '/doctors', pr: '0.9', lm: LM.doctors }, { p: '/treatments', pr: '0.9', lm: LM.treatments },
+    { p: '/cases', pr: '0.8', lm: LM.cases }, { p: '/column', pr: '0.8', lm: maxDate(LM.column, ...posts.map(postDay)) },
+    { p: '/encyclopedia', pr: '0.7', lm: LM.encyclopedia }, { p: '/faq', pr: '0.8', lm: LM.faq },
+    { p: '/notice', pr: '0.6', lm: maxDate(LM.notice, ...notices.map((n) => (n.created_at || '').slice(0, 10))) },
+    { p: '/directions', pr: '0.8', lm: LM.directions },
+    { p: '/tour', pr: '0.7', lm: LM.tour }, { p: '/pricing', pr: '0.7', lm: maxDate(LM.pricing, feesLm) },
+    { p: '/reservation', pr: '0.8', lm: LM.reservation }, { p: '/privacy', pr: '0.3', lm: LM.privacy }, { p: '/terms', pr: '0.3', lm: LM.terms },
+  ]
+  const urls: string[] = staticPaths.map((s) => U(`${SITE.domain}${s.p}`, s.pr, s.p === '/' ? 'daily' : 'weekly', s.lm))
+  DOCTORS.forEach((d) => urls.push(U(`${SITE.domain}/doctors/${d.slug}`, '0.8', 'monthly', LM.doctors)))
+  TREATMENTS.forEach((t) => urls.push(U(`${SITE.domain}/treatments/${t.slug}`, t.core ? '0.9' : '0.7', 'weekly', LM.treatments)))
+  AREAS.forEach((a) => urls.push(U(`${SITE.domain}/area/${a.slug}`, '0.6', 'monthly', LM.area)))
+  TERMS.forEach((t) => urls.push(U(`${SITE.domain}/encyclopedia/${t.slug}`, '0.4', 'monthly', LM.encyclopedia)))
+  for (const p of posts) urls.push(U(`${SITE.domain}/column/${p.slug}`, '0.7', 'weekly', postDay(p)))
+  // Member-gated case detail pages are noindex; keep only the public cases listing.
+  for (const n of notices) urls.push(U(`${SITE.domain}/notice/${n.id}`, '0.6', 'weekly', (n.created_at || '').slice(0, 10)))
   return c.body(
     `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.join('\n')}\n</urlset>`,
     200,
     { 'Content-Type': 'application/xml; charset=utf-8' }
   )
+})
+
+// 칼럼 RSS 2.0 피드 — 최신 공개 글 30개 (2026-10-08)
+app.get('/rss.xml', async (c) => {
+  const esc = (v: string) => String(v ?? '').replace(/[<>&"']/g, ch => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;', "'": '&apos;' }[ch]!))
+  const rfc822 = (v: string) => {
+    const iso = schemaDate(v)
+    return iso ? new Date(iso).toUTCString() : ''
+  }
+  let posts: any[] = []
+  try {
+    posts = ((await c.env.DB.prepare(
+      'SELECT slug, title, meta_description, category, created_at, updated_at FROM posts WHERE published = 1 ORDER BY created_at DESC LIMIT 30'
+    ).all()).results || []) as any[]
+  } catch { throw new HTTPException(503, { message: '피드를 일시적으로 불러올 수 없습니다.' }) }
+  const items = posts.map((p) => {
+    const link = `${SITE.domain}/column/${p.slug}`
+    const pub = rfc822(p.created_at)
+    return `<item><title>${esc(p.title)}</title><link>${esc(link)}</link><guid isPermaLink="true">${esc(link)}</guid>${pub ? `<pubDate>${pub}</pubDate>` : ''}${p.category ? `<category>${esc(p.category)}</category>` : ''}<description>${esc(p.meta_description || '')}</description></item>`
+  }).join('\n')
+  const last = posts.length ? rfc822(posts[0].updated_at || posts[0].created_at) : ''
+  const body = `<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<channel>
+<title>${esc(SITE.name)} 칼럼</title>
+<link>${SITE.domain}/column</link>
+<atom:link href="${SITE.domain}/rss.xml" rel="self" type="application/rss+xml"/>
+<description>내포신도시 고수치과 의료진이 쓰는 치과 칼럼 — 임플란트·치아교정·심미보철·충치·턱관절</description>
+<language>ko-KR</language>${last ? `\n<lastBuildDate>${last}</lastBuildDate>` : ''}
+${items}
+</channel>
+</rss>`
+  return c.body(body, 200, { 'Content-Type': 'application/rss+xml; charset=utf-8', 'Cache-Control': 'public, max-age=1800' })
 })
 
 // AI 답변엔진·검색 크롤러 명시 허용(PFWE-SPEC §10). 전용 그룹은 * 규칙을 상속하지 않으므로 같은 제외 경로를 반복한다.

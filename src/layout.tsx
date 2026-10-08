@@ -131,6 +131,7 @@ export function Layout(meta: PageMeta, content: any) {
 <meta name="theme-color" content="#101417">
 <meta name="format-detection" content="telephone=no">
 <link rel="canonical" href="${canonical}">
+<link rel="alternate" type="application/rss+xml" title="고수치과 칼럼" href="${SITE.domain}/rss.xml">
 <meta property="og:type" content="${meta.ogType || 'website'}">
 <meta property="og:title" content="${meta.title}">
 <meta property="og:description" content="${meta.description}">

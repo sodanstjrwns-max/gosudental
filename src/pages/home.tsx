@@ -21,7 +21,7 @@ export function homePage() {
   <div class="hero-hanja" aria-hidden="true">固守<b>高手</b></div>
   <span class="hero-seal" aria-hidden="true">高手</span>
   <div class="hero-inner">
-    <p class="hero-eyebrow">GOSU DENTAL · 내포신도시 ${SITE.openDate}</p>
+    <p class="hero-eyebrow">GOSU DENTAL · <a href="/area/naepo" style="color:inherit;text-decoration:underline;text-underline-offset:3px">내포 치과</a> · 내포신도시 ${SITE.openDate}</p>
     <h1 class="hero-title">
       <span class="line"><span>지켜야 할 것을</span></span>
       <span class="line"><span>오래도록 <em>고수</em>하는 치과</span></span>
@@ -229,7 +229,7 @@ export function homePage() {
   <div class="section-inner">
     <div class="cta-band reveal">
       <h2>잘 먹는 것에서 시작해, 편하게 웃을 수 있도록. <br>그리고 조금 더 자신 있게 나이 들어갈 수 있도록.</h2>
-      <p>${SITE.addressShort} · ${SITE.openDate}</p>
+      <p><a href="/area/naepo" style="color:inherit;text-decoration:underline;text-underline-offset:3px">내포 치과</a> 고수치과 · ${SITE.addressShort} · ${SITE.openDate}</p>
       <a href="/reservation" class="hero-btn primary">상담 예약하기</a>
     </div>
   </div>
@@ -237,9 +237,9 @@ export function homePage() {
 
   return Layout(
     {
-      title: '고수치과의원 | 내포신도시 임플란트·치아교정·심미보철 치과',
+      title: '내포 치과 고수치과의원 | 내포신도시 임플란트·교정과 전문의 치아교정·심미보철',
       description:
-        '내포신도시 주키즈소아청소년과 건물 5층, 고수치과의원. 좋은 결과·환자 중심 진료·배움과 성장을 고수하는 치과 — 임플란트·교정과 전문의 치아교정·심미보철 올인원 진료. 2026년 11월 개원 예정.',
+        '내포 치과 고수치과의원 — 내포신도시 주키즈소아청소년과 건물 5층. 좋은 결과·환자 중심 진료·배움과 성장을 고수하는 치과 — 임플란트·교정과 전문의 치아교정·심미보철 올인원 진료. 2026년 11월 개원 예정.',
       path: '/',
     },
     content

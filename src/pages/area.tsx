@@ -94,6 +94,7 @@ export function areaPage(slug: string) {
     <div id="area-related-links" style="margin-top:48px">
       <h3 style="font-size:18px;font-weight:800;color:var(--brand-dark);margin-bottom:12px">함께 보면 좋은 안내</h3>
       <div class="pill-row">
+        ${area.region === '내포' || area.region === '내포신도시' ? html`<a class="pill" href="/area/naepo">내포 치과 안내</a>` : ''}
         ${entry.links.map((l) => html`<a class="pill" href="${l.href}">${l.label}</a>`)}
       </div>
       <h3 style="font-size:18px;font-weight:800;color:var(--brand-dark);margin:24px 0 12px">다른 지역 ${area.treatment} 안내</h3>
