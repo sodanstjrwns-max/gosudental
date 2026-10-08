@@ -4,6 +4,7 @@ import { Layout, breadcrumbSchema, schemaDate, faqSchema } from '../layout'
 import { TERM_ARTICLES, TERM_REFERENCES } from '../data/encyclopedia-content'
 import { SITE, TERMS, TREATMENTS, DOCTORS } from '../data/site'
 import { prepareArticleHtml, answerSummaryFromHtml, faqsFromArticleHtml, htmlText, metaDescription, attestedColumnAuthor, CLINIC_GENERAL_INFO_NOTE } from '../article-seo'
+import { columnHubNote } from '../hub-link'
 
 // ── 원장 칼럼 ──
 export const COLUMN_PER_PAGE = 12
@@ -125,6 +126,7 @@ export function columnDetailPage(post: any, related: any[] = [], relCases: any[]
   <div class="section-narrow">
     ${answer ? html`<aside class="col-answer" id="col-answer" aria-label="핵심 요약"><strong>핵심 요약</strong><p>${answer}</p></aside>` : ''}
     <article class="prose">${raw(body)}</article>
+    ${/href="(?:https:\/\/gosudc\.kr)?\/area\/naepo"/.test(body) ? '' : raw(columnHubNote(String(post.slug || post.id || ''), relTreatment?.name))}
     <p class="col-note">※ 이 글은 일반적인 의료 정보이며, 치료 결과는 개인에 따라 다를 수 있습니다. 정확한 진단은 내원 상담이 필요합니다.</p>
 
     <div style="display:flex;gap:14px;margin-top:52px;flex-wrap:wrap">
@@ -315,6 +317,7 @@ ${article ? html`
     <div class="pill-row">
       ${relTerms.map((t) => html`<a class="pill" href="/encyclopedia/${t.slug}">${t.name}</a>`)}
     </div>` : ''}
+    <p id="term-hub-link" style="margin-top:32px;font-size:15px;color:var(--ink-soft)">진료 상담·위치 안내: <a href="/area/naepo">내포 치과</a> 고수치과</p>
   </div>
 </section>`
 

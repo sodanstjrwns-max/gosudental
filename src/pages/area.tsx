@@ -63,6 +63,7 @@ export function areaPage(slug: string) {
 <section class="section" id="area-content-section">
   <div class="section-narrow prose">
     <div class="alert info" id="quick-answer"><strong>핵심 답변</strong> — ${entry.answer}</div>
+    <p id="area-hub-link" style="font-size:15px;color:var(--ink-soft)">고수치과의 위치·주차·의료진은 <a href="/area/naepo">내포 치과</a> 종합 안내에 한곳에 정리해 두었습니다.</p>
     ${order}
     <p style="font-size:14px;color:var(--ink-soft)">치료 방법·기간·결과에는 개인차가 있으며, 정밀 진단 후 개별적으로 안내드립니다.</p>
   </div>
@@ -94,7 +95,6 @@ export function areaPage(slug: string) {
     <div id="area-related-links" style="margin-top:48px">
       <h3 style="font-size:18px;font-weight:800;color:var(--brand-dark);margin-bottom:12px">함께 보면 좋은 안내</h3>
       <div class="pill-row">
-        ${area.region === '내포' || area.region === '내포신도시' ? html`<a class="pill" href="/area/naepo">내포 치과 안내</a>` : ''}
         ${entry.links.map((l) => html`<a class="pill" href="${l.href}">${l.label}</a>`)}
       </div>
       <h3 style="font-size:18px;font-weight:800;color:var(--brand-dark);margin:24px 0 12px">다른 지역 ${area.treatment} 안내</h3>

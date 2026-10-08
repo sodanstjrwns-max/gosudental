@@ -2,6 +2,7 @@ import { html, raw } from 'hono/html'
 import { safeJson } from './security'
 import { siteStyles } from './styles.generated'
 import { SITE, TREATMENTS, DOCTORS } from './data/site'
+import { footerHubLink } from './hub-link'
 
 export interface PageMeta {
   title: string
@@ -286,7 +287,7 @@ src="https://www.facebook.com/tr?id=1120020003707931&ev=PageView&noscript=1"
       <p>${SITE.address} (${SITE.addressShort})</p>
       <p>${SITE.openDate} | 대표전화: <a href="${SITE.telHref}" class="footer-tel">${SITE.tel}</a></p>
       <p class="footer-links">
-        <a href="/privacy">개인정보 처리방침</a> · <a href="/terms">이용약관</a> · <a href="/sitemap.xml">사이트맵</a>
+        ${footerHubLink(meta.path) ? html`<a href="/area/naepo">내포 치과</a> 위치·진료 안내 · ` : ''}<a href="/privacy">개인정보 처리방침</a> · <a href="/terms">이용약관</a> · <a href="/sitemap.xml">사이트맵</a>
       </p>
     </div>
     <div class="footer-legal">
