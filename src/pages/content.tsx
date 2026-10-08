@@ -3,7 +3,7 @@ import { html, raw } from 'hono/html'
 import { Layout, breadcrumbSchema, schemaDate, faqSchema } from '../layout'
 import { TERM_ARTICLES, TERM_REFERENCES } from '../data/encyclopedia-content'
 import { SITE, TERMS, TREATMENTS, DOCTORS } from '../data/site'
-import { prepareArticleHtml, answerSummaryFromHtml, faqsFromArticleHtml, htmlText, metaDescription } from '../article-seo'
+import { prepareArticleHtml, answerSummaryFromHtml, faqsFromArticleHtml, htmlText, metaDescription, attestedColumnAuthor, CLINIC_GENERAL_INFO_NOTE } from '../article-seo'
 
 // ── 원장 칼럼 ──
 export const COLUMN_PER_PAGE = 12
@@ -16,7 +16,7 @@ export function columnListPage(posts: any[], page = 1, totalPages = 1, total = p
   <div class="section-inner">
     <nav class="breadcrumb" aria-label="현재 위치"><a href="/">홈</a> / <span>원장 칼럼</span></nav>
     <p class="eyebrow">Column</p>
-    <h1 class="h-display">원장이 직접 쓰는 <br><em>치과 이야기</em></h1>
+    <h1 class="h-display">고수치과가 전하는 <br><em>치과 이야기</em></h1>
     <p class="lead">광고가 아닌, 진짜 도움이 되는 치과 이야기를 기록합니다. 배우고 성장하는 과정도 함께 남깁니다.</p>
   </div>
 </section>
@@ -53,7 +53,7 @@ export function columnListPage(posts: any[], page = 1, totalPages = 1, total = p
   return Layout(
     {
       title: `원장 칼럼${page > 1 ? ` (${page}쪽)` : ''} | 고수치과의원`,
-      description: `고수치과 원장이 직접 쓰는 치과 이야기${total ? ` ${total}편` : ''}. 임플란트·교정·심미보철·충치 치료에 대해 치료 전 알아둘 점과 정확하고 솔직한 의료 정보를 전합니다.`,
+      description: `고수치과가 전하는 치과 이야기${total ? ` ${total}편` : ''}. 임플란트·교정·심미보철·충치 치료에 대해 치료 전 알아둘 점과 정확하고 솔직한 의료 정보를 전합니다.`,
       path: '/column',
       canonicalSearch: page > 1 ? `?page=${page}` : undefined,
       pageType: 'CollectionPage',
@@ -69,7 +69,8 @@ export function columnListPage(posts: any[], page = 1, totalPages = 1, total = p
   )
 }
 export function columnDetailPage(post: any, related: any[] = [], relCases: any[] = []) {
-  const author = DOCTORS.find((d) => d.slug === post.author_slug) || DOCTORS[0]
+  // 작성자: 병원이 관리자에서 직접 선택한 의료진만(시드 글·미지정 글은 병원 발행, 대표원장 대체 없음) — article-seo.ts attestedColumnAuthor
+  const author = attestedColumnAuthor(post, DOCTORS)
   const relTreatment = TREATMENTS.find((t) => post.category === t.name)
   const url = `${SITE.domain}/column/${post.slug}`
   const body = prepareArticleHtml(sanitizeContent(post.content), post.title)
@@ -77,8 +78,8 @@ export function columnDetailPage(post: any, related: any[] = [], relCases: any[]
   const faqs = faqsFromArticleHtml(body)
   const description = metaDescription(post.meta_description, answer || htmlText(body).slice(0, 200))
   const reviewed = ymd(post.updated_at || post.created_at)
-  const pastCareer = author.career.find((x) => /^\(前\)/.test(x)) || author.career[0] || ''
-  const personRef = { '@id': `${SITE.domain}/doctors/${author.slug}#person` }
+  const pastCareer = author ? author.career.find((x) => /^\(前\)/.test(x)) || author.career[0] || '' : ''
+  const personRef = author ? { '@id': `${SITE.domain}/doctors/${author.slug}#person` } : null
 
   const articleSchema = {
     '@context': 'https://schema.org',
@@ -91,8 +92,8 @@ export function columnDetailPage(post: any, related: any[] = [], relCases: any[]
     datePublished: schemaDate(post.created_at),
     dateModified: schemaDate(post.updated_at || post.created_at),
     image: { '@type': 'ImageObject', url: new URL(post.thumbnail || '/static/img/og-image.jpg', SITE.domain).href },
-    author: { '@type': ['Person', 'Physician'], '@id': `${SITE.domain}/doctors/${author.slug}#person`, name: author.name, jobTitle: author.role, url: `${SITE.domain}/doctors/${author.slug}` },
-    reviewedBy: personRef,
+    author: author ? { '@type': ['Person', 'Physician'], '@id': `${SITE.domain}/doctors/${author.slug}#person`, name: author.name, jobTitle: author.role, url: `${SITE.domain}/doctors/${author.slug}` } : { '@id': `${SITE.domain}/#organization` },
+    ...(personRef ? { reviewedBy: personRef } : {}),
     publisher: { '@id': `${SITE.domain}/#organization` },
     isPartOf: { '@id': `${SITE.domain}/#website` },
     ...(relTreatment ? { about: { '@id': `${SITE.domain}/treatments/${relTreatment.slug}#procedure` } } : {}),
@@ -103,8 +104,7 @@ export function columnDetailPage(post: any, related: any[] = [], relCases: any[]
     '@context': 'https://schema.org',
     '@type': 'MedicalWebPage',
     ...(relTreatment ? { about: { '@id': `${SITE.domain}/treatments/${relTreatment.slug}#procedure` } } : {}),
-    reviewedBy: personRef,
-    ...(reviewed ? { lastReviewed: reviewed } : {}),
+    ...(personRef ? { reviewedBy: personRef, ...(reviewed ? { lastReviewed: reviewed } : {}) } : {}),
     speakable: { '@type': 'SpeakableSpecification', cssSelector: ['h1', ...(answer ? ['#col-answer'] : [])] },
   }
 
@@ -115,7 +115,7 @@ export function columnDetailPage(post: any, related: any[] = [], relCases: any[]
     ${post.category ? html`<p class="eyebrow">${post.category}</p>` : ''}
     <h1 class="h-display" style="font-size:clamp(26px,3.8vw,44px)">${post.title}</h1>
     <p style="font-size:14.5px;color:var(--ink-mute)">
-      <a href="/doctors/${author.slug}" style="font-weight:700;color:var(--brand)">${author.name} 원장</a> · ${(post.created_at || '').slice(0, 10)}
+      ${author ? html`<a href="/doctors/${author.slug}" style="font-weight:700;color:var(--brand)">${author.name} 원장</a>` : html`<span style="font-weight:700;color:var(--brand)">${SITE.name} 발행</span>`} · ${(post.created_at || '').slice(0, 10)}
       ${post.updated_at && post.updated_at !== post.created_at ? html` (최종 수정 ${(post.updated_at || '').slice(0, 10)})` : ''}
     </p>
   </div>
@@ -128,13 +128,18 @@ export function columnDetailPage(post: any, related: any[] = [], relCases: any[]
     <p class="col-note">※ 이 글은 일반적인 의료 정보이며, 치료 결과는 개인에 따라 다를 수 있습니다. 정확한 진단은 내원 상담이 필요합니다.</p>
 
     <div style="display:flex;gap:14px;margin-top:52px;flex-wrap:wrap">
-      <a href="/doctors/${author.slug}" class="treat-sub col-author" style="flex:1;min-width:240px">
+      ${author ? html`<a href="/doctors/${author.slug}" class="treat-sub col-author" style="flex:1;min-width:240px">
         ${author.photo ? html`<img src="${author.photo}" alt="${author.name} ${author.role}" width="64" height="64" loading="lazy" decoding="async">` : ''}
         <p style="font-size:12px;font-weight:700;color:var(--brand);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px">글쓴이</p>
         <h2>${author.name} 원장 (${author.role})</h2>
         <p>${author.specialties.map((s) => TREATMENTS.find((t) => t.slug === s)?.name || s).join(' · ')}${pastCareer ? html` · ${pastCareer}` : ''}</p>
         ${reviewed ? html`<p style="font-size:13px;color:var(--ink-mute)">최종 검토일 <time datetime="${reviewed}">${reviewed}</time></p>` : ''}
-      </a>
+      </a>` : html`<div class="treat-sub col-author" style="flex:1;min-width:240px">
+        <p style="font-size:12px;font-weight:700;color:var(--brand);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px">작성·발행</p>
+        <h2>${SITE.name}</h2>
+        <p>${CLINIC_GENERAL_INFO_NOTE}</p>
+        ${reviewed ? html`<p style="font-size:13px;color:var(--ink-mute)">최종 업데이트 <time datetime="${reviewed}">${reviewed}</time></p>` : ''}
+      </div>`}
       ${relTreatment ? html`
       <a href="/treatments/${relTreatment.slug}" class="treat-sub" style="flex:1;min-width:240px">
         <p style="font-size:12px;font-weight:700;color:var(--brand);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px">관련 진료</p>

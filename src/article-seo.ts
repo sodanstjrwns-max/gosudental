@@ -166,3 +166,16 @@ export async function pingIndexNow(paths: string[], host = 'gosudc.kr'): Promise
     try { await fetch(ep, { method: 'POST', headers: { 'Content-Type': 'application/json; charset=utf-8' }, body, signal: AbortSignal.timeout(5000) }) } catch { /* 무시 */ }
   }))
 }
+
+// ===== 칼럼 작성 주체 (2026-10-08, 사용자 승인) =====
+// 원장을 저자·감수자로 표시하는 건 원장이 쓰거나 검토했다는 근거가 있을 때만.
+// seed.sql('샘플 원장 칼럼', 커밋 d963032 2026-08-31 대행사 일괄 구현)로 들어간 id 1(greeting-open-2026)·
+// id 2(implant-checklist-before)는 author_slug='cho-wonik' 이지만 원장 작성·검토 근거 없음 → 병원(Organization) 발행.
+// 작성자가 비었거나 등록 의료진이 아닌 글도 대표원장으로 대체(fallback)하지 않고 병원 발행.
+// 관리자에서 병원이 의료진을 작성자로 직접 선택한 글(시드 제외)만 그 원장을 저자로 표시한다.
+export const AGENCY_SEED_POST_IDS = new Set([1, 2])
+export const CLINIC_GENERAL_INFO_NOTE = '일반 건강정보입니다. 진료 판단은 내원 상담에서 원장이 직접 합니다.'
+export function attestedColumnAuthor<D extends { slug: string }>(p: { id?: number | string | null; author_slug?: string | null }, doctors: D[]): D | undefined {
+  if (p.id != null && AGENCY_SEED_POST_IDS.has(Number(p.id))) return undefined
+  return p.author_slug ? doctors.find((d) => d.slug === p.author_slug) : undefined
+}

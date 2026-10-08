@@ -22,7 +22,7 @@ import { missionPage } from './pages/mission'
 import { doctorsListPage, doctorDetailPage } from './pages/doctors'
 import { treatmentsListPage, treatmentDetailPage } from './pages/treatments'
 import { casesListPage, caseDetailPage, CASE_PER_PAGE, CASE_CATEGORIES } from './pages/cases'
-import { INDEXNOW_KEY } from './article-seo'
+import { INDEXNOW_KEY, attestedColumnAuthor } from './article-seo'
 import {
   columnListPage, columnDetailPage, COLUMN_PER_PAGE, encyclopediaPage, termDetailPage,
   noticeListPage, noticeDetailPage,
@@ -709,22 +709,23 @@ app.get('/rss.xml', async (c) => {
   let posts: any[] = []
   try {
     posts = ((await c.env.DB.prepare(
-      'SELECT slug, title, meta_description, category, created_at, updated_at FROM posts WHERE published = 1 ORDER BY created_at DESC LIMIT 30'
+      'SELECT id, slug, title, author_slug, meta_description, category, created_at, updated_at FROM posts WHERE published = 1 ORDER BY created_at DESC LIMIT 30'
     ).all()).results || []) as any[]
   } catch { throw new HTTPException(503, { message: '피드를 일시적으로 불러올 수 없습니다.' }) }
   const items = posts.map((p) => {
     const link = `${SITE.domain}/column/${p.slug}`
     const pub = rfc822(p.created_at)
-    return `<item><title>${esc(p.title)}</title><link>${esc(link)}</link><guid isPermaLink="true">${esc(link)}</guid>${pub ? `<pubDate>${pub}</pubDate>` : ''}${p.category ? `<category>${esc(p.category)}</category>` : ''}<description>${esc(p.meta_description || '')}</description></item>`
+    const doc = attestedColumnAuthor(p, DOCTORS) // 시드·미지정 글 = 병원 발행 (article-seo.ts)
+    return `<item><title>${esc(p.title)}</title><link>${esc(link)}</link><guid isPermaLink="true">${esc(link)}</guid>${pub ? `<pubDate>${pub}</pubDate>` : ''}<dc:creator>${esc(doc ? `${doc.name} ${doc.role}` : SITE.name)}</dc:creator>${p.category ? `<category>${esc(p.category)}</category>` : ''}<description>${esc(p.meta_description || '')}</description></item>`
   }).join('\n')
   const last = posts.length ? rfc822(posts[0].updated_at || posts[0].created_at) : ''
   const body = `<?xml version="1.0" encoding="UTF-8"?>
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:dc="http://purl.org/dc/elements/1.1/">
 <channel>
 <title>${esc(SITE.name)} 칼럼</title>
 <link>${SITE.domain}/column</link>
 <atom:link href="${SITE.domain}/rss.xml" rel="self" type="application/rss+xml"/>
-<description>내포신도시 고수치과 의료진이 쓰는 치과 칼럼 — 임플란트·치아교정·심미보철·충치·턱관절</description>
+<description>내포신도시 고수치과 치과 칼럼 — 임플란트·치아교정·심미보철·충치·턱관절</description>
 <language>ko-KR</language>${last ? `\n<lastBuildDate>${last}</lastBuildDate>` : ''}
 ${items}
 </channel>
@@ -768,7 +769,7 @@ async function llmsColumnList(c: any, full: boolean) {
     const rows = ((await c.env.DB.prepare('SELECT slug, title, meta_description FROM posts WHERE published = 1 ORDER BY created_at DESC').all()).results || []) as any[]
     if (!rows.length) return ''
     const one = (v: any) => String(v || '').replace(/\s+/g, ' ').trim()
-    return `\n## 원장 칼럼 (${rows.length}편)\n${rows.map((r) => `- [${one(r.title)}](${SITE.domain}/column/${r.slug})${full && one(r.meta_description) ? `: ${one(r.meta_description)}` : ''}`).join('\n')}\n`
+    return `\n## 칼럼 (${rows.length}편)\n${rows.map((r) => `- [${one(r.title)}](${SITE.domain}/column/${r.slug})${full && one(r.meta_description) ? `: ${one(r.meta_description)}` : ''}`).join('\n')}\n`
   } catch { return '' }
 }
 
