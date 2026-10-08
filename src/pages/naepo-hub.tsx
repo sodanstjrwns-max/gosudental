@@ -129,7 +129,6 @@ export function naepoHubPage() {
             { '@type': 'AdministrativeArea', name: '충청남도 홍성군 홍북읍' },
           ],
           dateModified: NAEPO_HUB_MODIFIED,
-          lastReviewed: NAEPO_HUB_MODIFIED,
         },
         faqSchema(HUB_FAQS),
         breadcrumbSchema([
