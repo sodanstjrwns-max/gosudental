@@ -3,7 +3,9 @@ import AxeBuilder from '@axe-core/playwright'
 import { SITE, TERMS, AREAS } from '../src/data/site'
 import { readFileSync, writeFileSync } from 'node:fs'
 
-const base = 'http://localhost:3000'
+// 로컬 전용. 3000 이 다른 앱에 점유돼 있으면 BASE_URL=http://localhost:<포트> 로 실행 (운영 도메인 금지)
+const base = process.env.BASE_URL || 'http://localhost:3000'
+if (!/^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(base)) throw new Error('BASE_URL must be local')
 test.setTimeout(180000)
 
 test('SEO: every sitemap document has a coherent heading and connected schema structure', async ({ page, request }) => {
@@ -44,7 +46,29 @@ test('SEO: every sitemap document has a coherent heading and connected schema st
     expect(webpage, path).toHaveLength(1)
     expect(webpage[0].isPartOf['@id']).toBe(SITE.domain + '/#website')
     expect(result.schemas.filter((s: any) => s['@id'] === SITE.domain + '/#organization'), path).toHaveLength(1)
-    expect(JSON.stringify(result.schemas)).not.toMatch(/lastReviewed|reviewedBy|NoninvasiveProcedure|SpeakableSpecification/)
+    const schemaText = JSON.stringify(result.schemas)
+    expect(schemaText, path).not.toMatch(/NoninvasiveProcedure/)
+    // 감수 신호(reviewedBy·lastReviewed·speakable)는 근거 있는 곳에만 허용:
+    // - /treatments/* : 화면 '감수: 조원익 대표원장 · 최종 검토 YYYY-MM-DD' 줄이 있고 스키마 날짜가 그 줄과 같아야 함 (2026-09-29 도입)
+    // - /column/*     : 감수자 = 그 글의 작성 원장 본인(BlogPosting author @id)일 때만
+    // - 그 밖(백과·지역·허브·목록 등): 금지
+    const pageNode = result.schemas.find((s: any) => s['@id'] === canonical + '#webpage') || {}
+    const extraNodes = result.schemas.filter((s: any) => [s['@type']].flat().includes('MedicalWebPage') && !s['@id'])
+    const reviewNodes = [pageNode, ...extraNodes].filter((s: any) => s.reviewedBy || s.lastReviewed)
+    if (path.startsWith('/treatments/') && path !== '/treatments/') {
+      if (reviewNodes.length) {
+        const reviewed = reviewNodes.map((s: any) => s.lastReviewed).find(Boolean)
+        expect(reviewed, path).toMatch(/^\d{4}-\d{2}-\d{2}$/)
+        expect(html, path + ' visible review line').toMatch(new RegExp('감수:[\\s\\S]{0,200}최종 검토 <time datetime="' + reviewed + '"'))
+        for (const s of reviewNodes) expect(s.reviewedBy?.['@id'], path).toMatch(/\/doctors\/[^/#]+#person$/)
+      }
+    } else if (path.startsWith('/column/')) {
+      const article = result.schemas.find((s: any) => [s['@type']].flat().includes('BlogPosting')) || {}
+      const reviewers = [article, ...reviewNodes].map((s: any) => s.reviewedBy?.['@id']).filter(Boolean)
+      for (const r of reviewers) expect(r, path + ' reviewer must be the column author').toBe(article.author?.['@id'])
+    } else {
+      expect(schemaText, path).not.toMatch(/lastReviewed|reviewedBy|SpeakableSpecification/)
+    }
   }
 })
 
