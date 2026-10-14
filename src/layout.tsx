@@ -155,8 +155,11 @@ ${schemaDate(meta.modifiedTime) ? html`<meta property="article:modified_time" co
 <meta name="twitter:description" content="${meta.description}">
 <meta name="twitter:image" content="${og}">
 <meta name="twitter:image:alt" content="${imageAlt}">
-<link rel="icon" type="image/png" sizes="32x32" href="/static/img/favicon-32.png">
-<link rel="apple-touch-icon" href="/static/img/apple-touch-icon.png">
+<link rel="icon" href="/favicon.ico?v=fav20261014" sizes="any">
+<link rel="icon" type="image/png" sizes="48x48" href="/favicon-48.png?v=fav20261014">
+<link rel="icon" type="image/png" sizes="96x96" href="/favicon-96.png?v=fav20261014">
+<link rel="icon" type="image/png" sizes="192x192" href="/favicon-192.png?v=fav20261014">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=fav20261014">
 <style>${raw(siteStyles)}</style>
 ${meta.path === '/' ? html`<link rel="preload" as="image" href="/static/img/interior-lobby-mobile.webp" media="(max-width:640px)" fetchpriority="high"><link rel="preload" as="image" href="/static/img/interior-lobby.webp" media="(min-width:641px)" fetchpriority="high">` : ''}
 <noscript><style>.reveal{opacity:1!important;transform:none!important}.mobile-menu{display:block!important;position:static!important}.mobile-toggle{display:none!important}.quote-band{clip-path:none!important}.quote-band blockquote,.quote-band cite{opacity:1!important;transform:none!important}form[data-ajax] button[type=submit]{display:none!important}</style></noscript>

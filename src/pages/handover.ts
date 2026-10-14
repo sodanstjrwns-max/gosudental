@@ -18,7 +18,7 @@ export function handoverPage(c: Context<any>) {
 <meta name="robots" content="noindex, nofollow, noarchive, nosnippet"><meta name="referrer" content="no-referrer">
 <title>고수치과의원 홈페이지 납품 안내서</title>
 <meta name="description" content="고수치과의원 홈페이지의 가치와 구성, 콘텐츠 운영 방법, 관리자 사용법, 수정 지원과 결제 안내.">
-<link rel="canonical" href="https://gosudc.kr/handover"><link rel="icon" href="/static/img/favicon-32.png">
+<link rel="canonical" href="https://gosudc.kr/handover"><link rel="icon" href="/favicon.ico?v=fav20261014" sizes="any"><link rel="icon" type="image/png" sizes="48x48" href="/favicon-48.png?v=fav20261014">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;700;900&family=Gowun+Batang:wght@400;700&family=Nanum+Brush+Script&display=swap">
 <link rel="stylesheet" href="/static/handover.css?v=2">
