@@ -22,7 +22,7 @@ import { missionPage } from './pages/mission'
 import { doctorsListPage, doctorDetailPage } from './pages/doctors'
 import { treatmentsListPage, treatmentDetailPage } from './pages/treatments'
 import { casesListPage, caseDetailPage, CASE_PER_PAGE, CASE_CATEGORIES } from './pages/cases'
-import { INDEXNOW_KEY, attestedColumnAuthor } from './article-seo'
+import { INDEXNOW_KEY, attestedColumnAuthor, imageSizeFromBytes } from './article-seo'
 import {
   columnListPage, columnDetailPage, COLUMN_PER_PAGE, encyclopediaPage, termDetailPage,
   noticeListPage, noticeDetailPage,
@@ -31,6 +31,7 @@ import { directionsPage, tourPage, pricingPage, faqTotalPage, reservationPage } 
 import { loginPage, registerPage, mypagePage, privacyPage, termsPage, notFoundPage } from './pages/auth'
 import { areaPage } from './pages/area'
 import { naepoHubPage, NAEPO_HUB_PATH, NAEPO_HUB_MODIFIED } from './pages/naepo-hub'
+import { naepoCard } from './naepo-cards'
 import { gameHubPage, gamePlayPage } from './pages/game'
 import {
   adminLoginPage, adminDashPage, adminUsersPage, adminReservationsPage,
@@ -304,6 +305,15 @@ app.get('/column/:slug', async (c) => {
     const tslug = TREATMENTS.find((t) => t.name === post.category)?.slug
     if (tslug && TREAT_CASE_CAT[tslug]) relCases = (await c.env.DB.prepare('SELECT id, title, duration FROM cases WHERE published = 1 AND category = ? ORDER BY created_at DESC LIMIT 3').bind(TREAT_CASE_CAT[tslug]).all()).results || []
   } catch { /* noop */ }
+  // og:image:width/height — R2 업로드 썸네일은 헤더 바이트에서 실제 크기를 읽는다 (2026-10-14)
+  const thumbKey = String(post.thumbnail || '').replace(/^https:\/\/(?:www\.)?gosudc\.kr/, '').match(/^\/api\/uploads\/([\w.-]+)$/)?.[1]
+  if (thumbKey) {
+    try {
+      const obj = await c.env.R2.get('uploads/' + thumbKey, { range: { offset: 0, length: 65536 } })
+      const size = obj ? imageSizeFromBytes(new Uint8Array(await obj.arrayBuffer())) : null
+      if (size) post = { ...post, _ogW: size.width, _ogH: size.height }
+    } catch { /* 크기 생략 */ }
+  }
   return c.html(columnDetailPage(post, related, relCases))
 })
 
@@ -655,16 +665,19 @@ app.get('/sitemap.xml', async (c) => {
   // lastmod = 해당 페이지 내용(템플릿 함수·데이터 파일)을 실제로 고친 날짜(git 기록 기준 고정값, 2026-10-08 점검).
   // 내용을 고치면 해당 값을 그날로 바꾼다. 게시판 글·수가는 DB 날짜를 쓴다. new Date()로 오늘을 지어내지 않는다.
   const LM = {
-    home: '2026-10-08', mission: '2026-10-07', doctors: '2026-09-29', treatments: '2026-10-03',
+    home: '2026-10-14', mission: '2026-10-07', doctors: '2026-09-29', treatments: '2026-10-14',
     cases: '2026-10-03', column: '2026-10-03', encyclopedia: '2026-09-16', faq: '2026-09-15',
     notice: '2026-09-15', directions: '2026-10-07', tour: '2026-09-15', pricing: '2026-09-15',
     reservation: '2026-10-07', privacy: '2026-10-07', terms: '2026-08-31', area: '2026-10-07',
     naepoHub: NAEPO_HUB_MODIFIED,
+    naepoArea: '2026-10-14', // '내포 {진료}' 6개: 대표 이미지·카드·신설 3개 (2026-10-14)
   }
   const maxDate = (...ds: string[]) => ds.filter((d) => /^\d{4}-\d{2}-\d{2}$/.test(d)).sort().pop() || ''
   const xml = (value: string) => value.replace(/[<>&"']/g, ch => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;', "'": '&apos;' }[ch]!))
-  const U = (loc: string, pr: string, cf = 'weekly', lm = '') =>
-    `<url><loc>${xml(loc)}</loc>${/^\d{4}-\d{2}-\d{2}$/.test(lm) ? `<lastmod>${lm}</lastmod>` : ''}<changefreq>${cf}</changefreq><priority>${pr}</priority></url>`
+  // img: 그 페이지 og:image 와 같은 사진(이미지 사이트맵). 2026-10-14
+  const U = (loc: string, pr: string, cf = 'weekly', lm = '', img?: { loc: string; title: string }) =>
+    `<url><loc>${xml(loc)}</loc>${/^\d{4}-\d{2}-\d{2}$/.test(lm) ? `<lastmod>${lm}</lastmod>` : ''}<changefreq>${cf}</changefreq><priority>${pr}</priority>${img ? `<image:image><image:loc>${xml(SITE.domain + img.loc)}</image:loc><image:title>${xml(img.title)}</image:title></image:image>` : ''}</url>`
+  const TX_OG = new Set(['implant', 'ortho', 'aesthetic', 'preservation', 'prosthetics', 'tmj'])
   let posts: any[] = [], notices: any[] = [], feesLm = ''
   try {
     posts = ((await c.env.DB.prepare('SELECT slug, created_at, updated_at FROM posts WHERE published = 1').all()).results || []) as any[]
@@ -686,14 +699,19 @@ app.get('/sitemap.xml', async (c) => {
   ]
   const urls: string[] = staticPaths.map((s) => U(`${SITE.domain}${s.p}`, s.pr, s.p === '/' ? 'daily' : 'weekly', s.lm))
   DOCTORS.forEach((d) => urls.push(U(`${SITE.domain}/doctors/${d.slug}`, '0.8', 'monthly', LM.doctors)))
-  TREATMENTS.forEach((t) => urls.push(U(`${SITE.domain}/treatments/${t.slug}`, t.core ? '0.9' : '0.7', 'weekly', LM.treatments)))
-  AREAS.forEach((a) => urls.push(U(`${SITE.domain}/area/${a.slug}`, '0.6', 'monthly', LM.area)))
+  TREATMENTS.forEach((t) => urls.push(U(`${SITE.domain}/treatments/${t.slug}`, t.core ? '0.9' : '0.7', 'weekly', LM.treatments,
+    TX_OG.has(t.slug) ? { loc: `/static/img/og/treatment-${t.slug}-1200x800.jpg`, title: `${t.name} 진료 안내 이미지` } : undefined)))
+  AREAS.forEach((a) => {
+    const card = naepoCard(a.slug)
+    urls.push(U(`${SITE.domain}/area/${a.slug}`, card ? '0.7' : '0.6', 'monthly', card ? LM.naepoArea : LM.area,
+      card ? { loc: card.og, title: `${card.title} 진료 장면` } : undefined))
+  })
   TERMS.forEach((t) => urls.push(U(`${SITE.domain}/encyclopedia/${t.slug}`, '0.4', 'monthly', LM.encyclopedia)))
   for (const p of posts) urls.push(U(`${SITE.domain}/column/${p.slug}`, '0.7', 'weekly', postDay(p)))
   // Member-gated case detail pages are noindex; keep only the public cases listing.
   for (const n of notices) urls.push(U(`${SITE.domain}/notice/${n.id}`, '0.6', 'weekly', (n.created_at || '').slice(0, 10)))
   return c.body(
-    `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.join('\n')}\n</urlset>`,
+    `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">\n${urls.join('\n')}\n</urlset>`,
     200,
     { 'Content-Type': 'application/xml; charset=utf-8' }
   )

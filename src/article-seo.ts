@@ -179,3 +179,32 @@ export function attestedColumnAuthor<D extends { slug: string }>(p: { id?: numbe
   if (p.id != null && AGENCY_SEED_POST_IDS.has(Number(p.id))) return undefined
   return p.author_slug ? doctors.find((d) => d.slug === p.author_slug) : undefined
 }
+
+// 이미지 헤더 바이트에서 가로·세로 읽기 (PNG · JPEG · WebP). 칼럼 썸네일 og:image:width/height 용 (2026-10-14).
+// 실패하면 null — 크기를 지어내지 않는다.
+export function imageSizeFromBytes(b: Uint8Array): { width: number; height: number } | null {
+  const u16be = (i: number) => (b[i] << 8) | b[i + 1]
+  const u32be = (i: number) => ((b[i] << 24) >>> 0) + (b[i + 1] << 16) + (b[i + 2] << 8) + b[i + 3]
+  const u16le = (i: number) => b[i] | (b[i + 1] << 8)
+  const u24le = (i: number) => b[i] | (b[i + 1] << 8) | (b[i + 2] << 16)
+  const ok = (w: number, h: number) => (w > 0 && h > 0 && w < 20000 && h < 20000 ? { width: w, height: h } : null)
+  if (b.length >= 24 && b[0] === 0x89 && b[1] === 0x50 && b[2] === 0x4e && b[3] === 0x47) return ok(u32be(16), u32be(20))
+  if (b.length >= 30 && b[0] === 0x52 && b[1] === 0x49 && b[2] === 0x46 && b[3] === 0x46 && b[8] === 0x57 && b[9] === 0x45 && b[10] === 0x42 && b[11] === 0x50) {
+    const kind = String.fromCharCode(b[12], b[13], b[14], b[15])
+    if (kind === 'VP8 ') return ok(u16le(26) & 0x3fff, u16le(28) & 0x3fff)
+    if (kind === 'VP8L') { const v = b[21] | (b[22] << 8) | (b[23] << 16) | (b[24] << 24); return ok((v & 0x3fff) + 1, ((v >> 14) & 0x3fff) + 1) }
+    if (kind === 'VP8X') return ok(u24le(24) + 1, u24le(27) + 1)
+    return null
+  }
+  if (b.length >= 4 && b[0] === 0xff && b[1] === 0xd8) {
+    let i = 2
+    while (i + 9 < b.length) {
+      if (b[i] !== 0xff) { i++; continue }
+      const m = b[i + 1]
+      if (m === 0xd8 || m === 0x01 || (m >= 0xd0 && m <= 0xd7)) { i += 2; continue }
+      if (m >= 0xc0 && m <= 0xcf && m !== 0xc4 && m !== 0xc8 && m !== 0xcc) return ok(u16be(i + 7), u16be(i + 5))
+      i += 2 + u16be(i + 2)
+    }
+  }
+  return null
+}

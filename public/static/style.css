@@ -1523,3 +1523,39 @@ body.game-page { overscroll-behavior-y: none; }
   .gnb-list > li > a::after { left: 12px; right: 12px; }
   .header-inner { gap: 20px; }
 }
+
+/* ═══ '내포 {진료}' 사진 카드 (홈·허브·하위 페이지, 2026-10-14) — treat-card 언어(2px 각, 먹선, 하늘 그림자) ═══ */
+.area-card-grid { list-style: none; margin: 48px 0 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 22px; }
+.area-card-grid.compact { margin-top: 16px; gap: 14px; }
+.area-card-grid > li { min-width: 0; }
+.area-card {
+  height: 100%; display: flex; flex-direction: column; background: #fff;
+  border: 1px solid var(--line); border-radius: 2px; overflow: hidden; color: var(--ink);
+  transition: transform 0.5s var(--ease), box-shadow 0.5s var(--ease), border-color 0.5s var(--ease);
+}
+.area-card:hover { transform: translateY(-6px); border-color: var(--ink); box-shadow: 8px 8px 0 var(--sky-mist), 0 22px 50px rgba(16,20,23,0.1); }
+.area-card:focus-visible { outline: 3px solid var(--sky-deep); outline-offset: 4px; border-color: var(--ink); }
+.area-card-img { display: block; aspect-ratio: 1 / 1; overflow: hidden; background: var(--sky-mist); }
+.area-card-img img { display: block; width: 100%; height: 100%; object-fit: cover; transition: transform 0.8s var(--ease); }
+.area-card:hover .area-card-img img { transform: scale(1.05); }
+.area-card-body { display: flex; flex-direction: column; gap: 8px; padding: 20px 22px 24px; border-top: 3px solid var(--sky); }
+.area-card-title { margin: 0; font-family: var(--serif); font-size: 20px; font-weight: 900; line-height: 1.35; letter-spacing: -0.01em; color: var(--ink); word-break: keep-all; }
+.area-card-line { font-size: 14px; line-height: 1.65; color: var(--ink-soft); word-break: keep-all; }
+.area-card-grid.compact .area-card-body { padding: 14px 16px 16px; gap: 4px; }
+.area-card-grid.compact .area-card-title { font-size: 16.5px; }
+.area-card-grid.compact .area-card-line { font-size: 13px; }
+.area-hero-figure { margin: 0 0 32px; }
+.area-hero-figure img { display: block; width: 100%; height: auto; aspect-ratio: 3 / 2; object-fit: cover; border-radius: 2px; border: 1px solid var(--line); background: var(--sky-mist); }
+@media (max-width: 1024px) {
+  .area-card-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+}
+@media (max-width: 640px) {
+  .area-card-grid { gap: 12px; margin-top: 32px; }
+  .area-card-body { padding: 12px 12px 14px; gap: 4px; }
+  .area-card-title { font-size: 15.5px; }
+  .area-card-line { font-size: 12.5px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .area-card, .area-card-img img { transition: none; }
+  .area-card:hover, .area-card:hover .area-card-img img { transform: none; }
+}

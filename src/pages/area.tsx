@@ -2,6 +2,7 @@ import { html, raw } from 'hono/html'
 import { Layout, breadcrumbSchema, faqSchema } from '../layout'
 import { SITE, AREAS, TREATMENTS, DOCTORS } from '../data/site'
 import { AREA_ENTRIES, AREA_REGION_LOCAL } from '../data/area-local'
+import { naepoCard, naepoCardGrid, naepoCardImageObject, NAEPO_CARD_OG } from '../naepo-cards'
 
 // 확장 원고 본문(\n\n 블록, '- ' 목록)을 앞부분만 간단히 렌더 (지역 페이지용 발췌)
 function renderExcerpt(body: string, minChars = 520): string {
@@ -32,6 +33,9 @@ export function areaPage(slug: string) {
   // 지역×진료마다 다른 질문 세트 (src/data/area-local.ts). 화면 FAQ 와 FAQPage 스키마가 같은 배열을 쓴다.
   const localFaqs = entry.faqs
   const focus = t.sections.find((s) => s.h === entry.focus)
+  // '내포 {진료}' 6개: 대표 사진(og·본문 첫 이미지·스키마·사이트맵 동일) + 하단 형제 카드
+  const card = naepoCard(area.slug)
+  const otherRegionSame = AREAS.filter((a) => a.treatmentSlug === area.treatmentSlug && a.slug !== area.slug)
 
   const secContext = html`
     <h2>${entry.h}</h2>
@@ -44,6 +48,9 @@ export function areaPage(slug: string) {
     <h2>${focus.h}</h2>
     ${raw(renderExcerpt(focus.body))}
     <p><a href="/treatments/${t.slug}">→ ${t.name} 진료 전체 내용 보기</a></p>` : ''
+  const secExtra = (entry.extra || []).map((x) => html`
+    <h2>${x.h}</h2>
+    <p>${x.body}</p>`)
   const order = [
     [secContext, secAccess, secFocus],
     [secAccess, secContext, secFocus],
@@ -62,9 +69,11 @@ export function areaPage(slug: string) {
 
 <section class="section" id="area-content-section">
   <div class="section-narrow prose">
+    ${card ? html`<figure class="area-hero-figure" id="area-hero-image"><img src="${card.body}" srcset="${card.body640} 640w, ${card.body} 1200w" sizes="(max-width:760px) 92vw, 720px" width="${card.bodyW}" height="${card.bodyH}" alt="${card.title} 진료 장면" fetchpriority="high" decoding="async"></figure>` : ''}
     <div class="alert info" id="quick-answer"><strong>핵심 답변</strong> — ${entry.answer}</div>
     <p id="area-hub-link" style="font-size:15px;color:var(--ink-soft)">고수치과의 위치·주차·의료진은 <a href="/area/naepo">내포 치과</a> 종합 안내에 한곳에 정리해 두었습니다.</p>
     ${order}
+    ${secExtra}
     <p style="font-size:14px;color:var(--ink-soft)">치료 방법·기간·결과에는 개인차가 있으며, 정밀 진단 후 개별적으로 안내드립니다.</p>
   </div>
 </section>
@@ -97,14 +106,14 @@ export function areaPage(slug: string) {
       <div class="pill-row">
         ${entry.links.map((l) => html`<a class="pill" href="${l.href}">${l.label}</a>`)}
       </div>
-      <h3 style="font-size:18px;font-weight:800;color:var(--brand-dark);margin:24px 0 12px">다른 지역 ${area.treatment} 안내</h3>
+      ${otherRegionSame.length ? html`<h3 style="font-size:18px;font-weight:800;color:var(--brand-dark);margin:24px 0 12px">다른 지역 ${area.treatment} 안내</h3>
       <div class="pill-row">
-        ${AREAS.filter((a) => a.treatmentSlug === area.treatmentSlug && a.slug !== area.slug).map((a) => html`<a class="pill" href="/area/${a.slug}">${a.region} ${a.treatment}</a>`)}
-      </div>
+        ${otherRegionSame.map((a) => html`<a class="pill" href="/area/${a.slug}">${a.region} ${a.treatment}</a>`)}
+      </div>` : ''}
       <h3 style="font-size:18px;font-weight:800;color:var(--brand-dark);margin:24px 0 12px">${area.region} 다른 진료 안내</h3>
-      <div class="pill-row">
+      ${card ? raw(naepoCardGrid({ exclude: area.slug, titleTag: 'p', compact: true })) : html`<div class="pill-row">
         ${AREAS.filter((a) => a.region === area.region && a.slug !== area.slug).map((a) => html`<a class="pill" href="/area/${a.slug}">${a.region} ${a.treatment}</a>`)}
-      </div>
+      </div>`}
     </div>
     <div class="cta-band" style="margin-top:60px">
       <h2>${area.region}에서 오시는 <br>${area.treatment} 상담</h2>
@@ -120,6 +129,7 @@ export function areaPage(slug: string) {
     name: `${area.region} ${area.treatment} — ${SITE.name}`,
     about: { '@type': 'Place', name: area.region },
     url: `${SITE.domain}/area/${area.slug}`,
+    ...(card ? { image: naepoCardImageObject(card) } : {}),
   }
 
   return Layout(
@@ -127,6 +137,7 @@ export function areaPage(slug: string) {
       title: `${area.region} ${area.treatment} 진료·방문 안내 | 고수치과의원`,
       description: `${area.region} ${area.treatment} 치과를 찾으신다면 — 내포신도시 고수치과. ${t.short}. 주키즈소아과 건물 5층, 주차 가능.`,
       path: `/area/${area.slug}`,
+      ...(card ? { ogImage: card.og, ogImageWidth: NAEPO_CARD_OG.width, ogImageHeight: NAEPO_CARD_OG.height, ogImageAlt: `${card.title} 진료 장면` } : {}),
       schema: [
         citySchema,
         faqSchema(localFaqs),

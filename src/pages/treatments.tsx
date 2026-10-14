@@ -155,19 +155,25 @@ export function treatmentDetailPage(slug: string, relatedCases: any[], relatedCo
     speakable: { '@type': 'SpeakableSpecification', cssSelector: ['h1', '#tx-answer'] },
   }
 
-  const heroImgs: Record<string, string> = {
-    implant: '/static/img/treatment-implant-ai-20260915.webp',
-    ortho: '/static/img/treatment-ortho-ai-20260915.webp',
-    aesthetic: '/static/img/treatment-aesthetic-ai-20260915.webp',
-    preservation: '/static/img/interior-02.webp',
-    prosthetics: '/static/img/interior-04.webp',
-    tmj: '/static/img/interior-09.webp',
-    antiaging: '/static/img/interior-17.webp',
+  // 대표 이미지 = og:image (같은 사진). 충치·보철·턱관절은 2026-10-14 진료별 이미지로 교체(기존 인테리어 설계 이미지 대신).
+  const heroImgs: Record<string, { src: string; w: number; h: number; srcset?: boolean }> = {
+    implant: { src: '/static/img/treatment-implant-ai-20260915.webp', w: 1200, h: 800, srcset: true },
+    ortho: { src: '/static/img/treatment-ortho-ai-20260915.webp', w: 1200, h: 800, srcset: true },
+    aesthetic: { src: '/static/img/treatment-aesthetic-ai-20260915.webp', w: 1200, h: 800, srcset: true },
+    preservation: { src: '/static/img/cards/naepo-preservation-1200.webp', w: 1200, h: 797, srcset: true },
+    prosthetics: { src: '/static/img/cards/naepo-prosthetics-1200.webp', w: 1200, h: 797, srcset: true },
+    tmj: { src: '/static/img/cards/naepo-tmj-1200.webp', w: 1200, h: 797, srcset: true },
+    antiaging: { src: '/static/img/interior-17.webp', w: 1600, h: 900 },
   }
+  const hero = heroImgs[t.slug]
+  // og 는 대표 이미지와 같은 사진의 1200×800 JPG (공유 미리보기 호환). 안티에이징은 공통 og 유지.
+  const txOg = hero.srcset ? `/static/img/og/treatment-${t.slug}-1200x800.jpg` : ''
+  const pageSchema = txOg ? { ...webPageSchema, image: { '@type': 'ImageObject', url: `${SITE.domain}${txOg}`, width: 1200, height: 800 } } : webPageSchema
+  const heroSrc640 = hero.src.replace(/(-1200)?\.webp$/, '-640.webp')
 
   const content = html`
 <section class="hero" id="treatment-hero" style="min-height:72svh">
-  <img class="hero-bg treatment-hero-image" src="${heroImgs[t.slug]}" ${t.core ? html`srcset="${heroImgs[t.slug].replace('.webp', '-640.webp')} 640w, ${heroImgs[t.slug]} 1200w" sizes="100vw"` : ''} alt="" width="1200" height="800" fetchpriority="high" decoding="async">
+  <img class="hero-bg treatment-hero-image" src="${hero.src}" ${hero.srcset ? html`srcset="${heroSrc640} 640w, ${hero.src} 1200w" sizes="100vw"` : ''} alt="" width="${hero.w}" height="${hero.h}" fetchpriority="high" decoding="async">
   <div class="hero-veil"></div>
   <div class="hero-inner" style="padding-top:150px;padding-bottom:80px">
     <nav class="breadcrumb" aria-label="현재 위치" style="color:rgba(255,255,255,0.6)"><a href="/">홈</a> / <a href="/treatments">진료안내</a> / <span>${t.name}</span></nav>
@@ -305,12 +311,14 @@ ${AREAS.some((a) => a.treatmentSlug === t.slug) ? html`
 
   return Layout(
     {
-      title: `${t.name} — 내포 ${t.name} | 고수치과의원`,
+      // 2026-10-14: '임플란트 — 내포 임플란트' 중복 제거. /area/naepo-* ('… 진료·방문 안내') 제목과 겹치지 않게 '진료 과정·담당 의료진'.
+      title: `내포 ${t.name} 진료 | 치료 과정·담당 의료진 — 고수치과의원`,
       description: `${t.heroCopy.slice(0, 140)}`,
       path: `/treatments/${t.slug}`,
+      ...(txOg ? { ogImage: txOg, ogImageWidth: 1200, ogImageHeight: 800, ogImageAlt: `${t.name} 진료 안내 이미지` } : {}),
       schema: [
         procSchema,
-        webPageSchema,
+        pageSchema,
         faqSchema(t.faqs),
         breadcrumbSchema([
           { name: '홈', path: '/' },

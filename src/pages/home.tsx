@@ -1,8 +1,9 @@
-import { html } from 'hono/html'
+import { html, raw } from 'hono/html'
 import { Layout } from '../layout'
 import { PHOTOS } from '../data/photos'
 import { photoFigure } from '../photo-gallery'
 import { SITE, TREATMENTS, DOCTORS, EQUIPMENT } from '../data/site'
+import { naepoCardGrid, naepoItemListSchema } from '../naepo-cards'
 
 export function homePage() {
   const core = TREATMENTS.filter((t) => t.core)
@@ -105,6 +106,16 @@ export function homePage() {
         <p>${t.short}</p>
       </a>`)}
     </div>
+  </div>
+</section>
+
+<!-- 내포 진료 안내 — '내포 {진료}' 하위 페이지 사진 카드 6개 (2026-10-14) -->
+<section class="section" id="naepo-area-cards" style="background:var(--sky-mist)">
+  <div class="section-inner">
+    <p class="eyebrow">Naepo Guide</p>
+    <h2 class="h-display">내포 치과 <em>진료 안내</em></h2>
+    <p class="lead">내포신도시에서 많이 찾으시는 진료 여섯 가지를, 검사·치료 순서와 자주 묻는 질문까지 진료별로 따로 정리했습니다. 위치·주차·의료진은 <a href="/area/naepo" style="color:inherit;text-decoration:underline;text-underline-offset:3px">내포 치과 종합 안내</a>에서 보실 수 있습니다.</p>
+    ${raw(naepoCardGrid({ titleTag: 'h3' }))}
   </div>
 </section>
 
@@ -241,6 +252,7 @@ export function homePage() {
       description:
         '내포 치과 고수치과의원 — 내포신도시 주키즈소아청소년과 건물 5층. 좋은 결과·환자 중심 진료·배움과 성장을 고수하는 치과 — 임플란트·교정과 전문의 치아교정·심미보철 올인원 진료. 2026년 11월 개원 예정.',
       path: '/',
+      schema: [naepoItemListSchema('내포 치과 진료 안내')],
     },
     content
   )

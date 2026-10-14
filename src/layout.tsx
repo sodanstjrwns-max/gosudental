@@ -13,6 +13,9 @@ export interface PageMeta {
   noindex?: boolean
   pageType?: 'WebPage' | 'MedicalWebPage' | 'CollectionPage' | 'ProfilePage' | 'AboutPage' | 'ContactPage'
   ogImageAlt?: string
+  /** og:image 실제 픽셀 크기(알 때만). 기본 og-image.jpg 는 1200×630 으로 자동 표기 */
+  ogImageWidth?: number
+  ogImageHeight?: number
   publishedTime?: string
   modifiedTime?: string
   schema?: object[]
@@ -91,6 +94,9 @@ export function Layout(meta: PageMeta, content: any) {
   const canonical = canonicalUrl(meta.path) + (meta.canonicalSearch && /^\?[a-z0-9=&%-]+$/i.test(meta.canonicalSearch) ? meta.canonicalSearch : '')
   const og = new URL(meta.ogImage || '/static/img/og-image.jpg', SITE.domain).href
   const imageAlt = meta.ogImageAlt || (meta.ogImage ? meta.title : `${SITE.name} — ${SITE.slogan}`)
+  const ogW = meta.ogImage ? meta.ogImageWidth : 1200
+  const ogH = meta.ogImage ? meta.ogImageHeight : 630
+  const ogSized = !!(ogW && ogH && ogW > 0 && ogH > 0)
   const noindex = meta.noindex || meta.path.startsWith('/auth/') || meta.path.startsWith('/cases/') || meta.path === '/404' || meta.path === '/error'
   const supplied = (meta.schema || []) as Record<string, any>[]
   const pageKinds = new Set(['WebPage', 'MedicalWebPage', 'FAQPage', 'CollectionPage', 'ProfilePage', 'AboutPage', 'ContactPage'])
@@ -106,7 +112,7 @@ export function Layout(meta: PageMeta, content: any) {
     '@id': `${canonical}#webpage`, url: canonical, name: meta.title, description: meta.description,
     inLanguage: 'ko-KR', isPartOf: { '@id': `${SITE.domain}/#website` },
     publisher: { '@id': `${SITE.domain}/#organization` },
-    primaryImageOfPage: { '@type': 'ImageObject', url: og, caption: imageAlt },
+    primaryImageOfPage: { '@type': 'ImageObject', url: og, ...(ogSized ? { width: ogW, height: ogH } : {}), caption: imageAlt },
     ...(entities.some(s => s['@type'] === 'BreadcrumbList') ? { breadcrumb: { '@id': `${canonical}#breadcrumb` } } : {}),
     ...(mainEntity?.['@id'] && !pageExtras.some(s => s.mainEntity) ? { mainEntity: { '@id': mainEntity['@id'] } } : {}),
   }
@@ -138,7 +144,7 @@ export function Layout(meta: PageMeta, content: any) {
 <meta property="og:description" content="${meta.description}">
 <meta property="og:url" content="${canonical}">
 <meta property="og:image" content="${og}">
-${!meta.ogImage ? html`<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">` : ''}
+${ogSized ? html`<meta property="og:image:width" content="${ogW}"><meta property="og:image:height" content="${ogH}">` : ''}
 <meta property="og:image:alt" content="${imageAlt}">
 ${schemaDate(meta.publishedTime) ? html`<meta property="article:published_time" content="${schemaDate(meta.publishedTime)}">` : ''}
 ${schemaDate(meta.modifiedTime) ? html`<meta property="article:modified_time" content="${schemaDate(meta.modifiedTime)}">` : ''}

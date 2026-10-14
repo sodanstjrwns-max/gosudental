@@ -470,14 +470,23 @@ const AREA_TREATMENTS = [
   { name: '치아교정', slug: 'ortho' },
   { name: '라미네이트', slug: 'aesthetic' },
 ]
-export const AREAS: Area[] = REGIONS.flatMap((r) =>
-  AREA_TREATMENTS.map((t) => ({
-    slug: `${slugRegion(r)}-${t.slug}`,
-    region: r,
-    treatment: t.name,
-    treatmentSlug: t.slug,
-  }))
-)
+// '내포' 전용 추가 진료 페이지 (2026-10-14 하위 페이지 카드 1차). 다른 지역에는 만들지 않는다(얇은 중복 페이지 방지).
+const NAEPO_EXTRA_AREAS: Area[] = [
+  { slug: 'naepo-preservation', region: '내포', treatment: '충치·신경치료', treatmentSlug: 'preservation' },
+  { slug: 'naepo-prosthetics', region: '내포', treatment: '보철(크라운·브릿지)', treatmentSlug: 'prosthetics' },
+  { slug: 'naepo-tmj', region: '내포', treatment: '턱관절', treatmentSlug: 'tmj' },
+]
+export const AREAS: Area[] = [
+  ...REGIONS.flatMap((r) =>
+    AREA_TREATMENTS.map((t) => ({
+      slug: `${slugRegion(r)}-${t.slug}`,
+      region: r,
+      treatment: t.name,
+      treatmentSlug: t.slug,
+    }))
+  ),
+  ...NAEPO_EXTRA_AREAS,
+]
 function slugRegion(r: string) {
   const map: Record<string, string> = {
     내포: 'naepo', 내포신도시: 'naepo-newtown', 예산: 'yesan', 홍성: 'hongseong', 삽교: 'sapgyo', 덕산: 'deoksan',

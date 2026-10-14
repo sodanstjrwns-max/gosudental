@@ -1,6 +1,7 @@
-import { html } from 'hono/html'
+import { html, raw } from 'hono/html'
 import { Layout, breadcrumbSchema, faqSchema } from '../layout'
 import { SITE, AREAS, DOCTORS } from '../data/site'
+import { naepoCardGrid } from '../naepo-cards'
 
 // ─────────────────────────────────────────────
 // '내포 치과' 지역 허브 (2026-10-08)
@@ -9,7 +10,7 @@ import { SITE, AREAS, DOCTORS } from '../data/site'
 // - 다른 지역 페이지(area-local.ts) 문장은 재사용하지 않는다. 가격·후기·평점·최상급 표현 금지.
 // ─────────────────────────────────────────────
 export const NAEPO_HUB_PATH = '/area/naepo'
-export const NAEPO_HUB_MODIFIED = '2026-10-08'
+export const NAEPO_HUB_MODIFIED = '2026-10-14' // 10/14 '내포 {진료}' 사진 카드 6개 추가
 
 const HUB_FAQS = [
   {
@@ -40,7 +41,7 @@ const HUB_FAQS = [
 
 export function naepoHubPage() {
   const ortho = DOCTORS.find((d) => d.slug === 'kim-kyunghwan')
-  const areaLinks = AREAS.filter((a) => a.region === '내포' || a.region === '내포신도시')
+  const areaLinks = AREAS.filter((a) => a.region === '내포신도시') // '내포 {진료}' 6개는 위 사진 카드로 연결
 
   const content = html`
 <section class="page-hero dark" id="naepo-hub-hero">
@@ -85,8 +86,14 @@ export function naepoHubPage() {
     </ul>
     <p>비용이 궁금하시면 <a href="/pricing">비급여 수가 안내</a>를, 처음 듣는 치과 용어는 <a href="/encyclopedia">치과 백과사전</a>을 참고해 주세요.</p>
 
-    <h2>지역별 진료 안내</h2>
-    <p>내포·내포신도시에서 많이 묻는 진료를 따로 정리한 페이지입니다.</p>
+    <h2>내포 진료별 안내</h2>
+    <p>내포에서 많이 찾으시는 진료 여섯 가지를 진료별로 따로 정리했습니다. 검사 순서, 치료 방법을 고르는 기준, 자주 묻는 질문을 각 페이지에서 보실 수 있습니다.</p>
+  </div>
+  <div class="section-inner" id="naepo-hub-cards" style="margin-top:8px;margin-bottom:40px">
+    ${raw(naepoCardGrid({ titleTag: 'h3' }))}
+  </div>
+  <div class="section-narrow prose">
+    <p>내포신도시 기준으로 정리한 진료 안내도 함께 참고하세요.</p>
     <div class="pill-row">
       ${areaLinks.map((a) => html`<a class="pill" href="/area/${a.slug}">${a.region} ${a.treatment}</a>`)}
     </div>
