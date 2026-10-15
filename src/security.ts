@@ -50,7 +50,9 @@ const htmlFilter = new FilterXSS({
     p: [], br: [], h2: [], h3: [], h4: [], strong: [], b: [], em: [], i: [], u: [], s: [],
     ul: [], ol: [], li: [], blockquote: [], a: ['href', 'title'],
     img: ['src', 'alt', 'width', 'height'], figure: [], figcaption: [], hr: [],
-    table: [], thead: [], tbody: [], tr: [], th: ['colspan', 'rowspan'], td: ['colspan', 'rowspan'], div: [], span: [],
+    table: [], caption: [], thead: [], tbody: [], tfoot: [], tr: [], th: ['colspan', 'rowspan'], td: ['colspan', 'rowspan'], span: [],
+    // data-col-meta: 칼럼 부가 설정(핵심 요약·목차 끄기) 표시 요소 — 값은 summary|no-toc 만 (article-seo.ts splitColumnMeta)
+    div: ['data-col-meta'],
   },
   stripIgnoreTag: true,
   stripIgnoreTagBody: ['script', 'style', 'iframe', 'object', 'embed', 'svg', 'math', 'textarea', 'title', 'noscript', 'template'],
@@ -63,6 +65,7 @@ const htmlFilter = new FilterXSS({
       if (!/^(?:https?:\/\/|mailto:|tel:|\/(?!\/)|#)/i.test(value) || /[\\\x00-\x20]/.test(value)) return ''
     }
     if (['width', 'height', 'colspan', 'rowspan'].includes(name) && !/^\d{1,4}$/.test(value)) return ''
+    if (name === 'data-col-meta') return value === 'summary' || value === 'no-toc' ? value : ''
     return safeAttrValue(tag, name, value, cssFilter)
   },
 })

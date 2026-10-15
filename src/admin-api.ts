@@ -4,7 +4,7 @@ import type { Bindings } from './auth'
 import { DOCTORS, TREATMENTS } from './data/site'
 import { CASE_CATEGORIES } from './pages/cases'
 import { bad, text, positiveId, jsonObject, consent, sanitizeContent, validateImage } from './security'
-import { pingIndexNow } from './article-seo'
+import { pingIndexNow, splitColumnMeta, joinColumnMeta } from './article-seo'
 
 type App = Hono<{ Bindings: Bindings }>
 const fields = ['pano_before', 'pano_after', 'photo_before', 'photo_after'] as const
@@ -39,7 +39,13 @@ export function registerAdminAPI(app: App) {
       const id = positiveId(c.req.param('id'))
       const item: any = await c.env.DB.prepare(`SELECT * FROM ${table} WHERE id = ?`).bind(id).first()
       if (!item) throw missing()
-      if (table === 'posts') item.content = sanitizeContent(item.content)
+      if (table === 'posts') {
+        // 본문 맨 앞 부가 설정(핵심 요약·목차 끄기)은 에디터 밖 입력칸으로 돌려준다
+        const { html, meta } = splitColumnMeta(sanitizeContent(item.content))
+        item.content = html
+        item.summary = meta.summary
+        item.show_toc = meta.showToc ? 1 : 0
+      }
       return c.json(ok({ item }))
     })
   }
@@ -110,8 +116,12 @@ export function registerAdminAPI(app: App) {
       if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) bad('슬러그는 영문 소문자·숫자·하이픈으로 입력해주세요.')
       if (await c.env.DB.prepare('SELECT id FROM posts WHERE slug=? AND id != ?').bind(slug, id || 0).first())
         throw new HTTPException(409, { message: '이미 사용 중인 슬러그입니다.' })
-      const content = sanitizeContent(text(body.content, '본문', 200000, true))
-      if (!content.replace(/<[^>]*>/g, '').trim() && !content.includes('<img ')) bad('유효한 본문을 입력해주세요.')
+      const bodyHtml = splitColumnMeta(sanitizeContent(text(body.content, '본문', 200000, true))).html
+      if (!bodyHtml.replace(/<[^>]*>/g, '').trim() && !bodyHtml.includes('<img ')) bad('유효한 본문을 입력해주세요.')
+      // 핵심 요약(선택, 직접 입력 시 자동 발췌보다 우선) · 목차 표시(기본 켬) — 본문 앞 표시 요소로 저장(article-seo.ts)
+      const summary = text(body.summary, '핵심 요약', 300)
+      const showToc = body.show_toc === undefined ? true : consent(body.show_toc) || body.show_toc === 1 || body.show_toc === '1'
+      const content = joinColumnMeta(bodyHtml, { summary, showToc })
       const category = text(body.category, '카테고리', 60)
       if (category && !TREATMENTS.some(t => t.name === category)) bad('올바른 진료 카테고리를 선택해주세요.')
       const thumbnail = content.match(/<img[^>]+src="([^"]+)"/)?.[1] || null

@@ -38,6 +38,10 @@ const escAttr = (s: string) => s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').
 /** 렌더용 본문 정리 — 내용은 바꾸지 않고 태그만 보정 */
 export function prepareArticleHtml(html: string, title: string): string {
   let out = String(html || '')
+  // 붙여넣기로 제목 태그가 문단·사진을 감싼 경우(<h2><p>…</p></h2>) 제목 태그만 걷어낸다 — 본문이 제목 크기로 보이고 목차가 깨지는 것 방지 (2026-10-15)
+  out = out.replace(/<(h[1-6])\b[^>]*>((?:(?!<\/\1>)[\s\S])*?<(?:p|div|img|ul|ol|table|figure|blockquote|h[1-6])\b(?:(?!<\/\1>)[\s\S])*)<\/\1>/gi, '$2')
+  // 빈 h2·h3(<h2><br></h2>) 제거
+  out = out.replace(/<(h[2-4])\b[^>]*>(?:\s|&nbsp;|<br\s*\/?>|<span>\s*<\/span>)*<\/\1>/gi, '')
   // 빈 h1(<h1><br></h1>) 제거, 나머지 본문 h1 은 h2 로 (페이지 H1 = 글 제목 하나)
   out = out.replace(/<h1\b[^>]*>(?:\s|&nbsp;|<br\s*\/?>)*<\/h1>/gi, '')
   out = out.replace(/<h1(\b[^>]*)>/gi, '<h2$1>').replace(/<\/h1>/gi, '</h2>')
@@ -63,42 +67,124 @@ const GREETING = /^(안녕하세요|안녕하십니까|반갑습니다)/
 const SENTENCE_SPLIT = /(?<=[.!?。])\s+/
 const CONNECTOR = /^(그리고|그런데|하지만|그러나|그래서|그렇게|또|또한|특히|물론|이처럼|이렇게)\s/
 const LEAD_IN = /(이런|다음과 같|아래와 같|아래처럼)/
+const SELF_INTRO = /(원장|대표원장|치과의원|치과)\s*[가-힣]{0,4}\s*(입니다|이에요|예요)\.?$/
 
 /**
- * 핵심 요약 박스 문구 — 본문 앞부분 문단에서 그대로 발췌(새 문장을 만들지 않음).
+ * 본문 HTML → 문단 텍스트 목록(제목은 HEAD 표시). 에디터가 Enter 로 만드는 <div> 줄, 태그 밖 맨 글자도 문단으로 본다.
+ * 목록·표·인용·그림 캡션은 요약 후보에서 뺀다.
+ */
+function articleBlocks(html: string): string[] {
+  const HEAD = '\u0002HEAD\u0002'
+  const src = String(html || '')
+    .replace(/<(h[1-6])\b[^>]*>[\s\S]*?<\/\1>/gi, `\u0001${HEAD}\u0001`)
+    .replace(/<(ul|ol|table|blockquote|figure)\b[^>]*>[\s\S]*?<\/\1>/gi, '\u0001')
+    .replace(/<\/?(?:p|div|section|article|hr)\b[^>]*>|<br\s*\/?>\s*(?:<br\s*\/?>\s*)+/gi, '\u0001')
+  return src.split('\u0001').map((t) => (t === HEAD ? HEAD : htmlText(t))).filter(Boolean)
+}
+/** 문단 앞머리의 인사·자기소개 문장("안녕하세요. ○○치과 대표원장 ○○○입니다.")만 떼어낸다 — 뒤 문장은 그대로 */
+function dropGreeting(t: string): string {
+  const ss = t.split(SENTENCE_SPLIT).filter(Boolean)
+  while (ss.length && (GREETING.test(ss[0]) || (SELF_INTRO.test(ss[0]) && ss[0].length < 50))) ss.shift()
+  return ss.join(' ')
+}
+
+/**
+ * 핵심 요약 박스 문구 — 본문에서 그대로 발췌(새 문장을 만들지 않음). 2026-10-15 보완:
+ * 0) (호출부) 관리자 '핵심 요약' 입력값이 있으면 그것을 우선 사용
  * 1) "결론부터/결론적으로/요약하면/한마디로"로 시작하는 문단
- * 2) 인사·인용·질문·접속사로 시작하는 도입·"이런 말씀" 같은 예고 문단을 건너뛴 첫 설명 문단(…입니다/됩니다)
- * 3) 그 외 첫 실질 문단(40자 이상)
- * 문장 단위로 최대 3문장·220자. 적당한 문단이 없으면 빈 문자열(박스 미표시).
+ * 2) 글 머리(첫 소제목 전, 첫 소제목이 맨 위면 두 번째 소제목 전)의 첫 설명 문단 — 인사·자기소개 문장은 떼고 판단
+ * 3) 앞쪽 15문단 중 "…입니다/됩니다"로 설명하는 문단
+ * 4) 그 외 첫 실질 문단(40자 이상)
+ * 문단 = <p>, 에디터의 <div> 줄, 태그 밖 글자. ※ 안내문·▶ 링크 줄·인용·질문은 제외. 최대 3문장·220자.
  */
 export function answerSummaryFromHtml(html: string): string {
-  const src = String(html || '')
-  const paras = Array.from(src.matchAll(/<p\b[^>]*>([\s\S]*?)<\/p>/gi))
-    .slice(0, 25)
-    .map((m) => htmlText(m[1]))
-    .filter((t) => t.length >= 20)
+  const blocks = articleBlocks(html).slice(0, 60)
+  const paras: string[] = []
+  let leadEnd = -1
+  for (const b of blocks) {
+    if (b === '\u0002HEAD\u0002') {
+      if (paras.length && leadEnd < 0) leadEnd = paras.length
+      continue
+    }
+    const t = dropGreeting(b)
+    if (t.length >= 20) paras.push(t)
+  }
+  if (leadEnd < 0) leadEnd = Math.min(paras.length, 4)
   const ok = (t: string) =>
     t.length >= 40 &&
     !GREETING.test(t) &&
+    !/^[※▶►\-–•·*]/.test(t) &&
+    !/▶/.test(t) &&
     !/^[“"'「『(]/.test(t) &&
     !/[“”"]/.test(t) &&
     !CONNECTOR.test(t) &&
     !/원장입니다\.?$/.test(t) &&
     !/[?？]$|까요\.?$/.test(t) &&
     !(LEAD_IN.test(t) && t.length < 90)
+  const declarative = (t: string) => /(다|요)\.?$/.test(t)
   const pick =
     paras.find((t) => /^(먼저\s*)?(결론부터|결론적으로|요약하면|한마디로|핵심만)/.test(t)) ||
+    paras.slice(0, Math.min(leadEnd, 4)).find((t) => ok(t) && declarative(t)) ||
     paras.slice(0, 15).find((t) => ok(t) && /(입니다|됩니다|습니다)\.?$/.test(t) && /(입니다|됩니다|때문입니다)/.test(t)) ||
     paras.find(ok)
   if (!pick) return ''
+  return clipSentences(pick)
+}
+function clipSentences(pick: string, max = 220): string {
   const sentences = pick.split(SENTENCE_SPLIT).filter(Boolean)
   let out = ''
   for (const s of sentences.slice(0, 3)) {
-    if ((out + ' ' + s).trim().length > 220 && out) break
+    if ((out + ' ' + s).trim().length > max && out) break
     out = (out + ' ' + s).trim()
   }
-  if (out.length > 220) out = out.slice(0, 219).trimEnd() + '…'
+  if (out.length > max) out = out.slice(0, max - 1).trimEnd() + '…'
   return out
+}
+
+// ===== 칼럼 부가 설정(핵심 요약 직접 입력·목차 표시) — 2026-10-15 =====
+// posts 테이블에 열을 추가하지 않고(운영 D1 마이그레이션 없이) 본문 맨 앞의 표시 요소로 저장한다.
+// <div data-col-meta="summary">요약</div> · <div data-col-meta="no-toc"></div>
+// 화면·검색 요약·목차 계산 전에 splitColumnMeta 로 떼어내므로 본문에는 나타나지 않는다.
+export type ColumnMeta = { summary: string; showToc: boolean }
+const META_RE = /<div\b[^>]*\bdata-col-meta="(summary|no-toc)"[^>]*>([\s\S]*?)<\/div>/gi
+export function splitColumnMeta(html: string): { html: string; meta: ColumnMeta } {
+  let summary = ''
+  let showToc = true
+  const rest = String(html || '').replace(META_RE, (_m, kind: string, inner: string) => {
+    if (kind === 'summary' && !summary) summary = htmlText(inner).slice(0, 300)
+    if (kind === 'no-toc') showToc = false
+    return ''
+  })
+  return { html: rest, meta: { summary, showToc } }
+}
+const escHtml = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+export function joinColumnMeta(html: string, meta: ColumnMeta): string {
+  const body = splitColumnMeta(html).html
+  const summary = String(meta.summary || '').replace(/\s+/g, ' ').trim()
+  return (summary ? `<div data-col-meta="summary">${escHtml(summary)}</div>` : '') + (meta.showToc ? '' : '<div data-col-meta="no-toc"></div>') + body
+}
+
+export type TocItem = { level: 2 | 3; id: string; text: string }
+/** h2·h3 에 id(sec-1, sec-2 …)를 붙이고 목차 항목을 돌려준다. 너무 긴(120자 초과) 제목은 목차에서 뺀다(id 는 부여). */
+export function addHeadingAnchors(html: string): { html: string; toc: TocItem[] } {
+  const toc: TocItem[] = []
+  let n = 0
+  const out = String(html || '').replace(/<(h[23])\b([^>]*)>([\s\S]*?)<\/\1>/gi, (m, tag: string, attrs: string, inner: string) => {
+    const text = htmlText(inner)
+    if (!text) return m
+    n++
+    const id = `sec-${n}`
+    const clean = attrs.replace(/\sid\s*=\s*("[^"]*"|'[^']*'|\S+)/i, '')
+    if (text.length <= 120) toc.push({ level: tag.toLowerCase() === 'h2' ? 2 : 3, id, text })
+    return `<${tag}${clean} id="${id}">${inner}</${tag}>`
+  })
+  return { html: out, toc }
+}
+/** 표를 가로 스크롤 상자로 감싼다(모바일에서 표만 좌우로 밀어 보기) */
+export function wrapTables(html: string): string {
+  return String(html || '')
+    .replace(/<table\b/gi, '<div class="col-table" role="region" aria-label="표 (좌우로 밀어 보기)" tabindex="0"><table')
+    .replace(/<\/table>/gi, '</table></div>')
 }
 
 const QUESTION_END = /(?:[?？]|(?:나요|까요|가요|은가|는가|인가|니까|는지요|을까|ㄹ까|죠|습니까|되나요|있나요)[.!]?)$/

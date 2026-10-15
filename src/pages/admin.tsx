@@ -31,7 +31,7 @@ function adminShell(active: string, title: string, body: any) {
   </aside>
   <main class="admin-main">${body}</main>
 </div>
-<script src="/static/admin.js?v=20260913-delivery" defer></script>
+<script src="/static/admin.js?v=20261015-editor" defer></script>
 </body>
 </html>`
 }
@@ -192,8 +192,32 @@ export function adminCasesPage(cases: any[]) {
 }
 
 const EDITOR_SCRIPT = raw(`<script>
-function execCmd(cmd, val) { document.execCommand(cmd, false, val || null); document.getElementById('editor').focus(); }
-function insertHeading(tag) { document.execCommand('formatBlock', false, tag); }
+/* 칼럼 에디터 — 2026-10-15 확장: 밑줄·번호 목록·표(삽입·행/열 편집)·HTML 보기/편집·붙여넣기 정리.
+   저장 시 서버(security.ts sanitizeContent)가 허용 태그만 남기므로 여기 정리는 편의용 1차 정리다. */
+var colSavedRange = null;
+function colEd() { return document.getElementById('editor'); }
+function colInEditor(node) { var ed = colEd(); return !!(ed && node && (node === ed || ed.contains(node))); }
+function colSaveRange() {
+  var sel = window.getSelection();
+  if (sel && sel.rangeCount && colInEditor(sel.getRangeAt(0).commonAncestorContainer)) colSavedRange = sel.getRangeAt(0).cloneRange();
+}
+function colRestoreRange() {
+  var ed = colEd(); ed.focus();
+  var sel = window.getSelection();
+  if (colSavedRange && colInEditor(colSavedRange.commonAncestorContainer)) { sel.removeAllRanges(); sel.addRange(colSavedRange); return; }
+  var r = document.createRange(); r.selectNodeContents(ed); r.collapse(false); sel.removeAllRanges(); sel.addRange(r);
+}
+function colChanged() { var f = document.getElementById('post-form'); if (f) f.dispatchEvent(new Event('input', { bubbles: true })); colUpdateTableTools(); }
+function execCmd(cmd, val) { if (colHtmlMode()) return; colRestoreRange(); document.execCommand(cmd, false, val || null); colSaveRange(); colChanged(); }
+function insertHeading(tag) { if (colHtmlMode()) return; colRestoreRange(); document.execCommand('formatBlock', false, tag); colSaveRange(); colChanged(); }
+function insertLink() {
+  if (colHtmlMode()) return;
+  colSaveRange();
+  var url = prompt('링크 주소 (https://… 또는 /treatments/… )');
+  if (!url) return;
+  if (!/^(https?:\\/\\/|\\/(?!\\/)|#|mailto:|tel:)/i.test(url)) { alert('https:// 로 시작하는 주소나 사이트 안 주소(/로 시작)만 넣을 수 있습니다.'); return; }
+  execCmd('createLink', url);
+}
 async function uploadImage(file) {
   const fd = new FormData(); fd.append('image', file);
   const res = await fetch('/api/admin/upload', { method: 'POST', body: fd });
@@ -201,25 +225,148 @@ async function uploadImage(file) {
   if (!res.ok || !d.ok) throw new Error(d.error || '이미지 업로드 실패');
   return d.url;
 }
-async function pickImage() {
-  const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*';
-  inp.onchange = async () => {
-    if (!inp.files[0]) return;
-    try { const url = await uploadImage(inp.files[0]); if (url) document.execCommand('insertImage', false, url); } catch (e) { alert(e.message); }
-  };
+async function colInsertImageFile(file) {
+  try { const url = await uploadImage(file); if (url) { colRestoreRange(); document.execCommand('insertImage', false, url); colSaveRange(); colChanged(); } } catch (e) { alert(e.message); }
+}
+function pickImage() {
+  if (colHtmlMode()) return;
+  colSaveRange();
+  const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/jpeg,image/png,image/webp';
+  inp.onchange = () => { if (inp.files[0]) colInsertImageFile(inp.files[0]); };
   inp.click();
 }
+
+/* ── 붙여넣기·HTML 정리(허용 태그만, 속성 제거) ── */
+var COL_ALLOWED = { P:1, BR:1, H2:1, H3:1, H4:1, STRONG:1, B:1, EM:1, I:1, U:1, S:1, UL:1, OL:1, LI:1, BLOCKQUOTE:1, A:1, IMG:1, FIGURE:1, FIGCAPTION:1, HR:1, TABLE:1, CAPTION:1, THEAD:1, TBODY:1, TFOOT:1, TR:1, TH:1, TD:1, DIV:1, SPAN:1 };
+var COL_DROP = { SCRIPT:1, STYLE:1, IFRAME:1, OBJECT:1, EMBED:1, SVG:1, MATH:1, TEXTAREA:1, NOSCRIPT:1, TEMPLATE:1, HEAD:1, META:1, LINK:1, TITLE:1, BUTTON:1, INPUT:1, SELECT:1, FORM:1, VIDEO:1, AUDIO:1, CANVAS:1 };
+var COL_KEEP_ATTR = { A: ['href', 'title'], IMG: ['src', 'alt', 'width', 'height'], TH: ['colspan', 'rowspan'], TD: ['colspan', 'rowspan'] };
+function colCleanHtml(htmlStr, report) {
+  var doc = new DOMParser().parseFromString('<body>' + String(htmlStr || '') + '</body>', 'text/html');
+  var droppedImages = 0;
+  (function walk(node) {
+    Array.from(node.childNodes).forEach(function (el) {
+      if (el.nodeType === 8) { el.remove(); return; }
+      if (el.nodeType !== 1) return;
+      var tag = el.tagName;
+      if (COL_DROP[tag]) { el.remove(); return; }
+      if (tag === 'H1') { var h2 = doc.createElement('h2'); while (el.firstChild) h2.appendChild(el.firstChild); el.replaceWith(h2); el = h2; tag = 'H2'; }
+      if (!COL_ALLOWED[tag]) { walk(el); el.replaceWith.apply(el, Array.from(el.childNodes)); return; }
+      var keep = COL_KEEP_ATTR[tag] || [];
+      Array.from(el.attributes).forEach(function (at) { if (keep.indexOf(at.name) < 0) el.removeAttribute(at.name); });
+      if (tag === 'A') { var h = el.getAttribute('href') || ''; if (!/^(https?:\\/\\/|\\/(?!\\/)|#|mailto:|tel:)/i.test(h)) el.removeAttribute('href'); }
+      if (tag === 'IMG') { var src = el.getAttribute('src') || ''; if (!/^\\/(api\\/uploads|static\\/img)\\/[\\w.\\/-]+\\.(jpe?g|png|webp)$/i.test(src)) { droppedImages++; el.remove(); return; } }
+      walk(el);
+    });
+  })(doc.body);
+  if (report) report.droppedImages = droppedImages;
+  return doc.body.innerHTML;
+}
+function colPrettyHtml(h) {
+  return String(h || '')
+    .replace(/\\s*(<(?:p|div|h[1-6]|ul|ol|li|table|thead|tbody|tfoot|tr|blockquote|figure|hr)\\b)/gi, '\\n$1')
+    .replace(/(<\\/(?:p|div|h[1-6]|ul|ol|table|thead|tbody|tfoot|tr|blockquote|figure)>)/gi, '$1\\n')
+    .replace(/\\n{2,}/g, '\\n').trim();
+}
+
+/* ── HTML 보기/편집 ── */
+function colHtmlMode() { var t = document.getElementById('editor-html'); return !!(t && !t.hidden); }
+function colEditorSync() { if (colHtmlMode()) colEd().innerHTML = colCleanHtml(document.getElementById('editor-html').value); }
+function colEditorExitHtml(discard) {
+  var t = document.getElementById('editor-html'); if (!t || t.hidden) return;
+  if (!discard) colEditorSync();
+  t.hidden = true; colEd().hidden = false;
+  var btn = document.getElementById('tb-html'); btn.setAttribute('aria-pressed', 'false'); btn.textContent = '</> HTML';
+  document.querySelectorAll('.editor-toolbar [data-wysiwyg]').forEach(function (b) { b.disabled = false; });
+}
+function toggleHtml() {
+  var t = document.getElementById('editor-html'), ed = colEd(), btn = document.getElementById('tb-html');
+  if (!colHtmlMode()) {
+    t.value = colPrettyHtml(ed.innerHTML); ed.hidden = true; t.hidden = false; t.focus();
+    btn.setAttribute('aria-pressed', 'true'); btn.textContent = '편집기로 돌아가기';
+    document.querySelectorAll('.editor-toolbar [data-wysiwyg]').forEach(function (b) { b.disabled = true; });
+    document.getElementById('table-pop').hidden = true;
+  } else { colEditorExitHtml(false); colChanged(); }
+}
+window.colEditorSync = colEditorSync;
+window.colEditorExitHtml = colEditorExitHtml;
+
+/* ── 표 ── */
+function toggleTablePop() {
+  if (colHtmlMode()) return;
+  colSaveRange();
+  var pop = document.getElementById('table-pop'); pop.hidden = !pop.hidden;
+  if (!pop.hidden) document.getElementById('tbl-rows').focus();
+}
+function insertTable() {
+  var rows = Math.min(30, Math.max(1, parseInt(document.getElementById('tbl-rows').value, 10) || 3));
+  var cols = Math.min(10, Math.max(1, parseInt(document.getElementById('tbl-cols').value, 10) || 3));
+  var head = document.getElementById('tbl-head').checked;
+  var h = '<table>';
+  if (head) { h += '<thead><tr>'; for (var c = 0; c < cols; c++) h += '<th><br></th>'; h += '</tr></thead>'; }
+  h += '<tbody>';
+  var bodyRows = head ? Math.max(1, rows - 1) : rows;
+  for (var r = 0; r < bodyRows; r++) { h += '<tr>'; for (var c2 = 0; c2 < cols; c2++) h += '<td><br></td>'; h += '</tr>'; }
+  h += '</tbody></table><p><br></p>';
+  colRestoreRange();
+  document.execCommand('insertHTML', false, h);
+  document.getElementById('table-pop').hidden = true;
+  colSaveRange(); colChanged();
+}
+function colCurrentCell() {
+  var sel = window.getSelection(); if (!sel || !sel.rangeCount) return null;
+  var n = sel.anchorNode; if (n && n.nodeType === 3) n = n.parentNode;
+  var cell = n && n.closest ? n.closest('td,th') : null;
+  return cell && colInEditor(cell) ? cell : null;
+}
+function colUpdateTableTools() { var tools = document.getElementById('tb-table-tools'); if (tools) tools.hidden = colHtmlMode() || !colCurrentCell(); }
+function tableOp(op) {
+  var cell = colCurrentCell(); if (!cell) { alert('표 안의 칸을 먼저 클릭해주세요.'); return; }
+  var row = cell.parentNode, table = cell.closest('table'), idx = Array.prototype.indexOf.call(row.children, cell);
+  var allRows = Array.from(table.querySelectorAll('tr'));
+  if (op === 'row-add') { var nr = document.createElement('tr'); for (var i = 0; i < row.children.length; i++) { var td = document.createElement('td'); td.innerHTML = '<br>'; nr.appendChild(td); } if (row.parentNode.tagName === 'THEAD') { var tb = table.tBodies[0] || table.appendChild(document.createElement('tbody')); tb.insertBefore(nr, tb.firstChild); } else row.after(nr); }
+  if (op === 'col-add') allRows.forEach(function (tr) { var ref = tr.children[idx]; var nc = document.createElement(tr.parentNode.tagName === 'THEAD' ? 'th' : 'td'); nc.innerHTML = '<br>'; if (ref) ref.after(nc); else tr.appendChild(nc); });
+  if (op === 'row-del') { if (allRows.length <= 1) { table.remove(); } else row.remove(); }
+  if (op === 'col-del') { if (row.children.length <= 1) table.remove(); else allRows.forEach(function (tr) { if (tr.children[idx]) tr.children[idx].remove(); }); }
+  if (op === 'table-del') { if (confirm('이 표를 삭제할까요?')) table.remove(); }
+  colChanged();
+}
+
 document.addEventListener('DOMContentLoaded', () => {
-  const ed = document.getElementById('editor');
+  const ed = colEd();
   if (!ed) return;
+  // 새 줄을 <div> 대신 <p> 문단으로 — 핵심 요약 자동 발췌·문단 간격이 안정적으로 동작
+  try { document.execCommand('defaultParagraphSeparator', false, 'p'); } catch (e) {}
+  ed.addEventListener('focus', () => {
+    if (ed.innerHTML.trim() === '' || ed.innerHTML === '<br>') {
+      ed.innerHTML = '<p><br></p>';
+      const r = document.createRange(); r.setStart(ed.firstChild, 0); r.collapse(true);
+      const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r);
+    }
+  });
+  // 툴바 버튼을 눌러도 본문 커서(선택 영역)가 사라지지 않게
+  document.querySelector('.editor-toolbar').addEventListener('mousedown', (e) => { if (e.target.closest('button')) e.preventDefault(); });
+  document.addEventListener('selectionchange', () => { colSaveRange(); colUpdateTableTools(); });
   ed.addEventListener('dragover', (e) => { e.preventDefault(); ed.classList.add('dragover'); });
   ed.addEventListener('dragleave', () => ed.classList.remove('dragover'));
   ed.addEventListener('drop', async (e) => {
     e.preventDefault(); ed.classList.remove('dragover');
     const file = e.dataTransfer.files[0];
-    if (file && file.type.startsWith('image/')) {
-      try { const url = await uploadImage(file); if (url) document.execCommand('insertImage', false, url); } catch (e) { alert(e.message); }
-    }
+    if (file && file.type.startsWith('image/')) colInsertImageFile(file);
+  });
+  // 붙여넣기: 블로그·워드·구글문서 HTML의 글꼴·색·스크립트 등을 걷어내고 구조(제목·굵게·밑줄·목록·표·링크)만 남긴다
+  ed.addEventListener('paste', (e) => {
+    const cd = e.clipboardData; if (!cd) return;
+    const file = Array.from(cd.files || []).find((f) => /^image\\/(jpeg|png|webp)$/.test(f.type));
+    const htmlData = cd.getData('text/html');
+    if (!htmlData && file) { e.preventDefault(); colInsertImageFile(file); return; }
+    if (!htmlData) return;
+    e.preventDefault();
+    const rep = {};
+    const cleaned = colCleanHtml(htmlData, rep);
+    document.execCommand('insertHTML', false, cleaned);
+    colChanged();
+    const st = document.querySelector('#post-form .edit-status');
+    if (rep.droppedImages && st) st.textContent = '붙여넣은 내용 중 외부 사진 ' + rep.droppedImages + '장은 제외했습니다. 사진은 🖼 사진 버튼이나 끌어다 놓기로 올려주세요.';
   });
 });
 </script>`)
@@ -251,18 +398,45 @@ export function adminPostsPage(posts: any[]) {
     <div class="form-group"><label for="admin-field-19">메타 설명 (검색 결과 노출용, 120~160자)</label><input id="admin-field-19" class="form-control" name="meta_description" maxlength="170"></div>
     <div class="form-group">
       <label for="admin-field-20">본문 * <span style="font-weight:400;color:var(--ink-mute)">(이미지 드래그&드롭 삽입 가능)</span></label>
-      <div class="editor-toolbar">
-        <button type="button" onclick="insertHeading('h2')">H2</button>
-        <button type="button" onclick="insertHeading('h3')">H3</button>
-        <button type="button" onclick="insertHeading('p')">본문</button>
-        <button type="button" onclick="execCmd('bold')"><b>B</b></button>
-        <button type="button" onclick="execCmd('italic')"><i>I</i></button>
-        <button type="button" onclick="execCmd('insertUnorderedList')">• 목록</button>
-        <button type="button" onclick="execCmd('createLink', prompt('링크 URL'))">🔗 링크</button>
-        <button type="button" onclick="pickImage()">🖼 사진</button>
+      <div class="editor-toolbar" role="toolbar" aria-label="본문 서식">
+        <button type="button" data-wysiwyg onclick="insertHeading('h2')" title="큰 소제목 (목차에 표시)">H2</button>
+        <button type="button" data-wysiwyg onclick="insertHeading('h3')" title="작은 소제목 (목차에 표시)">H3</button>
+        <button type="button" data-wysiwyg onclick="insertHeading('p')">본문</button>
+        <span class="tb-sep" aria-hidden="true"></span>
+        <button type="button" data-wysiwyg onclick="execCmd('bold')" title="굵게 (Ctrl/⌘+B)"><b>B</b></button>
+        <button type="button" data-wysiwyg onclick="execCmd('italic')" title="기울임 (Ctrl/⌘+I)"><i>I</i></button>
+        <button type="button" data-wysiwyg onclick="execCmd('underline')" title="밑줄 (Ctrl/⌘+U)"><u>U</u> 밑줄</button>
+        <span class="tb-sep" aria-hidden="true"></span>
+        <button type="button" data-wysiwyg onclick="execCmd('insertUnorderedList')">• 목록</button>
+        <button type="button" data-wysiwyg onclick="execCmd('insertOrderedList')">1. 번호 목록</button>
+        <button type="button" data-wysiwyg onclick="insertHeading('blockquote')">❝ 인용</button>
+        <button type="button" data-wysiwyg onclick="insertLink()">🔗 링크</button>
+        <button type="button" data-wysiwyg onclick="pickImage()">🖼 사진</button>
+        <button type="button" data-wysiwyg onclick="toggleTablePop()" aria-controls="table-pop">▦ 표</button>
+        <span class="tb-sep" aria-hidden="true"></span>
+        <button type="button" id="tb-html" onclick="toggleHtml()" aria-pressed="false" title="HTML 코드로 보기·편집">&lt;/&gt; HTML</button>
+        <span class="tb-table-tools" id="tb-table-tools" hidden>
+          <span class="tb-sep" aria-hidden="true"></span>
+          <button type="button" data-wysiwyg onclick="tableOp('row-add')">행 추가</button>
+          <button type="button" data-wysiwyg onclick="tableOp('col-add')">열 추가</button>
+          <button type="button" data-wysiwyg onclick="tableOp('row-del')">행 삭제</button>
+          <button type="button" data-wysiwyg onclick="tableOp('col-del')">열 삭제</button>
+          <button type="button" data-wysiwyg onclick="tableOp('table-del')">표 삭제</button>
+        </span>
+      </div>
+      <div class="editor-table-pop" id="table-pop" hidden>
+        <label>행 <input type="number" id="tbl-rows" min="1" max="30" value="3"></label>
+        <label>열 <input type="number" id="tbl-cols" min="1" max="10" value="3"></label>
+        <label class="form-check" style="margin:0"><input type="checkbox" id="tbl-head" checked> 첫 행을 머리글로</label>
+        <button type="button" class="admin-btn" onclick="insertTable()">표 넣기</button>
+        <button type="button" class="admin-btn ghost" onclick="document.getElementById('table-pop').hidden=true">닫기</button>
       </div>
       <div id="editor" class="editor-area" role="textbox" aria-label="칼럼 본문" aria-multiline="true" contenteditable="true"></div>
+      <textarea id="editor-html" class="editor-html" aria-label="칼럼 본문 HTML" spellcheck="false" hidden></textarea>
+      <p class="editor-hint">H2·H3 소제목은 글 위 <strong>목차</strong>에 자동으로 들어갑니다(2개 이상일 때). 표 칸을 클릭하면 행·열 편집 버튼이 나타납니다. HTML 모드에서는 코드를 직접 붙여넣을 수 있으며, 저장 시 안전한 태그(제목·문단·굵게·밑줄·목록·표·링크·사진)만 남습니다.</p>
     </div>
+    <div class="form-group"><label for="admin-field-summary">핵심 요약 <span style="font-weight:400;color:var(--ink-mute)">(선택 · 글 맨 위 '핵심 요약' 상자. 비워두면 본문 첫 설명 문단에서 자동 발췌)</span></label><textarea id="admin-field-summary" class="form-control" name="summary" maxlength="300" rows="3" placeholder="예: 임플란트 수명은 식립 위치와 사후 관리에 따라 크게 달라집니다. 정기 검진이 가장 중요합니다."></textarea></div>
+    <label class="form-check" style="margin-bottom:18px"><input type="checkbox" name="show_toc" checked> <span><strong>목차 표시</strong> — 소제목(H2·H3)이 2개 이상이면 본문 앞에 목차를 보여줍니다</span></label>
     <div class="form-group"><label>공개 상태</label><select id="admin-field-20" name="published" class="form-control"><option value="1">공개</option><option value="0">비공개</option></select></div>
     <button type="submit" class="admin-btn" style="padding:12px 28px;font-size:15px">칼럼 발행</button>
   </form>

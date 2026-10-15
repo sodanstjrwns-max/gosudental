@@ -297,11 +297,10 @@ app.get('/column/:slug', async (c) => {
   } catch { throw new HTTPException(503, { message: '콘텐츠를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.' }) }
   if (!post) return c.html(notFoundPage(), 404)
   await bumpViews(c, 'posts', post.id)
-  // 관련 칼럼(같은 진료 최신 3편, 없으면 최신 글) + 같은 진료 비포&애프터
+  // 관련·이전 칼럼 카드(썸네일): 같은 진료 최신 글 우선, 나머지는 최근 글로 채워 최대 6편 (2026-10-15) + 같은 진료 비포&애프터
   let related: any[] = [], relCases: any[] = []
   try {
-    related = (await c.env.DB.prepare(`SELECT slug, title, created_at FROM posts WHERE published = 1 AND id != ?${post.category ? ' AND category = ?' : ''} ORDER BY created_at DESC LIMIT 3`).bind(...(post.category ? [post.id, post.category] : [post.id])).all()).results || []
-    if (!related.length) related = (await c.env.DB.prepare('SELECT slug, title, created_at FROM posts WHERE published = 1 AND id != ? ORDER BY created_at DESC LIMIT 3').bind(post.id).all()).results || []
+    related = (await c.env.DB.prepare(`SELECT slug, title, thumbnail, category, created_at FROM posts WHERE published = 1 AND id != ? ORDER BY ${post.category ? 'CASE WHEN category = ? THEN 0 ELSE 1 END, ' : ''}created_at DESC LIMIT 6`).bind(...(post.category ? [post.id, post.category] : [post.id])).all()).results || []
     const tslug = TREATMENTS.find((t) => t.name === post.category)?.slug
     if (tslug && TREAT_CASE_CAT[tslug]) relCases = (await c.env.DB.prepare('SELECT id, title, duration FROM cases WHERE published = 1 AND category = ? ORDER BY created_at DESC LIMIT 3').bind(TREAT_CASE_CAT[tslug]).all()).results || []
   } catch { /* noop */ }

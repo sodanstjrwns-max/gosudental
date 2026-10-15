@@ -3,7 +3,7 @@ import { html, raw } from 'hono/html'
 import { Layout, breadcrumbSchema, schemaDate, faqSchema } from '../layout'
 import { TERM_ARTICLES, TERM_REFERENCES } from '../data/encyclopedia-content'
 import { SITE, TERMS, TREATMENTS, DOCTORS } from '../data/site'
-import { prepareArticleHtml, answerSummaryFromHtml, faqsFromArticleHtml, htmlText, metaDescription, attestedColumnAuthor, CLINIC_GENERAL_INFO_NOTE } from '../article-seo'
+import { prepareArticleHtml, answerSummaryFromHtml, faqsFromArticleHtml, htmlText, metaDescription, attestedColumnAuthor, CLINIC_GENERAL_INFO_NOTE, splitColumnMeta, addHeadingAnchors, wrapTables } from '../article-seo'
 import { columnHubNote } from '../hub-link'
 
 // ── 원장 칼럼 ──
@@ -74,9 +74,17 @@ export function columnDetailPage(post: any, related: any[] = [], relCases: any[]
   const author = attestedColumnAuthor(post, DOCTORS)
   const relTreatment = TREATMENTS.find((t) => post.category === t.name)
   const url = `${SITE.domain}/column/${post.slug}`
-  const body = prepareArticleHtml(sanitizeContent(post.content), post.title)
-  const answer = answerSummaryFromHtml(body)
+  // 본문 앞 부가 설정(관리자 '핵심 요약'·'목차 표시')을 떼어낸 뒤 렌더 (article-seo.ts splitColumnMeta, 2026-10-15)
+  const { html: rawBody, meta } = splitColumnMeta(sanitizeContent(post.content))
+  const anchored = addHeadingAnchors(prepareArticleHtml(rawBody, post.title))
+  const body = wrapTables(anchored.html)
+  // 핵심 요약: 직접 입력값 우선, 없으면 본문 발췌(새 문장을 만들지 않음)
+  const answer = meta.summary || answerSummaryFromHtml(body)
   const faqs = faqsFromArticleHtml(body)
+  // 목차: 소제목 2개 이상일 때만. 10개를 넘고 H2 가 2개 이상이면 H2 만(글 머리가 너무 길어지지 않게)
+  const h2Only = anchored.toc.filter((t) => t.level === 2)
+  const toc = !meta.showToc || anchored.toc.length < 2 ? [] : anchored.toc.length > 10 && h2Only.length >= 2 ? h2Only : anchored.toc
+  const FALLBACK_THUMB = '/static/img/og-image.jpg'
   const description = metaDescription(post.meta_description, answer || htmlText(body).slice(0, 200))
   const reviewed = ymd(post.updated_at || post.created_at)
   const pastCareer = author ? author.career.find((x) => /^\(前\)/.test(x)) || author.career[0] || '' : ''
@@ -125,6 +133,7 @@ export function columnDetailPage(post: any, related: any[] = [], relCases: any[]
 <section class="section" id="post-body-section" style="padding-top:20px">
   <div class="section-narrow">
     ${answer ? html`<aside class="col-answer" id="col-answer" aria-label="핵심 요약"><strong>핵심 요약</strong><p>${answer}</p></aside>` : ''}
+    ${toc.length ? html`<nav class="col-toc" aria-label="목차"><details open><summary><span class="col-toc-title">목차</span><span class="col-toc-count">${toc.length}개 소제목</span></summary><ol>${toc.map((t) => html`<li class="lv${t.level}"><a href="#${t.id}">${t.text}</a></li>`)}</ol></details></nav>` : ''}
     <article class="prose">${raw(body)}</article>
     ${/href="(?:https:\/\/gosudc\.kr)?\/area\/naepo"/.test(body) ? '' : raw(columnHubNote(String(post.slug || post.id || ''), relTreatment?.name))}
     <p class="col-note">※ 이 글은 일반적인 의료 정보이며, 치료 결과는 개인에 따라 다를 수 있습니다. 정확한 진단은 내원 상담이 필요합니다.</p>
@@ -149,7 +158,12 @@ export function columnDetailPage(post: any, related: any[] = [], relCases: any[]
         <p>${relTreatment.short}</p>
       </a>` : ''}
     </div>
-    ${related.length ? html`<div class="col-related"><h2>${relTreatment ? `${relTreatment.name} 관련 칼럼` : '다른 칼럼'}</h2><ul>${related.map((r) => html`<li><a href="/column/${r.slug}">${r.title}</a><time datetime="${ymd(r.created_at)}">${ymd(r.created_at)}</time></li>`)}</ul></div>` : ''}
+    ${related.length ? html`<div class="col-related col-more"><h2>${relTreatment && related.some((r) => r.category === relTreatment.name) ? `${relTreatment.name} 관련 칼럼 · 이전 칼럼` : '이전 칼럼 더 보기'}</h2>
+      <ul class="col-more-grid">${related.map((r) => html`<li><a href="/column/${r.slug}" class="col-more-card">
+        <span class="col-more-thumb"><img src="${r.thumbnail || FALLBACK_THUMB}" alt="${r.title}" width="640" height="360" loading="lazy" decoding="async"></span>
+        <span class="col-more-body"><strong>${r.title}</strong><time datetime="${ymd(r.created_at)}">${ymd(r.created_at)}${r.category ? ` · ${r.category}` : ''}</time></span>
+      </a></li>`)}</ul>
+      <p class="col-more-all"><a href="/column">칼럼 전체 보기 →</a></p></div>` : ''}
     ${relCases.length ? html`<div class="col-related"><h2>${relTreatment ? `${relTreatment.name} 비포&애프터` : '비포&애프터'}</h2><ul>${relCases.map((k) => html`<li><a href="/cases/${k.id}">${k.title}</a><span>${k.duration || ''}</span></li>`)}</ul></div>` : ''}
   </div>
 </section>`

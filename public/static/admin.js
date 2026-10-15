@@ -31,6 +31,7 @@
     });
     const reset = () => {
       dirty = false;
+      if (window.colEditorExitHtml) window.colEditorExitHtml(true);
       form.reset(); delete form.dataset.editId;
       if (editor) editor.replaceChildren();
       form.querySelectorAll('[data-preview]').forEach(el => el.replaceChildren());
@@ -81,9 +82,11 @@
       const url = '/api/admin/' + kind + (id ? '/' + id : '');
       submit.disabled = true; status.textContent = '저장 중입니다…';
       try {
+        if (kind === 'posts' && window.colEditorSync) window.colEditorSync(); // HTML 모드에서 고친 코드 반영
         const fd = new FormData(form);
+        const toc = form.elements.namedItem('show_toc');
         const options = kind === 'posts'
-          ? json(method, { ...Object.fromEntries(fd), content: editor.innerHTML, published: fd.get('published') === '1' })
+          ? json(method, { ...Object.fromEntries(fd), content: editor.innerHTML, published: fd.get('published') === '1', show_toc: toc ? toc.checked : true })
           : { method, body: fd };
         await request(url, options);
         status.textContent = '저장되었습니다.';
