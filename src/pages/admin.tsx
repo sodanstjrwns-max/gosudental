@@ -25,13 +25,14 @@ function adminShell(active: string, title: string, body: any) {
     <a href="/admin/fees" class="${active === 'fees' ? 'active' : ''}"><i class="fas fa-won-sign" style="width:20px"></i> 비급여 수가</a>
     <a href="/admin/users" class="${active === 'users' ? 'active' : ''}"><i class="fas fa-users" style="width:20px"></i> 회원 관리</a>
     <a href="/admin/reservations" class="${active === 'resv' ? 'active' : ''}"><i class="fas fa-calendar-check" style="width:20px"></i> 예약 관리</a>
+    <a href="/admin/recruit" class="${active === 'recruit' ? 'active' : ''}"><i class="fas fa-user" style="width:20px"></i> 채용 지원</a>
     <a href="/admin/stats" class="${active === 'stats' ? 'active' : ''}"><i class="fas fa-chart-line" style="width:20px"></i> 통합 통계</a>
     <a href="/" style="margin-top:20px"><i class="fas fa-arrow-up-right-from-square" style="width:20px"></i> 사이트 보기</a>
     <a href="#" onclick="fetch('/api/admin/logout',{method:'POST'}).then(()=>location.href='/admin/login')" ><i class="fas fa-right-from-bracket" style="width:20px"></i> 로그아웃</a>
   </aside>
   <main class="admin-main">${body}</main>
 </div>
-<script src="/static/admin.js?v=20261015-editor" defer></script>
+<script src="/static/admin.js?v=20261021-recruit" defer></script>
 </body>
 </html>`
 }
@@ -66,7 +67,7 @@ export function adminLoginPage() {
 </html>`
 }
 
-export function adminDashPage(stats: { users: number; cases: number; posts: number; notices: number; resv: number; totalViews: number }) {
+export function adminDashPage(stats: { users: number; cases: number; posts: number; notices: number; resv: number; recruit: number; totalViews: number }) {
   return adminShell('dash', '대시보드', html`
 <h1>대시보드</h1>
 <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:18px">
@@ -75,6 +76,7 @@ export function adminDashPage(stats: { users: number; cases: number; posts: numb
   <div class="admin-card"><p style="font-size:13px;color:var(--ink-mute)">칼럼 게시물</p><p style="font-size:34px;font-weight:800;color:var(--brand-dark)">${stats.posts}</p></div>
   <div class="admin-card"><p style="font-size:13px;color:var(--ink-mute)">공지사항</p><p style="font-size:34px;font-weight:800;color:var(--brand-dark)">${stats.notices}</p></div>
   <div class="admin-card"><p style="font-size:13px;color:var(--ink-mute)">예약 신청</p><p style="font-size:34px;font-weight:800;color:var(--brand-dark)">${stats.resv}</p></div>
+  <a class="admin-card" href="/admin/recruit"><p style="font-size:13px;color:var(--ink-mute)">채용 지원</p><p style="font-size:34px;font-weight:800;color:var(--brand-dark)">${stats.recruit}</p></a>
   <div class="admin-card"><p style="font-size:13px;color:var(--ink-mute)">총 조회수 (봇 제외)</p><p style="font-size:34px;font-weight:800;color:var(--brand-dark)">${stats.totalViews}</p></div>
 </div>`)
 }
@@ -575,4 +577,57 @@ render();
 // 통합 통계 (중앙 대시보드 연동) — 본문은 pages/stats.ts 의 AdminStats 가 생성
 export function adminStatsPage(body: any) {
   return adminShell('stats', '통합 통계', body)
+}
+
+// 상시 인재채용 지원서 (2026-10-21) — 보유기간: 채용 절차 종료 후 1년 또는 삭제 요청 시까지
+export const RECRUIT_STATUS: Record<string, string> = {
+  new: '신규', reviewing: '검토 중', contacted: '연락 완료', pooled: '인재풀 보관', closed: '종료',
+}
+// D1 CURRENT_TIMESTAMP(UTC) → 한국시간 'YYYY-MM-DD HH:MM'
+const kst = (v?: string) => {
+  const t = v ? Date.parse(v.replace(' ', 'T') + 'Z') : NaN
+  return Number.isFinite(t) ? new Date(t + 9 * 3600e3).toISOString().slice(0, 16).replace('T', ' ') : (v || '')
+}
+export function adminRecruitPage(items: any[]) {
+  const fresh = items.filter((r) => (r.status || 'new') === 'new').length
+  return adminShell('recruit', '채용 지원', html`
+<h1>채용 지원 (${items.length}${fresh ? ` · 신규 ${fresh}` : ''})</h1>
+<p style="font-size:13.5px;color:var(--ink-mute);margin:-14px 0 20px">/recruit 상시 인재채용 페이지에서 접수된 지원서입니다. 항목을 누르면 상세 내용이 열립니다. 보유기간(채용 절차 종료 후 1년 또는 지원자 삭제 요청 시)이 지나면 삭제해 주세요.</p>
+${items.length ? '' : html`<div class="admin-card"><p style="color:var(--ink-mute)">아직 접수된 지원서가 없습니다.</p></div>`}
+${items.map((r) => {
+  const st = RECRUIT_STATUS[r.status] ? r.status : 'new'
+  return html`
+<details class="admin-card rc-adm-item" id="apply-${r.id}">
+  <summary>
+    <span><strong>${r.name}</strong> <span class="rc-adm-meta">· ${r.field} · ${r.phone} · ${kst(r.created_at)} 접수</span></span>
+    <span class="rc-adm-badge s-${st}">${RECRUIT_STATUS[st]}</span>
+  </summary>
+  <div class="rc-adm-body">
+    <dl>
+      <dt>성함</dt><dd>${r.name}</dd>
+      <dt>연락처</dt><dd><a href="tel:${r.phone}">${r.phone}</a></dd>
+      <dt>지원 분야</dt><dd>${r.field}</dd>
+      <dt>경력</dt><dd>${r.experience || '—'}</dd>
+      <dt>희망 입사 시기</dt><dd>${r.start_date || '—'}</dd>
+      <dt>자기소개</dt><dd>${r.intro || '—'}</dd>
+      <dt>개인정보 동의</dt><dd>${r.privacy_consent ? '동의함' : '—'} (접수 ${kst(r.created_at)} 한국시간)</dd>
+    </dl>
+    <div class="rc-adm-edit">
+      <label style="font-size:13px;font-weight:700">처리 상태
+        <select class="form-control" data-recruit-status="${r.id}">
+          ${Object.entries(RECRUIT_STATUS).map(([k, v]) => html`<option value="${k}" ${k === st ? 'selected' : ''}>${v}</option>`)}
+        </select>
+      </label>
+      <label style="font-size:13px;font-weight:700">메모 (내부용)
+        <textarea class="form-control" data-recruit-memo="${r.id}" maxlength="2000" placeholder="예: 10/22 통화, 12월 입사 가능">${r.memo || ''}</textarea>
+      </label>
+      <div class="rc-adm-actions">
+        <button type="button" class="admin-btn" data-recruit-save="${r.id}">저장</button>
+        <button type="button" class="admin-btn danger" data-delete="recruit" data-id="${r.id}">삭제</button>
+        <span role="status" aria-live="polite"></span>
+      </div>
+    </div>
+  </div>
+</details>`
+})}`)
 }

@@ -33,9 +33,10 @@ import { areaPage } from './pages/area'
 import { naepoHubPage, NAEPO_HUB_PATH, NAEPO_HUB_MODIFIED } from './pages/naepo-hub'
 import { naepoCard } from './naepo-cards'
 import { gameHubPage, gamePlayPage } from './pages/game'
+import { recruitPage, RECRUIT_FIELDS, RECRUIT_MODIFIED } from './pages/recruit'
 import {
   adminLoginPage, adminDashPage, adminUsersPage, adminReservationsPage,
-  adminCasesPage, adminPostsPage, adminNoticesPage, adminFeesPage, adminStatsPage,
+  adminCasesPage, adminPostsPage, adminNoticesPage, adminFeesPage, adminStatsPage, adminRecruitPage,
 } from './pages/admin'
 import { AdminStats, fetchSiteStats } from './pages/stats'
 
@@ -133,7 +134,7 @@ for (const path of ['/api/auth/register', '/api/auth/login', '/api/admin/login']
 }
 for (const [path, limit, seconds] of [
   ['/api/auth/login', 30, 900], ['/api/admin/login', 10, 900],
-  ['/api/auth/register', 10, 3600], ['/api/reservation', 10, 3600],
+  ['/api/auth/register', 10, 3600], ['/api/reservation', 10, 3600], ['/api/recruit', 5, 3600],
 ] as const) {
   app.use(path, async (c, next) => {
     if (c.req.method === 'POST') await rateLimit(c, path, clientIP(c), limit, seconds)
@@ -355,6 +356,7 @@ app.get('/pricing', async (c) => {
 })
 app.get('/faq', (c) => c.html(faqTotalPage()))
 app.get('/reservation', (c) => c.html(reservationPage()))
+app.get('/recruit', (c) => c.html(recruitPage())) // 상시 인재채용 (2026-10-21)
 app.get('/privacy', (c) => c.html(privacyPage()))
 app.get('/terms', (c) => c.html(termsPage()))
 // 고수 농구장 미니게임 (noindex, follow · 사이트맵·llms 제외)
@@ -449,6 +451,24 @@ app.post('/api/reservation', async (c) => {
   await c.env.DB.prepare('INSERT INTO reservations (name, phone, email, category, preferred_at, message) VALUES (?, ?, ?, ?, ?, ?)')
     .bind(name, phone, email || null, category || null, preferred || null, message || null).run()
   return c.json(ok({ message: '상담 예약이 접수되었습니다. 개원 준비 기간에는 순차적으로 연락드립니다.' }))
+})
+
+// 상시 인재채용 지원 — 허니팟(website) + IP당 시간 5회 제한(위 rateLimit). 알림 구조 없음(관리자 목록에서 확인).
+app.post('/api/recruit', async (c) => {
+  const body = await jsonObject(c)
+  // 허니팟: 사람에게 보이지 않는 칸이 채워지면 저장하지 않고 성공처럼 응답
+  if (typeof body.website === 'string' && body.website.trim()) return c.json(ok({ message: '지원서가 접수되었습니다. 감사합니다.' }))
+  const name = text(body.name, '성함', 40, true)
+  const phone = phoneValue(body.phone)
+  const field = text(body.field, '지원 분야', 20, true)
+  if (!(RECRUIT_FIELDS as readonly string[]).includes(field)) bad('지원 분야를 선택해주세요.')
+  const experience = text(body.experience, '경력', 200)
+  const startDate = text(body.start_date, '희망 입사 시기', 100)
+  const intro = text(body.intro, '자기소개', 2000)
+  if (!consent(body.privacy_consent)) bad('개인정보 수집·이용 동의가 필요합니다.')
+  await c.env.DB.prepare('INSERT INTO recruit_applications (name, phone, field, experience, start_date, intro, privacy_consent) VALUES (?, ?, ?, ?, ?, ?, 1)')
+    .bind(name, phone, field, experience || null, startDate || null, intro || null).run()
+  return c.json(ok({ message: '지원서가 접수되었습니다. 소중한 관심에 감사드리며, 확인 후 연락드리겠습니다.' }))
 })
 
 // 중앙 대시보드 실예약 집계 — 최근 28일 vs 직전 28일 (created_at 은 UTC CURRENT_TIMESTAMP)
@@ -571,10 +591,11 @@ app.get('/admin', async (c) => {
     (SELECT COUNT(*) FROM posts) AS posts,
     (SELECT COUNT(*) FROM notices) AS notices,
     (SELECT COUNT(*) FROM reservations) AS resv,
+    (SELECT COUNT(*) FROM recruit_applications) AS recruit,
     (SELECT COALESCE(SUM(views),0) FROM cases) +
     (SELECT COALESCE(SUM(views),0) FROM posts) +
     (SELECT COALESCE(SUM(views),0) FROM notices) AS totalViews
-  `).first<{ users: number; cases: number; posts: number; notices: number; resv: number; totalViews: number }>()
+  `).first<{ users: number; cases: number; posts: number; notices: number; resv: number; recruit: number; totalViews: number }>()
   if (!stats) throw new HTTPException(503, { message: '관리 통계를 불러오지 못했습니다.' })
   return c.html(adminDashPage(stats))
 })
@@ -586,6 +607,10 @@ app.get('/admin/users', async (c) => {
 app.get('/admin/reservations', async (c) => {
   const r = await c.env.DB.prepare('SELECT * FROM reservations ORDER BY created_at DESC').all()
   return c.html(adminReservationsPage(r.results || []))
+})
+app.get('/admin/recruit', async (c) => {
+  const r = await c.env.DB.prepare('SELECT * FROM recruit_applications ORDER BY created_at DESC, id DESC').all()
+  return c.html(adminRecruitPage(r.results || []))
 })
 app.get('/admin/cases', async (c) => {
   const r = await c.env.DB.prepare('SELECT id, title, category, region, doctor_slug, views, created_at FROM cases ORDER BY created_at DESC').all()
@@ -667,7 +692,7 @@ app.get('/sitemap.xml', async (c) => {
     home: '2026-10-14', mission: '2026-10-07', doctors: '2026-09-29', treatments: '2026-10-14',
     cases: '2026-10-03', column: '2026-10-03', encyclopedia: '2026-09-16', faq: '2026-09-15',
     notice: '2026-09-15', directions: '2026-10-07', tour: '2026-09-15', pricing: '2026-09-15',
-    reservation: '2026-10-07', privacy: '2026-10-07', terms: '2026-08-31', area: '2026-10-07',
+    reservation: '2026-10-07', privacy: '2026-10-21', recruit: RECRUIT_MODIFIED, terms: '2026-08-31', area: '2026-10-07',
     naepoHub: NAEPO_HUB_MODIFIED,
     naepoArea: '2026-10-14', // '내포 {진료}' 6개: 대표 이미지·카드·신설 3개 (2026-10-14)
   }
@@ -694,7 +719,7 @@ app.get('/sitemap.xml', async (c) => {
     { p: '/notice', pr: '0.6', lm: maxDate(LM.notice, ...notices.map((n) => (n.created_at || '').slice(0, 10))) },
     { p: '/directions', pr: '0.8', lm: LM.directions },
     { p: '/tour', pr: '0.7', lm: LM.tour }, { p: '/pricing', pr: '0.7', lm: maxDate(LM.pricing, feesLm) },
-    { p: '/reservation', pr: '0.8', lm: LM.reservation }, { p: '/privacy', pr: '0.3', lm: LM.privacy }, { p: '/terms', pr: '0.3', lm: LM.terms },
+    { p: '/reservation', pr: '0.8', lm: LM.reservation }, { p: '/recruit', pr: '0.5', lm: LM.recruit }, { p: '/privacy', pr: '0.3', lm: LM.privacy }, { p: '/terms', pr: '0.3', lm: LM.terms },
   ]
   const urls: string[] = staticPaths.map((s) => U(`${SITE.domain}${s.p}`, s.pr, s.p === '/' ? 'daily' : 'weekly', s.lm))
   DOCTORS.forEach((d) => urls.push(U(`${SITE.domain}/doctors/${d.slug}`, '0.8', 'monthly', LM.doctors)))
@@ -820,6 +845,7 @@ ${TREATMENTS.map((t) => `- [${t.name}](${SITE.domain}/treatments/${t.slug}): ${t
 - [치과 백과사전](${SITE.domain}/encyclopedia)
 - [오시는 길](${SITE.domain}/directions): ${SITE.address}
 - [상담 예약](${SITE.domain}/reservation)
+- [상시 인재채용](${SITE.domain}/recruit): 치과위생사·간호조무사·데스크·상담 상시 인재풀 등록
 
 ## 진료 시간
 ${SITE.hours.map((h) => `- ${h.day}: ${h.time}`).join('\n')}

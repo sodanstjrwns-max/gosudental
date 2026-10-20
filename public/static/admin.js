@@ -107,6 +107,20 @@
     try { await request('/api/admin/notices/' + btn.dataset.pin, json('PUT', { pinned: Number(btn.dataset.value) })); location.reload(); }
     catch (e) { alert(e.message); btn.disabled = false; }
   }));
+  document.querySelectorAll('[data-recruit-save]').forEach(btn => btn.addEventListener('click', async () => {
+    const id = btn.dataset.recruitSave;
+    const status = document.querySelector('[data-recruit-status="' + id + '"]');
+    const memo = document.querySelector('[data-recruit-memo="' + id + '"]');
+    const note = btn.parentElement.querySelector('[role=status]');
+    btn.disabled = true; note.textContent = '저장 중…';
+    try {
+      await request('/api/admin/recruit/' + id, json('PUT', { status: status.value, memo: memo.value }));
+      note.textContent = '저장했습니다.';
+      const badge = btn.closest('details').querySelector('.rc-adm-badge');
+      if (badge) { badge.className = 'rc-adm-badge s-' + status.value; badge.textContent = status.options[status.selectedIndex].text; }
+    } catch (e) { note.textContent = ''; alert(e.message); }
+    finally { btn.disabled = false; }
+  }));
   document.querySelectorAll('[data-reservation]').forEach(input => input.addEventListener('change', async () => {
     input.disabled = true;
     try { await request('/api/admin/reservations/' + input.dataset.reservation, json('PUT', { status: input.value })); input.dataset.previous = input.value; }

@@ -192,6 +192,23 @@ export function registerAdminAPI(app: App) {
     if (!r.meta.changes) throw missing()
     return c.json(ok())
   })
+  // 채용 지원서: 처리 상태·내부 메모 저장, 삭제 (2026-10-21)
+  app.put('/api/admin/recruit/:id', async c => {
+    const id = positiveId(c.req.param('id'))
+    const body = await jsonObject(c)
+    const status = text(body.status, '처리 상태', 20, true)
+    if (!['new', 'reviewing', 'contacted', 'pooled', 'closed'].includes(status)) bad('처리 상태를 올바르게 선택해주세요.')
+    const memo = text(body.memo, '메모', 2000)
+    const r = await c.env.DB.prepare('UPDATE recruit_applications SET status=?, memo=?, updated_at=CURRENT_TIMESTAMP WHERE id=?').bind(status, memo || null, id).run()
+    if (!r.meta.changes) throw missing()
+    return c.json(ok())
+  })
+  app.delete('/api/admin/recruit/:id', async c => {
+    const id = positiveId(c.req.param('id'))
+    const r = await c.env.DB.prepare('DELETE FROM recruit_applications WHERE id=?').bind(id).run()
+    if (!r.meta.changes) throw missing()
+    return c.json(ok())
+  })
   app.put('/api/admin/reservations/:id', async c => {
     const id = positiveId(c.req.param('id'))
     const body = await jsonObject(c)

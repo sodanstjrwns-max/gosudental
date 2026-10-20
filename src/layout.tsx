@@ -245,6 +245,7 @@ src="https://www.facebook.com/tr?id=1120020003707931&ev=PageView&noscript=1"
             <a href="/pricing">비용 안내</a>
             <a href="/faq">자주 묻는 질문</a>
             <a href="/notice">공지사항</a>
+            <a href="/recruit">인재채용</a>
           </div></div>
         </li>
         <li><a href="/game" class="gnb-game">${raw(BALL_ICON)}고수 농구장</a></li>
@@ -272,6 +273,7 @@ src="https://www.facebook.com/tr?id=1120020003707931&ev=PageView&noscript=1"
     <a href="/pricing">비용 안내</a>
     <a href="/faq">FAQ</a>
     <a href="/notice">공지사항</a>
+    <a href="/recruit">인재채용</a>
     <a href="/game" class="mm-game">${raw(BALL_ICON)}고수 농구장</a>
     <a href="/auth/login">로그인</a>
     <a href="/reservation" class="mobile-cta">상담 예약</a>
@@ -296,7 +298,7 @@ src="https://www.facebook.com/tr?id=1120020003707931&ev=PageView&noscript=1"
       <p>${SITE.address} (${SITE.addressShort})</p>
       <p>${SITE.openDate} | 대표전화: <a href="${SITE.telHref}" class="footer-tel">${SITE.tel}</a></p>
       <p class="footer-links">
-        ${footerHubLink(meta.path) ? html`<a href="/area/naepo">내포 치과</a> 위치·진료 안내 · ` : ''}<a href="/privacy">개인정보 처리방침</a> · <a href="/terms">이용약관</a> · <a href="/sitemap.xml">사이트맵</a>
+        ${footerHubLink(meta.path) ? html`<a href="/area/naepo">내포 치과</a> 위치·진료 안내 · ` : ''}<a href="/recruit">인재채용</a> · <a href="/privacy">개인정보 처리방침</a> · <a href="/terms">이용약관</a> · <a href="/sitemap.xml">사이트맵</a>
       </p>
     </div>
     <div class="footer-legal">
