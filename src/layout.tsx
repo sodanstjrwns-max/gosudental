@@ -3,6 +3,7 @@ import { safeJson } from './security'
 import { siteStyles } from './styles.generated'
 import { SITE, TREATMENTS, DOCTORS } from './data/site'
 import { footerHubLink } from './hub-link'
+import { IMMERSIVE_CSS, IMMERSIVE_JS } from './immersive-assets'
 
 export interface PageMeta {
   title: string
@@ -26,6 +27,8 @@ export interface PageMeta {
   robots?: string
   /** noindex 페이지에서도 GA4·Clarity 를 켤 때(게임 페이지) */
   analytics?: boolean
+  /** 메인 스크롤 몰입 연출(static/immersive.*) — 홈만 */
+  immersive?: boolean
 }
 
 // 메뉴 '고수 농구장' 아이콘 — 아이콘 폰트 서브셋에 농구공이 없어 인라인 SVG
@@ -162,6 +165,7 @@ ${schemaDate(meta.modifiedTime) ? html`<meta property="article:modified_time" co
 <link rel="icon" type="image/png" sizes="192x192" href="/favicon-192.png?v=fav20261014">
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=fav20261014">
 <style>${raw(siteStyles)}</style>
+${meta.immersive ? html`<link rel="stylesheet" href="${IMMERSIVE_CSS}">` : ''}
 ${meta.path === '/' ? html`<link rel="preload" as="image" href="/static/img/interior-lobby-mobile.webp" media="(max-width:640px)" fetchpriority="high"><link rel="preload" as="image" href="/static/img/interior-lobby.webp" media="(min-width:641px)" fetchpriority="high">` : ''}
 <noscript><style>.reveal{opacity:1!important;transform:none!important}.mobile-menu{display:block!important;position:static!important}.mobile-toggle{display:none!important}.quote-band{clip-path:none!important}.quote-band blockquote,.quote-band cite{opacity:1!important;transform:none!important}form[data-ajax] button[type=submit]{display:none!important}</style></noscript>
 ${raw(schemas.map((s) => `<script type="application/ld+json">${safeJson(s)}</script>`).join('\n'))}
@@ -317,6 +321,10 @@ src="https://www.facebook.com/tr?id=1120020003707931&ev=PageView&noscript=1"
 <script src="/static/app.js?v=20260913-delivery" defer></script>
 <script src="/static/gallery.js?v=20260913-photos" defer></script>
 <script src="/static/ink.js?v=20261007-game" defer></script>
+${meta.immersive ? html`<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.min.js" defer></script>
+<script src="${IMMERSIVE_JS}" defer></script>` : ''}
 </body>
 </html>`
 }

@@ -1,0 +1,19 @@
+/* 고수치과 메인 스크롤 몰입 연출 — static/immersive.js 가 html.mx 를 붙였을 때만 작동 */
+html.mx { scroll-behavior: auto !important; }
+html.mx.lenis, html.mx.lenis body { height: auto; }
+html.mx .lenis.lenis-smooth { scroll-behavior: auto !important; }
+
+/* 먹 번짐 낱말 */
+.mx-ink { display: inline-block; will-change: transform, filter, opacity; }
+
+/* 사진 시차 */
+.mx-par { overflow: hidden; }
+.mx-par img { will-change: transform; transform-origin: 50% 50%; }
+html.mx .space-item img { will-change: transform; }
+
+/* 스크롤에 붙은 상담 띠·카드는 CSS transform 전환을 끄고 나머지 전환만 */
+html.mx #cta-section .cta-band { will-change: transform; transition: none; }
+html.mx .treat-card-img, html.mx .space-item, html.mx #director-introduction .clinic-photo { will-change: clip-path; }
+
+/* 옆에서 들어오는 글·사진이 가로 스크롤을 만들지 않도록 */
+html.mx #director-introduction, html.mx #core-treatments-section, html.mx #director-life-preview, html.mx #doctors-section, html.mx #space-section { overflow-x: clip; }
