@@ -511,7 +511,7 @@ export function adminFeesPage(groups: { category: string; items: { name: string;
   return adminShell('fees', '비급여 수가', html`
 <h1>비급여 진료비(수가) 관리</h1>
 <p style="color:var(--ink-mute);margin:-6px 0 18px;font-size:14px">
-  분류·항목·금액을 직접 편집할 수 있습니다. 각 항목의 <strong>공개</strong> 체크를 끄면 비용 안내 페이지에서 숨겨지고, 저장 시 반영됩니다.
+  분류·항목·금액을 직접 편집할 수 있습니다. 각 줄의 <strong>+위·+아래</strong>로 원하는 자리에 항목을 끼워 넣고, <strong>↑·↓</strong>로 순서를 바꿀 수 있습니다. 각 항목의 <strong>공개</strong> 체크를 끄면 비용 안내 페이지에서 숨겨지고, 저장 시 반영됩니다.
   <br>모든 항목이 비공개인 분류는 페이지에 표시되지 않습니다.
 </p>
 
@@ -536,9 +536,12 @@ function render(){
     h += '<div style="border:1px solid var(--line,#e5e7eb);border-radius:12px;padding:16px;margin-bottom:18px">';
     h += '<div style="display:flex;gap:10px;align-items:center;margin-bottom:12px">';
     h += '<input aria-label="분류명" class="form-control" style="font-weight:800;font-size:16px;max-width:340px" value="'+esc(g.category)+'" oninput="FEES['+gi+'].category=this.value" placeholder="분류명 (예: 임플란트)">';
-    h += '<button type="button" class="admin-btn danger" onclick="delGroup('+gi+')" style="margin-left:auto">분류 삭제</button>';
+    h += '<span style="margin-left:auto;display:flex;gap:6px">';
+    h += '<button type="button" class="admin-btn ghost" onclick="moveGroup('+gi+',-1)" aria-label="분류를 위로" title="분류를 위로"'+(gi===0?' disabled':'')+'>↑</button>';
+    h += '<button type="button" class="admin-btn ghost" onclick="moveGroup('+gi+',1)" aria-label="분류를 아래로" title="분류를 아래로"'+(gi===FEES.length-1?' disabled':'')+'>↓</button>';
+    h += '<button type="button" class="admin-btn danger" onclick="delGroup('+gi+')">분류 삭제</button></span>';
     h += '</div>';
-    h += '<table class="admin-table" tabindex="0" aria-label="수가 편집 목록"><thead><tr><th style="width:36%">항목</th><th style="width:22%">비용</th><th>비고</th><th style="width:70px;text-align:center">공개</th><th style="width:60px"></th></tr></thead><tbody>';
+    h += '<table class="admin-table" tabindex="0" aria-label="수가 편집 목록"><thead><tr><th style="width:36%">항목</th><th style="width:22%">비용</th><th>비고</th><th style="width:70px;text-align:center">공개</th><th style="width:250px">순서 · 추가</th></tr></thead><tbody>';
     g.items.forEach(function(it, ii){
       var checked = (it.is_published===0||it.is_published===false)?'':'checked';
       h += '<tr>';
@@ -546,7 +549,12 @@ function render(){
       h += '<td><input class="form-control" value="'+esc(it.price)+'" oninput="FEES['+gi+'].items['+ii+'].price=this.value" aria-label="비용" placeholder="예: 500,000원"></td>';
       h += '<td><input class="form-control" value="'+esc(it.note)+'" oninput="FEES['+gi+'].items['+ii+'].note=this.value" aria-label="비고" placeholder="비고 (선택)"></td>';
       h += '<td style="text-align:center"><input aria-label="수가 공개" type="checkbox" '+checked+' onchange="FEES['+gi+'].items['+ii+'].is_published=this.checked?1:0;render()"></td>';
-      h += '<td><button type="button" class="admin-btn danger" onclick="delItem('+gi+','+ii+')">삭제</button></td>';
+      h += '<td style="white-space:nowrap">';
+      h += '<button type="button" class="admin-btn ghost" style="padding:6px 9px" onclick="moveItem('+gi+','+ii+',-1)" aria-label="위로 이동" title="위로 이동"'+(ii===0?' disabled':'')+'>↑</button> ';
+      h += '<button type="button" class="admin-btn ghost" style="padding:6px 9px" onclick="moveItem('+gi+','+ii+',1)" aria-label="아래로 이동" title="아래로 이동"'+(ii===g.items.length-1?' disabled':'')+'>↓</button> ';
+      h += '<button type="button" class="admin-btn ghost" style="padding:6px 9px" onclick="insertItem('+gi+','+ii+')" title="이 줄 위에 새 항목 추가">+위</button> ';
+      h += '<button type="button" class="admin-btn ghost" style="padding:6px 9px" onclick="insertItem('+gi+','+(ii+1)+')" title="이 줄 아래에 새 항목 추가">+아래</button> ';
+      h += '<button type="button" class="admin-btn danger" style="padding:6px 9px" onclick="delItem('+gi+','+ii+')">삭제</button></td>';
       h += '</tr>';
     });
     h += '</tbody></table>';
@@ -558,6 +566,11 @@ function render(){
 function addGroup(){ FEES.push({category:'새 분류', items:[{name:'',price:'',note:'',is_published:1}]}); render(); }
 function delGroup(gi){ if(confirm('이 분류 전체를 삭제하시겠습니까?')){ FEES.splice(gi,1); render(); } }
 function addItem(gi){ FEES[gi].items.push({name:'',price:'',note:'',is_published:1}); render(); }
+// 2026-11-02: 원하는 위치에 항목 끼워 넣기·순서 바꾸기 (조원익 원장 요청)
+function focusRow(gi,ii){ var t=document.querySelectorAll('#fees-editor table')[gi]; var r=t&&t.tBodies[0].rows[ii]; var i=r&&r.querySelector('input'); if(i){ i.focus(); r.scrollIntoView({block:'center'}); } }
+function insertItem(gi,at){ FEES[gi].items.splice(at,0,{name:'',price:'',note:'',is_published:1}); render(); focusRow(gi,at); }
+function moveItem(gi,ii,d){ var a=FEES[gi].items, j=ii+d; if(j<0||j>=a.length) return; var x=a[ii]; a[ii]=a[j]; a[j]=x; render(); focusRow(gi,j); }
+function moveGroup(gi,d){ var j=gi+d; if(j<0||j>=FEES.length) return; var x=FEES[gi]; FEES[gi]=FEES[j]; FEES[j]=x; render(); }
 function delItem(gi,ii){ FEES[gi].items.splice(ii,1); render(); }
 async function saveFees(){
   var btn = document.getElementById('fees-save');
