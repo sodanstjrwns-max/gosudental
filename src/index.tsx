@@ -450,8 +450,57 @@ app.post('/api/reservation', async (c) => {
   if (!consent(body.privacy_consent)) bad('개인정보 수집·이용 동의가 필요합니다.')
   await c.env.DB.prepare('INSERT INTO reservations (name, phone, email, category, preferred_at, message) VALUES (?, ?, ?, ?, ?, ?)')
     .bind(name, phone, email || null, category || null, preferred || null, message || null).run()
-  return c.json(ok({ message: '상담 예약이 접수되었습니다. 개원 준비 기간에는 순차적으로 연락드립니다.' }))
+  // 새 예약 알림 메일(Resend) — 응답을 늦추지 않도록 waitUntil, 실패해도 접수는 유지
+  const mail = sendReservationEmail(c.env, { name, phone, email: email || '', category: category || '', preferred: preferred || '', message: message || '' })
+  try { c.executionCtx.waitUntil(mail) } catch { await mail }
+  return c.json(ok({ message: '상담 예약이 접수되었습니다. 확인 후 순차적으로 연락드리겠습니다.' }))
 })
+
+// 예약 알림 메일 — Resend (from 도메인 gosudc.kr 은 Resend 인증 필요). secrets 없으면 건너뜀.
+async function sendReservationEmail(env: Bindings, r: { name: string; phone: string; email: string; category: string; preferred: string; message: string }) {
+  if (!env.RESEND_API_KEY || !env.NOTIFICATION_EMAIL) { console.log('reservation mail skipped: RESEND_API_KEY/NOTIFICATION_EMAIL not set'); return }
+  try {
+    const adminUrl = `${SITE.domain}/admin/reservations`
+    const when = new Date().toLocaleString('ko-KR', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Seoul' })
+    const phoneDigits = r.phone.replace(/[^0-9]/g, '')
+    const esc = (v: unknown) => String(v ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+    const row = (k: string, v: string) =>
+      `<tr><td style="padding:11px 16px;background:#f4f1ea;width:100px;color:#1f3b4d;font-weight:600;vertical-align:top">${k}</td><td style="padding:11px 16px;white-space:pre-wrap">${v}</td></tr>`
+    const res = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        from: '고수치과 <noreply@gosudc.kr>',
+        to: [env.NOTIFICATION_EMAIL],
+        ...(r.email ? { reply_to: r.email } : {}),
+        subject: `[상담 예약] ${r.name} · ${r.category || '진료 미선택'}`.replace(/[\r\n]+/g, ' '),
+        html: `
+          <div style="font-family:-apple-system,'Malgun Gothic',sans-serif;max-width:560px;margin:0 auto;color:#101417">
+            <div style="background:#101417;color:#fff;padding:18px 22px;border-radius:8px 8px 0 0">
+              <div style="font-size:13px;letter-spacing:.08em;color:#acd7e5">GOSU DENTAL · 새 상담 예약</div>
+              <div style="font-size:20px;font-weight:700;margin-top:4px">${esc(r.name)} 님의 상담 예약</div>
+            </div>
+            <table style="width:100%;border-collapse:collapse;border:1px solid #e5e1d8;border-top:none">
+              ${row('접수일시', esc(when) + ' (KST)')}
+              ${row('성함', `<strong>${esc(r.name)}</strong>`)}
+              ${row('연락처', `<a href="tel:${phoneDigits}" style="color:#101417;font-weight:700">${esc(r.phone)}</a>`)}
+              ${row('이메일', esc(r.email) || '-')}
+              ${row('관심 진료', esc(r.category) || '-')}
+              ${row('희망 일시', esc(r.preferred) || '-')}
+              ${row('남기신 말씀', esc(r.message) || '-')}
+            </table>
+            <div style="text-align:center;padding:20px 0">
+              <a href="${adminUrl}" style="display:inline-block;background:#101417;color:#fff;text-decoration:none;padding:13px 30px;border-radius:6px;font-weight:700;font-size:15px">관리자 화면에서 확인하기</a>
+            </div>
+            <p style="text-align:center;font-size:12px;color:#888;margin:0 0 8px">${adminUrl}</p>
+          </div>`,
+      }),
+    })
+    if (!res.ok) console.error('reservation mail failed:', res.status)
+  } catch (e) {
+    console.error('reservation mail error')
+  }
+}
 
 // 상시 인재채용 지원 — 허니팟(website) + IP당 시간 5회 제한(위 rateLimit). 알림 구조 없음(관리자 목록에서 확인).
 app.post('/api/recruit', async (c) => {
@@ -688,13 +737,14 @@ app.post('/api/admin/fees', async (c) => {
 app.get('/sitemap.xml', async (c) => {
   // lastmod = 해당 페이지 내용(템플릿 함수·데이터 파일)을 실제로 고친 날짜(git 기록 기준 고정값, 2026-10-08 점검).
   // 내용을 고치면 해당 값을 그날로 바꾼다. 게시판 글·수가는 DB 날짜를 쓴다. new Date()로 오늘을 지어내지 않는다.
+  // 2026-11-03: 개원·진료시간 반영(홈·진료·오시는 길·예약·수가·지역·개인정보 위탁)
   const LM = {
-    home: '2026-10-14', mission: '2026-10-07', doctors: '2026-09-29', treatments: '2026-10-14',
-    cases: '2026-10-03', column: '2026-10-03', encyclopedia: '2026-09-16', faq: '2026-09-15',
-    notice: '2026-09-15', directions: '2026-10-07', tour: '2026-09-15', pricing: '2026-09-15',
-    reservation: '2026-10-07', privacy: '2026-10-21', recruit: RECRUIT_MODIFIED, terms: '2026-08-31', area: '2026-10-07',
+    home: '2026-11-03', mission: '2026-10-07', doctors: '2026-09-29', treatments: '2026-11-03',
+    cases: '2026-11-03', column: '2026-10-03', encyclopedia: '2026-09-16', faq: '2026-09-15',
+    notice: '2026-09-15', directions: '2026-11-03', tour: '2026-11-03', pricing: '2026-11-03',
+    reservation: '2026-11-03', privacy: '2026-11-03', recruit: RECRUIT_MODIFIED, terms: '2026-08-31', area: '2026-11-03',
     naepoHub: NAEPO_HUB_MODIFIED,
-    naepoArea: '2026-10-14', // '내포 {진료}' 6개: 대표 이미지·카드·신설 3개 (2026-10-14)
+    naepoArea: '2026-11-03', // '내포 {진료}' 6개: 2026-11-03 개원·진료시간 문구 (2026-10-14 대표 이미지·카드·신설 3개)
   }
   const maxDate = (...ds: string[]) => ds.filter((d) => /^\d{4}-\d{2}-\d{2}$/.test(d)).sort().pop() || ''
   const xml = (value: string) => value.replace(/[<>&"']/g, ch => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;', "'": '&apos;' }[ch]!))
@@ -851,7 +901,7 @@ ${TREATMENTS.map((t) => `- [${t.name}](${SITE.domain}/treatments/${t.slug}): ${t
 ${SITE.hours.map((h) => `- ${h.day}: ${h.time}`).join('\n')}
 
 ## 정보 이용 시 확인 사항
-- 개원 예정 안내이며 대표전화는 ${SITE.tel}입니다. 확정 진료시간은 오시는 길 페이지에서 확인합니다.
+- 2026년 11월 2일 개원했으며 대표전화는 ${SITE.tel}입니다. 진료시간은 병원 사정에 따라 바뀔 수 있어 최신 내용은 오시는 길 페이지와 네이버 플레이스에서 확인합니다.
 - 진료 이미지는 실제 의료진 사진, 인테리어 설계 이미지, AI 설명 이미지로 구분되어 있습니다.
 - 잠정수가를 확정 가격으로 인용하거나 개인에게 동일한 치료 결과를 보장하지 않습니다.
 
@@ -899,6 +949,7 @@ app.get('/llms-full.txt', async (c) => {
 - 대표전화: ${SITE.tel}
 - 위치 랜드마크: ${SITE.landmark}
 - 개원: ${SITE.openDate}
+- 진료시간: ${SITE.hoursSummary}
 - 대표원장: 조원익
 - 미션: ${SITE.mission}
 - 예약: ${SITE.domain}/reservation

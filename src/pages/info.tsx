@@ -40,7 +40,7 @@ export function directionsPage() {
             ${SITE.hours.map((h) => html`<tr><th scope="row" style="width:40%">${h.day}</th><td>${h.time}</td></tr>`)}
           </tbody>
         </table>
-        <div class="alert info">${SITE.openDate}입니다. 진료시간은 확정되는 대로 이 페이지와 네이버 플레이스에서 안내드리겠습니다.</div>
+        <div class="alert info">${SITE.openDate}. 목요일은 오후 2시부터 진료하며, 월·목요일은 밤 9시까지 야간진료합니다. 진료 일정은 병원 사정에 따라 바뀔 수 있으니 내원 전 대표전화 <a href="${SITE.telHref}">${SITE.tel}</a>로 확인해 주세요.</div>
       </div>
     </div>
   </div>
@@ -91,7 +91,7 @@ export function tourPage() {
         <figcaption class="cap">${s.cap}</figcaption>
       </figure>`)}
     </div>
-    <div class="alert info" style="margin-top:40px">위 이미지는 인테리어 설계(3D) 도면으로, 실제 완공 모습과 일부 차이가 있을 수 있습니다. 개원 후 실제 공간 사진으로 업데이트됩니다.</div>
+    <div class="alert info" style="margin-top:40px">위 이미지는 인테리어 설계(3D) 도면으로, 실제 공간 모습과 일부 차이가 있을 수 있습니다. 실제 공간 사진은 준비되는 대로 업데이트합니다.</div>
   </div>
 </section>`
 
@@ -115,7 +115,7 @@ export function pricingPage(groups?: { category: string; items: { name: string; 
     <nav class="breadcrumb" aria-label="현재 위치"><a href="/">홈</a> / <span>비용 안내</span></nav>
     <p class="eyebrow">Pricing</p>
     <h1 class="h-display">비급여 진료비 <em>안내</em></h1>
-    <p class="lead">주요 진료비용을 안내드립니다. 현재 개원 준비 중인 잠정 수가이며, 진단 후 치료 계획과 함께 최종 비용을 설명드립니다.</p>
+    <p class="lead">주요 진료비용을 안내드립니다. 공개 수가는 병원 사정에 따라 바뀔 수 있으며, 진단 후 치료 계획과 함께 최종 비용을 설명드립니다.</p>
   </div>
 </section>
 
@@ -140,7 +140,7 @@ export function pricingPage(groups?: { category: string; items: { name: string; 
 
   return Layout(
     {
-      title: '비용 안내 — 개원 준비 중 잠정수가 | 고수치과의원',
+      title: '비용 안내 — 비급여 진료비 | 고수치과의원',
       description: '고수치과 비급여 진료비용 안내. 임플란트·치아교정·라미네이트 등 주요 진료의 잠정 비용을 안내합니다. 최종 금액과 적용 조건은 병원 확인 후 확정됩니다.',
       path: '/pricing',
       schema: [breadcrumbSchema([{ name: '홈', path: '/' }, { name: '비용 안내', path: '/pricing' }])],
@@ -250,7 +250,7 @@ export function reservationPage() {
       </label>
       <button type="submit" class="btn-submit">예약 신청하기</button>
     </form>
-    <div class="alert info" style="margin-top:20px">${SITE.openDate}로, 개원 전에는 상담 예약을 순차적으로 안내드립니다.</div>
+    <div class="alert info" style="margin-top:20px">${SITE.openDate}. 남겨 주신 예약 신청은 진료시간 중 확인 후 순차적으로 연락드립니다. (진료시간: ${SITE.hoursSummary})</div>
   </div>
 </section>`
 

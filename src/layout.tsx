@@ -29,6 +29,8 @@ export interface PageMeta {
   analytics?: boolean
   /** 메인 스크롤 몰입 연출(static/immersive.*) — 홈만 */
   immersive?: boolean
+  /** main 밖(쌓임 맥락 밖)에 붙는 오버레이 — 홈 팝업 배너 */
+  overlay?: any
 }
 
 // 메뉴 '고수 농구장' 아이콘 — 아이콘 폰트 서브셋에 농구공이 없어 인라인 SVG
@@ -44,7 +46,7 @@ const ORG_SCHEMA = {
   logo: `${SITE.domain}/static/img/logo-stack.png`,
   image: [`${SITE.domain}/static/img/og-image.jpg`, `${SITE.domain}/static/img/interior-lobby.jpg`],
   slogan: SITE.slogan,
-  description: `${SITE.slogan} — 임플란트·교정과 전문의 치아교정·심미보철 올인원 진료. 내포신도시 주키즈소아청소년과 건물 5층, 2026년 11월 2일 개원 예정.`,
+  description: `${SITE.slogan} — 임플란트·교정과 전문의 치아교정·심미보철 올인원 진료. 내포신도시 주키즈소아청소년과 건물 5층, 2026년 11월 2일 개원. 월·목 야간진료(21시까지), 토요일 진료.`,
   address: {
     '@type': 'PostalAddress',
     streetAddress: '삽교읍 예학로 93, 5층',
@@ -65,6 +67,14 @@ const ORG_SCHEMA = {
   })),
   knowsAbout: ['임플란트', '치아교정', '투명교정', '심미보철', '라미네이트', '충치치료', '신경치료', '턱관절치료', '자연치아 보존'],
   telephone: SITE.telIntl,
+  foundingDate: '2026-11-02',
+  // 진료시간(SITE.hours 와 동일, 2026-11-03 원장 안내). 점심시간·공휴일 휴진은 화면 표에서 안내
+  openingHoursSpecification: [
+    { '@type': 'OpeningHoursSpecification', dayOfWeek: 'https://schema.org/Monday', opens: '10:00', closes: '21:00' },
+    { '@type': 'OpeningHoursSpecification', dayOfWeek: ['https://schema.org/Tuesday', 'https://schema.org/Wednesday', 'https://schema.org/Friday'], opens: '10:00', closes: '19:00' },
+    { '@type': 'OpeningHoursSpecification', dayOfWeek: 'https://schema.org/Thursday', opens: '14:00', closes: '21:00' },
+    { '@type': 'OpeningHoursSpecification', dayOfWeek: 'https://schema.org/Saturday', opens: '10:00', closes: '14:00' },
+  ],
   sameAs: [SITE.blog, SITE.instagram, SITE.youtube],
 }
 
@@ -318,6 +328,7 @@ src="https://www.facebook.com/tr?id=1120020003707931&ev=PageView&noscript=1"
   <a href="/reservation" class="cta-res"><i class="fas fa-calendar-check" aria-hidden="true"></i> 상담 예약</a>
 </nav>
 
+${meta.overlay || ''}
 <script src="/static/app.js?v=20260913-delivery" defer></script>
 <script src="/static/gallery.js?v=20260913-photos" defer></script>
 <script src="/static/ink.js?v=20261007-game" defer></script>

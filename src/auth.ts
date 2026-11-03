@@ -10,6 +10,8 @@ export type Bindings = {
   MASTER_KEY?: string
   ADMIN_PASSWORD?: string
   SESSION_SECRET?: string
+  RESEND_API_KEY?: string      // Resend 이메일 발송 키 (새 상담 예약 알림)
+  NOTIFICATION_EMAIL?: string  // 예약 알림 받을 주소 (gosudental1@gmail.com)
 }
 
 const enc = new TextEncoder()

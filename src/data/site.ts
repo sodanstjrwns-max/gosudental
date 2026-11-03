@@ -13,17 +13,23 @@ export const SITE = {
   tel: '041-337-2888',
   telHref: 'tel:+82-41-337-2888',
   telIntl: '+82-41-337-2888',
-  openDate: '2026년 11월 2일 개원 예정',
+  openDate: '2026년 11월 2일 개원',
   domain: 'https://gosudc.kr',
   blog: 'https://blog.naver.com/naepo_gosudental', // 병원 공식 블로그(2026-10-07 원장 요청으로 교체)
   instagram: 'https://www.instagram.com/gosudental',
   youtube: 'https://www.youtube.com/channel/UCll6HJc-MktSNtDArs9_MZg',
   landmark: '주키즈소아청소년과 건물 5층 · 내포신도시중흥S클래스더시티 앞 · 보성초 도보 5분',
+  // 진료시간 — 2026-11-03 조원익 원장 카톡·'11월 진료 안내' 이미지 기준
   hours: [
-    { day: '평일', time: '진료시간 확정 시 안내드립니다' },
-    { day: '토요일', time: '진료시간 확정 시 안내드립니다' },
-    { day: '일요일·공휴일', time: '휴진 예정' },
+    { day: '월요일', time: '10:00 ~ 21:00 (야간진료)' },
+    { day: '화·수·금요일', time: '10:00 ~ 19:00' },
+    { day: '목요일', time: '14:00 ~ 21:00 (야간진료)' },
+    { day: '토요일', time: '10:00 ~ 14:00 (점심시간 없음)' },
+    { day: '점심시간', time: '13:00 ~ 14:00 (월·화·수·금)' },
+    { day: '일요일·공휴일', time: '휴진' },
   ],
+  /** 한 줄 요약(본문·FAQ·llms 공용) */
+  hoursSummary: '월 10:00~21:00(야간), 화·수·금 10:00~19:00, 목 14:00~21:00(야간), 토 10:00~14:00(점심시간 없음), 점심시간 13:00~14:00(월·화·수·금), 일요일·공휴일 휴진',
 }
 
 // ── 의료진 ──

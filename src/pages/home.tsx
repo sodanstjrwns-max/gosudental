@@ -4,6 +4,7 @@ import { PHOTOS } from '../data/photos'
 import { photoFigure } from '../photo-gallery'
 import { SITE, TREATMENTS, DOCTORS, EQUIPMENT } from '../data/site'
 import { naepoCardGrid, naepoItemListSchema } from '../naepo-cards'
+import { homePopup } from '../popup'
 
 export function homePage() {
   const core = TREATMENTS.filter((t) => t.core)
@@ -250,10 +251,11 @@ export function homePage() {
     {
       title: '내포 치과 고수치과의원 | 내포신도시 임플란트·교정과 전문의 치아교정·심미보철',
       description:
-        '내포 치과 고수치과의원 — 내포신도시 주키즈소아청소년과 건물 5층. 좋은 결과·환자 중심 진료·배움과 성장을 고수하는 치과 — 임플란트·교정과 전문의 치아교정·심미보철 올인원 진료. 2026년 11월 개원 예정.',
+        '내포 치과 고수치과의원 — 내포신도시 주키즈소아청소년과 건물 5층. 좋은 결과·환자 중심 진료·배움과 성장을 고수하는 치과 — 임플란트·교정과 전문의 치아교정·심미보철 올인원 진료. 2026년 11월 2일 개원, 월·목 야간진료.',
       path: '/',
       schema: [naepoItemListSchema('내포 치과 진료 안내')],
       immersive: true,
+      overlay: homePopup(),
     },
     content
   )

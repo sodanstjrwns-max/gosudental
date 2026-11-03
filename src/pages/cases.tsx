@@ -36,7 +36,7 @@ export function casesListPage(cases: any[], loggedIn: boolean, opts: { cat?: str
       ? html`<div class="empty-state">
           <i class="fas fa-images"></i>
           <p style="font-size:17px;font-weight:600;color:var(--ink-soft)">치료 케이스를 준비하고 있습니다</p>
-          <p style="margin-top:8px">2026년 11월 개원 이후, 환자분들의 동의를 받은 치료 케이스가 하나씩 채워질 예정입니다.</p>
+          <p style="margin-top:8px">환자분들의 동의를 받은 치료 케이스가 앞으로 하나씩 채워질 예정입니다.</p>
         </div>`
       : html`<div class="case-grid">
         ${cases.map((cs) => html`
