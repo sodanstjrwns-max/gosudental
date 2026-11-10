@@ -55,6 +55,7 @@ const ORG_SCHEMA = {
     postalCode: '32419',
     addressCountry: 'KR',
   },
+  geo: { '@type': 'GeoCoordinates', latitude: SITE.geo.latitude, longitude: SITE.geo.longitude },
   hasMap: 'https://map.naver.com/p/search/충청남도%20예산군%20삽교읍%20예학로%2093',
   areaServed: ['내포신도시', '예산군', '홍성군', '삽교읍', '덕산면', '충청남도'],
   medicalSpecialty: 'Dentistry',

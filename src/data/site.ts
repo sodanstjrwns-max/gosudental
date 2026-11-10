@@ -19,6 +19,8 @@ export const SITE = {
   instagram: 'https://www.instagram.com/gosudental',
   youtube: 'https://www.youtube.com/channel/UCll6HJc-MktSNtDArs9_MZg',
   landmark: '주키즈소아청소년과 건물 5층 · 내포신도시중흥S클래스더시티 앞 · 보성초 도보 5분',
+  // 병원 좌표 — 네이버 플레이스 기준(2026-11-10 확인). 구조화 데이터 geo 에만 쓴다
+  geo: { latitude: 36.6653197, longitude: 126.6780681 },
   // 진료시간 — 2026-11-03 조원익 원장 카톡·'11월 진료 안내' 이미지 기준
   hours: [
     { day: '월요일', time: '10:00 ~ 21:00 (야간진료)' },
