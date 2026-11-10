@@ -30,7 +30,7 @@ export function homePage() {
     </h1>
     <p class="hero-sub">좋은 결과를 고수합니다. 환자 중심의 진료를 고수합니다. 배움과 성장을 고수합니다. <br>— 우리 지역에도 충분히 믿고 치료받을 수 있는 치과가 있도록.</p>
     <div class="hero-actions">
-      <a href="/reservation" class="hero-btn primary">상담 예약하기</a>
+      <a href="/reservation" class="hero-btn primary" data-cta="reserve">상담 예약하기</a>
       <a href="/mission" class="hero-btn outline">고수치과 이야기</a>
     </div>
   </div>
@@ -242,7 +242,7 @@ export function homePage() {
     <div class="cta-band reveal">
       <h2>잘 먹는 것에서 시작해, 편하게 웃을 수 있도록. <br>그리고 조금 더 자신 있게 나이 들어갈 수 있도록.</h2>
       <p><a href="/area/naepo" style="color:inherit;text-decoration:underline;text-underline-offset:3px">내포 치과</a> 고수치과 · ${SITE.addressShort} · ${SITE.openDate}</p>
-      <a href="/reservation" class="hero-btn primary">상담 예약하기</a>
+      <a href="/reservation" class="hero-btn primary" data-cta="reserve">상담 예약하기</a>
     </div>
   </div>
 </section>`
@@ -253,7 +253,11 @@ export function homePage() {
       description:
         '내포 치과 고수치과의원 — 내포신도시 주키즈소아청소년과 건물 5층. 좋은 결과·환자 중심 진료·배움과 성장을 고수하는 치과 — 임플란트·교정과 전문의 치아교정·심미보철 올인원 진료. 2026년 11월 2일 개원, 월·목 야간진료.',
       path: '/',
-      schema: [naepoItemListSchema('내포 치과 진료 안내')],
+      schema: [
+        naepoItemListSchema('내포 치과 진료 안내'),
+        // 화면의 대표 문구(h1·그 아래 소개)와 하단 위치·개원 안내 문장을 가리킨다. 화면에 없는 글은 넣지 않는다. (2026-11-10)
+        { '@type': 'WebPage', speakable: { '@type': 'SpeakableSpecification', cssSelector: ['h1', '.hero-sub', '#cta-section .cta-band p'] } },
+      ],
       immersive: true,
       overlay: homePopup(),
     },

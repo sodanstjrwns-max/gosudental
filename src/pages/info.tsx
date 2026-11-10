@@ -1,6 +1,6 @@
 import { html } from 'hono/html'
 import { Layout, breadcrumbSchema, faqSchema } from '../layout'
-import { SITE, TREATMENTS, PRICING, PRICING_NOTICE } from '../data/site'
+import { SITE, TREATMENTS, PRICING, PRICING_NOTICE, PRICING_BASIS_DATE } from '../data/site'
 
 export function directionsPage() {
   const content = html`
@@ -140,10 +140,14 @@ export function pricingPage(groups?: { category: string; items: { name: string; 
 
   return Layout(
     {
-      title: '비용 안내 — 비급여 진료비 | 고수치과의원',
+      title: '내포 치과 비용 안내 — 비급여 진료비 | 고수치과의원',
       description: '고수치과 비급여 진료비용 안내. 임플란트·치아교정·라미네이트 등 주요 진료의 잠정 비용을 안내합니다. 최종 금액과 적용 조건은 병원 확인 후 확정됩니다.',
       path: '/pricing',
-      schema: [breadcrumbSchema([{ name: '홈', path: '/' }, { name: '비용 안내', path: '/pricing' }])],
+      schema: [
+        // 화면 안내문의 수가 기준일(PRICING_NOTICE)과 같은 날짜. 공개 수가가 하나도 없으면 넣지 않는다.
+        ...(list.length ? [{ '@type': 'WebPage', lastReviewed: PRICING_BASIS_DATE }] : []),
+        breadcrumbSchema([{ name: '홈', path: '/' }, { name: '비용 안내', path: '/pricing' }]),
+      ],
     },
     content
   )
@@ -215,7 +219,7 @@ export function reservationPage() {
 
 <section class="section" id="reservation-form-section" style="padding-top:30px">
   <div class="auth-wrap" style="max-width:640px">
-    <form class="form-card" data-ajax action="/api/reservation" method="POST">
+    <form class="form-card" data-ajax data-pf-contact action="/api/reservation" method="POST">
       <div class="form-group">
         <label for="info-field-1">성함 <span class="req">*</span></label>
         <input id="info-field-1" class="form-control" name="name" required placeholder="홍길동">

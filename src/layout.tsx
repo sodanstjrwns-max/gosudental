@@ -38,7 +38,7 @@ const BALL_ICON = '<svg class="nav-ball" viewBox="0 0 16 16" width="15" height="
 
 const ORG_SCHEMA = {
   '@context': 'https://schema.org',
-  '@type': 'Dentist',
+  '@type': ['Dentist', 'MedicalClinic', 'LocalBusiness'],
   '@id': `${SITE.domain}/#organization`,
   name: SITE.name,
   alternateName: [SITE.nameEn, '고수치과', '내포 고수치과'],
@@ -129,7 +129,19 @@ export function Layout(meta: PageMeta, content: any) {
     ...(entities.some(s => s['@type'] === 'BreadcrumbList') ? { breadcrumb: { '@id': `${canonical}#breadcrumb` } } : {}),
     ...(mainEntity?.['@id'] && !pageExtras.some(s => s.mainEntity) ? { mainEntity: { '@id': mainEntity['@id'] } } : {}),
   }
-  const schemas = noindex ? [] : [ORG_SCHEMA, WEBSITE_SCHEMA, webpage, ...entities]
+  // 같은 @id 를 한 페이지에서 두 번 풀어 쓰지 않는다: 이 페이지 스키마가 의료진·진료 엔티티를 직접 정의하면
+  // 병원 엔티티 안의 같은 항목(founder·availableService)은 @id 참조만 남긴다. (2026-11-10)
+  const definedIds = new Set<string>()
+  const collectIds = (node: any) => {
+    if (Array.isArray(node)) return node.forEach(collectIds)
+    if (!node || typeof node !== 'object') return
+    if (typeof node['@id'] === 'string' && Object.keys(node).length > 1) definedIds.add(node['@id'])
+    Object.values(node).forEach(collectIds)
+  }
+  collectIds([webpage, ...entities])
+  const refOnly = (node: any) => (node && definedIds.has(node['@id']) ? { '@id': node['@id'] } : node)
+  const org = { ...ORG_SCHEMA, founder: refOnly(ORG_SCHEMA.founder), availableService: ORG_SCHEMA.availableService.map(refOnly) }
+  const schemas = noindex ? [] : [org, WEBSITE_SCHEMA, webpage, ...entities]
   const coreT = TREATMENTS.filter((t) => t.core)
   const otherT = TREATMENTS.filter((t) => !t.core)
 
@@ -184,6 +196,12 @@ if (['gosudental.pages.dev','gosudc.kr','www.gosudc.kr'].includes(location.hostn
 window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','G-PEHGCMJSN9',{anonymize_ip:true,page_location:location.origin+location.pathname});
 const ga=document.createElement('script');ga.async=true;ga.src='https://www.googletagmanager.com/gtag/js?id=G-PEHGCMJSN9';document.head.append(ga);
 (function(c,l,a,r,i,t,y){c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};t=l.createElement(r);t.async=1;t.src='https://www.clarity.ms/tag/'+i;y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);})(window,document,'clarity','script','yenfpw6ija');
+const beacon=document.createElement('script');beacon.defer=true;beacon.src='https://pf-dashboard-2nt.pages.dev/beacon.js';document.head.append(beacon);
+}
+</script>` : ''}
+${meta.path === '/reservation' ? html`<script>
+/* 예약 페이지: GA4·Clarity 는 계속 제외하고, 병원 통계 비콘만 싣는다(전송값은 종류·경로뿐, 입력 내용은 보내지 않음). 폼 시작·제출 집계용 (2026-11-10) */
+if (['gosudental.pages.dev','gosudc.kr','www.gosudc.kr'].includes(location.hostname)) {
 const beacon=document.createElement('script');beacon.defer=true;beacon.src='https://pf-dashboard-2nt.pages.dev/beacon.js';document.head.append(beacon);
 }
 </script>` : ''}
@@ -268,7 +286,7 @@ src="https://www.facebook.com/tr?id=1120020003707931&ev=PageView&noscript=1"
     </nav>
     <div class="header-cta">
       <a href="/auth/login" class="btn-ghost" id="login-link">로그인</a>
-      <a href="/reservation" class="btn-brand">상담 예약</a>
+      <a href="/reservation" class="btn-brand" data-cta="reserve">상담 예약</a>
     </div>
     <button class="mobile-toggle" aria-controls="mobile-menu" aria-label="메뉴 열기" aria-expanded="false">
       <span></span><span></span><span></span>
@@ -291,7 +309,7 @@ src="https://www.facebook.com/tr?id=1120020003707931&ev=PageView&noscript=1"
     <a href="/recruit">인재채용</a>
     <a href="/game" class="mm-game">${raw(BALL_ICON)}고수 농구장</a>
     <a href="/auth/login">로그인</a>
-    <a href="/reservation" class="mobile-cta">상담 예약</a>
+    <a href="/reservation" class="mobile-cta" data-cta="reserve">상담 예약</a>
   </div>
 </header>
 
@@ -325,7 +343,7 @@ src="https://www.facebook.com/tr?id=1120020003707931&ev=PageView&noscript=1"
 
 <nav class="mobile-cta-bar" aria-label="모바일 빠른 메뉴">
   <a href="/directions" class="cta-dir"><i class="fas fa-location-dot" aria-hidden="true"></i> 오시는 길</a>
-  <a href="/reservation" class="cta-res"><i class="fas fa-calendar-check" aria-hidden="true"></i> 상담 예약</a>
+  <a href="/reservation" class="cta-res" data-cta="reserve"><i class="fas fa-calendar-check" aria-hidden="true"></i> 상담 예약</a>
 </nav>
 
 ${meta.overlay || ''}

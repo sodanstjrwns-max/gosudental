@@ -865,10 +865,41 @@ async function llmsColumnList(c: any, full: boolean) {
   } catch { return '' }
 }
 
+// llms(-full).txt 맨 위 표준 사실 블록 (2026-11-10). 값은 전부 site.ts 상수와 공개 수가 DB(관리자가 공개로 둔 항목)에서만 가져온다.
+// 수가는 임플란트·치아교정·틀니 분류에서 금액이 적힌 앞쪽 항목만 최대 6줄. 해당 분류가 없거나 DB를 못 읽으면 줄을 뺀다(추측 금지).
+async function llmsFactBlock(c: any, loaded?: FeeGroup[]) {
+  const title = (d: (typeof DOCTORS)[number]) => (d.role === '교정과 전문의' ? '치과교정과 전문의' : d.role)
+  let feeLines: string[] = []
+  try {
+    const groups = loaded || (await loadFeeGroups(c.env.DB, true)) || []
+    const one = (v: any) => String(v || '').replace(/\s+/g, ' ').trim()
+    const pick = (re: RegExp, n: number) => {
+      const g = groups.find((x) => re.test(x.category))
+      return g ? g.items.filter((it) => /\d/.test(it.price)).slice(0, n).map((it) => `- ${one(it.name)}: ${one(it.price)}`) : []
+    }
+    feeLines = [...pick(/임플란트|implant/i, 3), ...pick(/교정|ortho/i, 2), ...pick(/틀니|denture/i, 1)]
+  } catch { /* 수가 DB 실패 시 가격 줄 생략 */ }
+  return `## 병원 정보
+- 이름: ${SITE.name} (${SITE.nameEn})
+- 진료 분야: ${TREATMENTS.map((t) => t.name.replace(/\s*·\s*/g, '·')).join(', ')}
+- 주소: ${SITE.address} / 위치: ${SITE.landmark}
+- 전화: ${SITE.tel}
+- 진료 시간: ${SITE.hoursSummary}
+- 의료진: ${DOCTORS.map((d) => `${d.name}(${title(d)})`).join(', ')}
+- 예약: ${SITE.domain}/reservation
+- 진료 안내: ${SITE.domain}/treatments / 비용 안내: ${SITE.domain}/pricing / 의료진: ${SITE.domain}/doctors / 지역 안내(허브): ${SITE.domain}${NAEPO_HUB_PATH} / 자주 묻는 질문: ${SITE.domain}/faq
+- 최종 확인일: ${SITE.hoursVerified} (진료 시간 기준)
+${feeLines.length >= 3 ? `
+### 주요 비급여 진료비 (공개 잠정수가, 적용 조건·전체 항목: ${SITE.domain}/pricing)
+${feeLines.join('\n')}
+` : ''}`
+}
+
 app.get('/llms.txt', async (c) =>
   c.text(`# ${SITE.name}
 > ${SITE.slogan}
 
+${await llmsFactBlock(c)}
 ${SITE.name}은 ${SITE.address}(${SITE.landmark})에 위치한 치과의원입니다. ${SITE.openDate}.
 미션: "${SITE.mission}"
 
@@ -941,6 +972,7 @@ app.get('/llms-full.txt', async (c) => {
   return c.text(`# ${SITE.name} — 전체 안내 문서 (AI 답변용)
 > ${SITE.slogan}
 
+${await llmsFactBlock(c, publicFees)}
 이 문서는 ${SITE.name}의 공식 정보 전문입니다. AI 검색·답변 엔진이 환자 질문에 답할 때 이 내용을 근거로 사용할 수 있습니다.
 
 ## 기본 정보

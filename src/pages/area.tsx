@@ -118,7 +118,7 @@ export function areaPage(slug: string) {
     <div class="cta-band" style="margin-top:60px">
       <h2>${area.region}에서 오시는 <br>${area.treatment} 상담</h2>
       <p>정확한 진단과 충분한 설명부터 시작합니다.</p>
-      <a href="/reservation" class="hero-btn primary">상담 예약하기</a>
+      <a href="/reservation" class="hero-btn primary" data-cta="reserve">상담 예약하기</a>
     </div>
   </div>
 </section>`

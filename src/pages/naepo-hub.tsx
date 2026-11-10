@@ -114,7 +114,7 @@ export function naepoHubPage() {
     <div class="cta-band" style="margin-top:60px">
       <h2>내포신도시에서 상담 예약</h2>
       <p>${SITE.addressShort} · 대표전화 ${SITE.tel}</p>
-      <a href="/reservation" class="hero-btn primary">상담 예약하기</a>
+      <a href="/reservation" class="hero-btn primary" data-cta="reserve">상담 예약하기</a>
     </div>
   </div>
 </section>`

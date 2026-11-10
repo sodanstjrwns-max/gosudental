@@ -230,7 +230,7 @@ export function gamePlayPage(slug: string) {
         <div class="gm-care">
           <p>${g.care}</p>
           <div class="gm-care-links">
-            <a class="gm-res" href="/reservation">상담 예약하기 →</a>
+            <a class="gm-res" href="/reservation" data-cta="reserve">상담 예약하기 →</a>
             <a href="${g.careLink.href}">${g.careLink.label}</a>
           </div>
         </div>

@@ -2,7 +2,37 @@ import { html } from 'hono/html'
 import { Layout, breadcrumbSchema } from '../layout'
 import { PHOTOS, CHO_LIFE } from '../data/photos'
 import { photoFigure, photoGallery } from '../photo-gallery'
-import { SITE, DOCTORS, TREATMENTS } from '../data/site'
+import { SITE, DOCTORS, TREATMENTS, type Doctor } from '../data/site'
+
+// ── 의료진 구조화 데이터 (2026-11-10) ──
+// 화면의 '경력 및 학회 활동' 목록(d.career)과 진료 분야(d.specialties)에 실제로 적힌 것만 옮긴다. 화면에 없는 학력·학회는 만들지 않는다.
+// 학력: '○○대학교 치과대학 졸업' · '○○대학교 대학원 … 석사/박사' 줄 / 학회: '○○학회 회원·정회원' 줄 / 자격: '전문의'·'인정의' 줄
+const SCHOOL_RE = /^(.+?대학교(?:\s*(?:치과대학|대학원))?)\s.*(?:졸업|석사|박사)/
+const SOCIETY_RE = /^(.+?학회)(?:\([^)]*\))?\s*(?:정회원|회원)$/
+const CREDENTIAL_RE = /(?:전문의|인정의)/
+const uniq = (list: string[]) => [...new Set(list)]
+
+function doctorPersonSchema(d: Doctor) {
+  const schools = uniq(d.career.map((c) => c.match(SCHOOL_RE)?.[1]?.trim() || '').filter(Boolean))
+  const societies = uniq(d.career.map((c) => c.match(SOCIETY_RE)?.[1]?.trim() || '').filter(Boolean))
+  const credentials = d.career.filter((c) => CREDENTIAL_RE.test(c))
+  const fields = TREATMENTS.filter((t) => d.specialties.includes(t.slug)).map((t) => t.name)
+  return {
+    '@type': ['Person', 'Physician'],
+    '@id': `${SITE.domain}/doctors/${d.slug}#person`,
+    name: d.name,
+    jobTitle: d.role,
+    image: d.photo ? `${SITE.domain}${d.photo}` : undefined,
+    worksFor: { '@id': `${SITE.domain}/#organization` },
+    description: d.tagline,
+    url: `${SITE.domain}/doctors/${d.slug}`,
+    medicalSpecialty: 'Dentistry',
+    ...(fields.length ? { knowsAbout: fields } : {}),
+    ...(schools.length ? { alumniOf: schools.map((name) => ({ '@type': 'CollegeOrUniversity', name })) } : {}),
+    ...(societies.length ? { memberOf: societies.map((name) => ({ '@type': 'Organization', name })) } : {}),
+    ...(credentials.length ? { hasCredential: credentials.map((name) => ({ '@type': 'EducationalOccupationalCredential', name })) } : {}),
+  }
+}
 
 export function doctorsListPage() {
   const content = html`
@@ -52,7 +82,17 @@ export function doctorsListPage() {
         '고수치과 의료진을 소개합니다. 대표원장 조원익, 치과교정과 전문의 김경환, 이민우 원장 — 3인 협진 체계로 임플란트·교정·심미보철 올인원 진료를 제공합니다.',
       path: '/doctors',
       pageType: 'CollectionPage',
-      schema: [breadcrumbSchema([{ name: '홈', path: '/' }, { name: '의료진', path: '/doctors' }])],
+      schema: [
+        // 화면의 의료진 카드와 1:1, 같은 순서
+        {
+          '@context': 'https://schema.org',
+          '@type': 'ItemList',
+          name: `${SITE.name} 의료진`,
+          numberOfItems: DOCTORS.length,
+          itemListElement: DOCTORS.map((d, i) => ({ '@type': 'ListItem', position: i + 1, item: doctorPersonSchema(d) })),
+        },
+        breadcrumbSchema([{ name: '홈', path: '/' }, { name: '의료진', path: '/doctors' }]),
+      ],
     },
     content
   )
@@ -63,17 +103,7 @@ export function doctorDetailPage(slug: string, cases: any[]) {
   if (!d) return null
   const specs = TREATMENTS.filter((t) => d.specialties.includes(t.slug))
 
-  const personSchema = {
-    '@context': 'https://schema.org',
-    '@type': ['Person', 'Physician'],
-    '@id': `${SITE.domain}/doctors/${d.slug}#person`,
-    name: d.name,
-    jobTitle: d.role,
-    image: d.photo ? `${SITE.domain}${d.photo}` : undefined,
-    worksFor: { '@id': `${SITE.domain}/#organization` },
-    description: d.tagline,
-    url: `${SITE.domain}/doctors/${d.slug}`,
-  }
+  const personSchema = { '@context': 'https://schema.org', ...doctorPersonSchema(d) }
 
   const content = html`
 <section class="page-hero" id="doctor-hero">
@@ -161,7 +191,7 @@ ${slug === 'cho-wonik' ? html`
     <div class="cta-band reveal">
       <h2>${d.name} 원장에게 <br>상담받고 싶으시다면</h2>
       <p>상담 예약 시 희망 의료진을 남겨주세요.</p>
-      <a href="/reservation" class="hero-btn primary">상담 예약하기</a>
+      <a href="/reservation" class="hero-btn primary" data-cta="reserve">상담 예약하기</a>
     </div>
   </div>
 </section>`

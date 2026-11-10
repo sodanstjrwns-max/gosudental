@@ -303,7 +303,7 @@ ${AREAS.some((a) => a.treatmentSlug === t.slug) ? html`
     <div class="cta-band reveal">
       <h2>${t.name} 상담이 <br>필요하신가요?</h2>
       <p>불필요한 치료를 권하지 않습니다. 정확한 진단과 충분한 설명부터 시작합니다.</p>
-      <a href="/reservation" class="hero-btn primary">상담 예약하기</a>
+      <a href="/reservation" class="hero-btn primary" data-cta="reserve">상담 예약하기</a>
     </div>
     <p id="treatment-hub-link" style="margin-top:20px;text-align:center;font-size:15px;color:var(--ink-soft)">찾아오는 길·주차·의료진은 <a href="/area/naepo">내포 치과</a> 고수치과 안내에서 함께 확인하실 수 있습니다.</p>
   </div>
