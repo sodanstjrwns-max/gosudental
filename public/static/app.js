@@ -66,6 +66,26 @@
     films.forEach((v) => vio.observe(v));
   }
 
+  // 첫 화면 배경 영상: 페이지를 다 불러온 뒤에야 받기 시작(첫 화면 표시를 늦추지 않게), 휴대폰은 세로로 자른 판.
+  // 움직임 줄이기·데이터 절약이면 받지 않고 사진만 둔다. 첫 화면이 안 보이면 멈춘다. 2026-11-26
+  const hv = document.querySelector('video[data-hero-video]');
+  if (hv && !calm) {
+    const startHero = () => {
+      hv.src = window.matchMedia('(max-width: 640px)').matches ? hv.dataset.srcMobile : hv.dataset.src;
+      hv.muted = true;
+      hv.addEventListener('playing', () => { hv.classList.add('on'); const h = hv.closest('.hero'); if (h) h.classList.add('video-on'); }, { once: true });
+      const p = hv.play(); if (p && p.catch) p.catch(() => {});
+    };
+    const later = () => setTimeout(startHero, 400);
+    if (document.readyState === 'complete') later(); else window.addEventListener('load', later, { once: true });
+    if ('IntersectionObserver' in window) {
+      new IntersectionObserver((entries) => entries.forEach((e) => {
+        if (!hv.getAttribute('src')) return;
+        if (e.isIntersecting) { const p = hv.play(); if (p && p.catch) p.catch(() => {}); } else hv.pause();
+      })).observe(hv);
+    }
+  }
+
   // Count-up stats
   const counters = document.querySelectorAll('[data-count]');
   if (counters.length && 'IntersectionObserver' in window) {

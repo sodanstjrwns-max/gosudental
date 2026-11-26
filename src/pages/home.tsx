@@ -19,6 +19,7 @@ export function homePage() {
 <!-- HERO -->
 <section class="hero" id="hero-section">
   <div class="hero-bg" style="background-image:url('/static/img/space/gosu-lobby-wide-20261126-hero.webp')"></div>
+  <video class="hero-video" muted loop playsinline preload="none" aria-hidden="true" tabindex="-1" data-hero-video data-src="/static/video/gosu-hero-20261126.mp4" data-src-mobile="/static/video/gosu-hero-20261126-mobile.mp4"></video>
   <div class="hero-veil"></div>
   <div class="hero-hanja" aria-hidden="true">固守<b>高手</b></div>
   <span class="hero-seal" aria-hidden="true">高手</span>
@@ -209,7 +210,7 @@ export function homePage() {
     <h2 class="h-display reveal reveal-d1">두려움이 아닌 <br><em>편안함</em>이 먼저인 공간</h2>
     <p class="lead reveal reveal-d2">치과 문을 여는 순간부터 두려움이 아닌 편안함을 느끼실 수 있도록, 공간 하나하나를 설계했습니다.</p>
     <div class="space-gallery">
-      <figure class="space-item sp-a reveal space-film"><video src="/static/video/gosu-space-loop-20261126.mp4" poster="/static/img/space/gosu-space-loop-poster-20261126.webp" muted loop playsinline preload="none" data-inview-play aria-label="고수치과 건물 외관과 로비·북카페를 담은 공간 영상"></video><figcaption class="cap">Space Film</figcaption></figure>
+      <figure class="space-item sp-a reveal"><img src="/static/img/space/gosu-lounge-20261126-1600.webp" srcset="/static/img/space/gosu-lounge-20261126-800.webp 800w, /static/img/space/gosu-lounge-20261126-1600.webp 1600w" sizes="(max-width:768px) 92vw, 60vw" alt="고수치과 라운지 — 곡선 조명 아래 소파와 식물" loading="lazy" decoding="async"><figcaption class="cap">Lounge</figcaption></figure>
       <figure class="space-item sp-b reveal reveal-d1"><img src="/static/img/space/gosu-bookcafe-20261126-1600.webp" srcset="/static/img/space/gosu-bookcafe-20261126-800.webp 800w, /static/img/space/gosu-bookcafe-20261126-1600.webp 1600w" sizes="(max-width:768px) 92vw, 40vw" alt="고수치과 북카페 — 원목 테이블과 책장이 있는 기다림 공간" loading="lazy" decoding="async"><figcaption class="cap">Book Cafe</figcaption></figure>
       <figure class="space-item sp-c reveal"><img src="/static/img/space/gosu-clinic-zone-20261126-1600.webp" srcset="/static/img/space/gosu-clinic-zone-20261126-800.webp 800w, /static/img/space/gosu-clinic-zone-20261126-1600.webp 1600w" sizes="(max-width:768px) 92vw, 40vw" alt="고수치과 진료 존 — 칸막이로 나뉜 진료 체어" loading="lazy" decoding="async"><figcaption class="cap">Clinic</figcaption></figure>
       <figure class="space-item sp-d reveal reveal-d1"><img src="/static/img/space/gosu-waiting-20261126-1600.webp" srcset="/static/img/space/gosu-waiting-20261126-800.webp 800w, /static/img/space/gosu-waiting-20261126-1600.webp 1600w" sizes="(max-width:768px) 92vw, 40vw" alt="고수치과 대기 공간 — 곡선 조명 아래 소파" loading="lazy" decoding="async"><figcaption class="cap">Waiting</figcaption></figure>

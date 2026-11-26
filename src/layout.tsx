@@ -348,7 +348,7 @@ src="https://www.facebook.com/tr?id=1120020003707931&ev=PageView&noscript=1"
 </nav>
 
 ${meta.overlay || ''}
-<script src="/static/app.js?v=20261126-film" defer></script>
+<script src="/static/app.js?v=20261126-hero" defer></script>
 <script src="/static/gallery.js?v=20260913-photos" defer></script>
 <script src="/static/ink.js?v=20261007-game" defer></script>
 ${meta.immersive ? html`<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" defer></script>
