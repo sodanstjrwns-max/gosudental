@@ -7,7 +7,7 @@ import { SITE } from '../data/site'
 export function missionPage() {
   const content = html`
 <section class="hero" id="mission-hero" style="min-height:88svh">
-  <div class="hero-bg" style="background-image:url('/static/img/interior-bookcafe.jpg')"></div>
+  <div class="hero-bg" style="background-image:url('/static/img/space/gosu-bookcafe-3-20261126-1600x900.webp')"></div>
   <div class="hero-veil"></div>
   <div class="hero-hanja" aria-hidden="true">信賴<b>固守</b></div>
   <span class="hero-seal" aria-hidden="true">信賴</span>

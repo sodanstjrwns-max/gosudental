@@ -44,7 +44,7 @@ const ORG_SCHEMA = {
   alternateName: [SITE.nameEn, '고수치과', '내포 고수치과'],
   url: SITE.domain,
   logo: `${SITE.domain}/static/img/logo-stack.png`,
-  image: [`${SITE.domain}/static/img/og-image.jpg`, `${SITE.domain}/static/img/interior-lobby.jpg`],
+  image: [`${SITE.domain}/static/img/og-image.jpg`, `${SITE.domain}/static/img/space/gosu-lobby-wide-20261126-1600.jpg`],
   slogan: SITE.slogan,
   description: `${SITE.slogan} — 임플란트·교정과 전문의 치아교정·심미보철 올인원 진료. 내포신도시 주키즈소아청소년과 건물 5층, 2026년 11월 2일 개원. 월·목 야간진료(21시까지), 토요일 진료.`,
   address: {
@@ -189,7 +189,7 @@ ${schemaDate(meta.modifiedTime) ? html`<meta property="article:modified_time" co
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=fav20261014">
 <style>${raw(siteStyles)}</style>
 ${meta.immersive ? html`<link rel="stylesheet" href="${IMMERSIVE_CSS}">` : ''}
-${meta.path === '/' ? html`<link rel="preload" as="image" href="/static/img/interior-lobby-mobile.webp" media="(max-width:640px)" fetchpriority="high"><link rel="preload" as="image" href="/static/img/interior-lobby.webp" media="(min-width:641px)" fetchpriority="high">` : ''}
+${meta.path === '/' ? html`<link rel="preload" as="image" href="/static/img/space/gosu-lobby-wide-20261126-hero-mobile.webp" media="(max-width:640px)" fetchpriority="high"><link rel="preload" as="image" href="/static/img/space/gosu-lobby-wide-20261126-hero.webp" media="(min-width:641px)" fetchpriority="high">` : ''}
 <noscript><style>.reveal{opacity:1!important;transform:none!important}.mobile-menu{display:block!important;position:static!important}.mobile-toggle{display:none!important}.quote-band{clip-path:none!important}.quote-band blockquote,.quote-band cite{opacity:1!important;transform:none!important}form[data-ajax] button[type=submit]{display:none!important}</style></noscript>
 ${raw(schemas.map((s) => `<script type="application/ld+json">${safeJson(s)}</script>`).join('\n'))}
 ${(!noindex || meta.analytics) && meta.path !== '/reservation' && !meta.path.startsWith('/cases') ? html`<script>
@@ -348,7 +348,7 @@ src="https://www.facebook.com/tr?id=1120020003707931&ev=PageView&noscript=1"
 </nav>
 
 ${meta.overlay || ''}
-<script src="/static/app.js?v=20260913-delivery" defer></script>
+<script src="/static/app.js?v=20261126-film" defer></script>
 <script src="/static/gallery.js?v=20260913-photos" defer></script>
 <script src="/static/ink.js?v=20261007-game" defer></script>
 ${meta.immersive ? html`<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" defer></script>

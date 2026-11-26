@@ -54,6 +54,18 @@
     reveals.forEach((el) => el.classList.add('visible'));
   }
 
+  // 공간 영상(홈): 화면에 보일 때만 소리 없이 재생. 움직임 줄이기·데이터 절약 설정이면 정지 화면(poster)만 둔다. 2026-11-26
+  const films = document.querySelectorAll('video[data-inview-play]');
+  const calm = window.matchMedia('(prefers-reduced-motion: reduce)').matches || (navigator.connection && navigator.connection.saveData);
+  if (films.length && !calm && 'IntersectionObserver' in window) {
+    const vio = new IntersectionObserver((entries) => entries.forEach((e) => {
+      const v = e.target;
+      if (e.isIntersecting) { v.muted = true; v.preload = 'auto'; const p = v.play(); if (p && p.catch) p.catch(() => {}); }
+      else if (!v.paused) v.pause();
+    }), { threshold: 0.2, rootMargin: '120px 0px' });
+    films.forEach((v) => vio.observe(v));
+  }
+
   // Count-up stats
   const counters = document.querySelectorAll('[data-count]');
   if (counters.length && 'IntersectionObserver' in window) {

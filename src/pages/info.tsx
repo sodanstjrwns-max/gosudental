@@ -60,38 +60,53 @@ export function directionsPage() {
 }
 
 export function tourPage() {
+  // 2026-11-26 원장 제공 실제 사진(MYBOX)으로 교체 — 이전 3D 설계 이미지(interior-*.webp)는 쓰지 않음. 진료 장면은 환자 얼굴이 보이지 않는 사진만.
   const shots = [
-    { img: 'interior-lobby.webp', cap: '라운지 — 치과 문을 여는 순간부터 편안하게', cls: 'sp-a' },
-    { img: 'interior-bookcafe.webp', cap: '북카페 — 기다림이 지루하지 않은 공간', cls: 'sp-b' },
-    { img: 'interior-01.webp', cap: '데스크 & 라운지', cls: 'sp-c' },
-    { img: 'interior-02.webp', cap: '진료 존', cls: 'sp-d' },
-    { img: 'interior-03.webp', cap: '진료실 — 프라이버시를 지키는 구조', cls: 'sp-e' },
-    { img: 'interior-04.webp', cap: '대기 공간', cls: 'sp-a' },
-    { img: 'interior-07.webp', cap: '상담실', cls: 'sp-b' },
-    { img: 'interior-09.webp', cap: '복도 — 동선까지 설계한 공간', cls: 'sp-c' },
-    { img: 'interior-17.webp', cap: '진료 공간 전경', cls: 'sp-d' },
-    { img: 'interior-04.webp', cap: '수술 · 특수 진료 존', cls: 'sp-e' },
+    { img: 'exterior-drone', cap: '건물 외관 — 내포신도시 주키즈소아청소년과 건물 5층', cls: 'sp-a' },
+    { img: 'exterior-front', cap: '건물 정면', cls: 'sp-b' },
+    { img: 'desk', cap: '데스크 — 접수와 수납', cls: 'sp-c' },
+    { img: 'lounge', cap: '라운지 — 치과 문을 여는 순간부터 편안하게', cls: 'sp-d' },
+    { img: 'waiting-2', cap: '대기 공간', cls: 'sp-e' },
+    { img: 'lounge-2', cap: '라운지 전경', cls: 'sp-a' },
+    { img: 'bookcafe-2', cap: '북카페 — 기다림이 지루하지 않은 공간', cls: 'sp-b' },
+    { img: 'consult-room', cap: '상담실', cls: 'sp-c' },
+    { img: 'consult-scene', cap: '상담 — 구강 사진을 함께 보며 설명합니다', cls: 'sp-d' },
+    { img: 'hall-2', cap: '복도 — 동선까지 설계한 공간', cls: 'sp-e' },
+    { img: 'clinic-overview', cap: '진료 공간 전경', cls: 'sp-a' },
+    { img: 'clinic-zone-2', cap: '진료 존', cls: 'sp-b' },
+    { img: 'treatment-room', cap: '진료실 — 프라이버시를 지키는 구조', cls: 'sp-c' },
+    { img: 'treatment-scene', cap: '진료 장면', cls: 'sp-d' },
+    { img: 'xray-room', cap: '방사선 촬영실', cls: 'sp-e', w: [533, 1067] },
   ]
+  const src = (n: string, size: number) => `/static/img/space/gosu-${n}-20261126-${size}.webp`
+  const tourVideo = {
+    src: '/static/video/gosu-space-tour-20261126.mp4',
+    poster: '/static/img/space/gosu-space-tour-poster-20261126.webp',
+  }
   const content = html`
 <section class="page-hero dark" id="tour-hero">
   <div class="section-inner">
     <nav class="breadcrumb" aria-label="현재 위치"><a href="/">홈</a> / <span>공간 둘러보기</span></nav>
     <p class="eyebrow" style="color:var(--brand-accent)">Space Tour</p>
     <h1 class="h-display">치과 같지 않은 치과, <br><em style="color:var(--brand-soft)">고수치과의 공간</em></h1>
-    <p class="lead">두려움은 공간에서부터 시작됩니다. 그래서 고수치과는 첫인상부터 다르게 설계했습니다. 환자분이 편안하게 머무를 수 있는 공간을 준비하고 있습니다.</p>
+    <p class="lead">두려움은 공간에서부터 시작됩니다. 그래서 고수치과는 첫인상부터 다르게 설계했습니다. 환자분이 편안하게 머무를 수 있는 공간을 준비했습니다.</p>
   </div>
 </section>
 
 <section class="section" id="tour-gallery-section">
   <div class="section-inner">
+    <figure class="tour-film reveal">
+      <video src="${tourVideo.src}" poster="${tourVideo.poster}" controls preload="none" playsinline aria-label="고수치과 공간 영상 — 건물 외관부터 로비·진료실·북카페까지"></video>
+      <figcaption>공간 영상 · 2분 34초 — 건물 외관부터 로비·진료실·북카페까지 (소리가 함께 나옵니다)</figcaption>
+    </figure>
     <div class="space-gallery" style="margin-top:0">
       ${shots.map((s) => html`
       <figure class="space-item ${s.cls} reveal">
-        <img src="/static/img/${s.img}" alt="고수치과 ${s.cap}" loading="lazy">
+        <img src="${src(s.img, 1600)}" srcset="${src(s.img, 800)} ${s.w ? s.w[0] : 800}w, ${src(s.img, 1600)} ${s.w ? s.w[1] : 1600}w" sizes="(max-width:768px) 92vw, 50vw" alt="고수치과 ${s.cap}" loading="lazy" decoding="async">
         <figcaption class="cap">${s.cap}</figcaption>
       </figure>`)}
     </div>
-    <div class="alert info" style="margin-top:40px">위 이미지는 인테리어 설계(3D) 도면으로, 실제 공간 모습과 일부 차이가 있을 수 있습니다. 실제 공간 사진은 준비되는 대로 업데이트합니다.</div>
+    <p class="alert info" style="margin-top:40px">2026년 11월 개원 뒤 촬영한 실제 공간 사진과 영상입니다.</p>
   </div>
 </section>`
 
@@ -100,7 +115,19 @@ export function tourPage() {
       title: '공간 둘러보기 | 고수치과의원 — 내포신도시 치과 공간 안내',
       description: '고수치과 공간 둘러보기. 라운지·북카페·진료실·상담실까지 — 치과 같지 않은 편안한 공간을 만나보세요.',
       path: '/tour',
-      schema: [breadcrumbSchema([{ name: '홈', path: '/' }, { name: '공간 둘러보기', path: '/tour' }])],
+      schema: [
+        breadcrumbSchema([{ name: '홈', path: '/' }, { name: '공간 둘러보기', path: '/tour' }]),
+        {
+          '@context': 'https://schema.org',
+          '@type': 'VideoObject',
+          name: '고수치과 공간 둘러보기 영상',
+          description: '내포신도시 고수치과의원의 건물 외관부터 로비·진료실·상담실·북카페까지 담은 공간 영상입니다.',
+          thumbnailUrl: `${SITE.domain}${tourVideo.poster}`,
+          contentUrl: `${SITE.domain}${tourVideo.src}`,
+          uploadDate: '2026-11-26',
+          duration: 'PT2M34S',
+        },
+      ],
     },
     content
   )

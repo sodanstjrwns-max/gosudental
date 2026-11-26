@@ -155,7 +155,7 @@ export function treatmentDetailPage(slug: string, relatedCases: any[], relatedCo
     speakable: { '@type': 'SpeakableSpecification', cssSelector: ['h1', '#tx-answer'] },
   }
 
-  // 대표 이미지 = og:image (같은 사진). 충치·보철·턱관절은 2026-10-14 진료별 이미지로 교체(기존 인테리어 설계 이미지 대신).
+  // 대표 이미지 = og:image (같은 사진). 충치·보철·턱관절은 2026-10-14 진료별 이미지로 교체(기존 인테리어 설계 이미지 대신). 안티에이징은 2026-11-26 실제 진료실 사진.
   const heroImgs: Record<string, { src: string; w: number; h: number; srcset?: boolean }> = {
     implant: { src: '/static/img/treatment-implant-ai-20260915.webp', w: 1200, h: 800, srcset: true },
     ortho: { src: '/static/img/treatment-ortho-ai-20260915.webp', w: 1200, h: 800, srcset: true },
@@ -163,7 +163,7 @@ export function treatmentDetailPage(slug: string, relatedCases: any[], relatedCo
     preservation: { src: '/static/img/cards/naepo-preservation-1200.webp', w: 1200, h: 797, srcset: true },
     prosthetics: { src: '/static/img/cards/naepo-prosthetics-1200.webp', w: 1200, h: 797, srcset: true },
     tmj: { src: '/static/img/cards/naepo-tmj-1200.webp', w: 1200, h: 797, srcset: true },
-    antiaging: { src: '/static/img/interior-17.webp', w: 1600, h: 900 },
+    antiaging: { src: '/static/img/space/gosu-treatment-room-2-20261126-1600x900.webp', w: 1600, h: 900 },
   }
   const hero = heroImgs[t.slug]
   // og 는 대표 이미지와 같은 사진의 1200×800 JPG (공유 미리보기 호환). 안티에이징은 공통 og 유지.

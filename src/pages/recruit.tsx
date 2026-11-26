@@ -10,7 +10,7 @@ export const RECRUIT_MODIFIED = '2026-10-21'
 export function recruitPage() {
   const content = html`
 <section class="hero rc-hero" id="recruit-hero">
-  <div class="hero-bg" style="background-image:url('/static/img/interior-05.webp')"></div>
+  <div class="hero-bg" style="background-image:url('/static/img/space/gosu-clinic-overview-20261126-1600x900.webp')"></div>
   <div class="hero-veil"></div>
   <div class="hero-hanja" aria-hidden="true">固守<b>高手</b></div>
   <div class="hero-inner">

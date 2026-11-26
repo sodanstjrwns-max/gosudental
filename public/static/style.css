@@ -426,6 +426,10 @@ ul { list-style: none; }
 .space-item { border-radius: 2px; overflow: hidden; position: relative; }
 .space-item img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.8s var(--ease); }
 .space-item:hover img { transform: scale(1.05); }
+.space-item video { width: 100%; height: 100%; object-fit: cover; display: block; background: #12181c; }
+.tour-film { margin: 0 0 40px; }
+.tour-film video { width: 100%; aspect-ratio: 16/9; display: block; background: #0a0d0f; border-radius: 2px; }
+.tour-film figcaption { margin-top: 12px; font-size: 14px; color: var(--ink-mute); }
 .space-item .cap {
   position: absolute; left: 22px; bottom: 20px; color: #fff;
   font-family: var(--serif); font-size: 14.5px; font-weight: 700; letter-spacing: 0.14em;
@@ -1461,7 +1465,7 @@ button:disabled { opacity: .65; cursor: wait; }
 
 /* Mobile: keep the visual identity without expensive full-screen SVG filters. */
 @media(max-width:640px) {
-  #hero-section .hero-bg { background-image:url('/static/img/interior-lobby-mobile.webp')!important; animation:none; }
+  #hero-section .hero-bg { background-image:url('/static/img/space/gosu-lobby-wide-20261126-hero-mobile.webp')!important; animation:none; }
   .hero-hanja,.hero-seal { animation:none; opacity:1; }
   .hero-hanja,.h-display em::after,.seal-stamp,.site-footer::before,.philosophy::before,.stats-band::before,.cta-band::before,.hero-seal { filter:none; }
   body::before { display:none; }
